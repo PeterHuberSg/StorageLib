@@ -3,9 +3,17 @@ This document specifies the content of a *Data Model* .cs file.
 
 
 # Table of Contents  
-[**Design principals**](#design-principals)  
+[**Data Model File Structure**](#data-model-file-structure)  
+  
+[**Supported Data Types in a Data Model**](#supported-data-types-in-a-data-model)  
+[**-DateTime Replacements**](#datetime-and-timespan-replacements)  
+[**-decimal Replacements**](#decimal-replacements)  
+  
+[**Further Documentation**](#further-documentation)  
+
 
 # Data Model File Structure
+
 
 # Supported Data Types in a Data Model
 The data class properties can be simple type as described below or other classes defined in the Data Model.
@@ -30,7 +38,7 @@ types, which indicates the precision (i.e. how many digits after decimal point) 
 try to provide the biggest possible data range, which is often not needed. For example, DateTime is more precise 
 than milliseconds, while often only a precision of days would be needed.
 
-## DateTime Replacements
+## DateTime and TimeSpan Replacements
 * `Date` becomes `DateTime`, stored as dd.mm.yyyy
 * `Time` becomes `TimeSpan`, stored as hh:mm:ss, max: 23.59:59
 * `DateMinutes` becomes `DateTime`, stored as dd.mm.yyyy hh:mm
@@ -49,6 +57,13 @@ minutes, it gets written as 'dd.mm.yyyy hh', without minutes.
 
 Only significant digits get written to a CSV file. If `Decimal2` has a 0 as second digit after the decimal point, 
 it gets written as '99999.9', without the trailing '0'.
+
+
+# Further Documentation
+* [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.
+* [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
+* [Design.md](Design.md) gives a high level introduction into the data design principals of *StorageLib* .
+
 
 
 

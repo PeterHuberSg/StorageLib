@@ -10,10 +10,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{207E4C18-EF19-4BA5-9DDB-F64F10EFB983}"
 	ProjectSection(SolutionItems) = preProject
 		DataModel.md = DataModel.md
+		Design.md = Design.md
 		Design.pptx = Design.pptx
 		Generator.jpg = Generator.jpg
 		LICENSE = LICENSE
-		Manual.md = Manual.md
 		README.md = README.md
 		Setup.md = Setup.md
 		YourAppSolution.pdn = YourAppSolution.pdn
@@ -32,9 +32,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDataContext", "Simple
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleDataModel", "SampleDataModel\SampleDataModel.csproj", "{670788D6-AB42-4E9B-8170-BA3940880D89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDataContext", "SampleDataContext\SampleDataContext.csproj", "{3D805B31-971E-49BB-90AA-8B40F630C922}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleDataContext", "SampleDataContext\SampleDataContext.csproj", "{3D805B31-971E-49BB-90AA-8B40F630C922}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDataConsole", "SampleDataConsole\SampleDataConsole.csproj", "{C2CB31B0-E6EE-4294-81FB-E8B4E3980944}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleDataConsole", "SampleDataConsole\SampleDataConsole.csproj", "{C2CB31B0-E6EE-4294-81FB-E8B4E3980944}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,5 +1,24 @@
-# Setup of *StorageLib* and your projects
+# Introduction  
+This document describes how to install a local copy of *StorageLib* on your PC and how to setup 
+VS for your own application using *StorageLib*.
 
+
+# Table of Contents  
+[**Setup StorageLib**](#setup-storagelib)  
+  
+[**Setup your application**](#setup-your-application)  
+[**-YourApplication 1**](#yourapplication-1)  
+[**-Project StorageClassGenerator 2**](#project-storageclassgenerator-2)  
+[**-Project StorageLib 3**](#project-storagelib-3)  
+[**-Project Data Model 4**](#project-data-model-4)  
+[**--Program.cs**](#program.cs)  
+[**--Data Model file**](#data-model-file)  
+[**-Project *Data Context* 5**](#project-data-context-5)  
+  
+[**Further Documentation**](#further-documentation)  
+
+
+# Setup StorageLib
 It might be easiest just to clone *StorageLib* to your PC. This allows you to step through the 
 *StorageLib* while debugging. *StorageLib* is extensively tested, but it might be interesting
 for you to see what it actually does.
@@ -8,7 +27,7 @@ If you clone *StorageLib*, you also need to Install Microsoft.CodeAnalysis.CShar
 with Nuget.
 
 
-
+# Setup your application
 For you own application, create a new solution which could be WPF, WinForm, Console, etc. :
 
 ![](YourAppSolution.png)
@@ -28,16 +47,16 @@ For this and all other projects you add, ensure that the project file contains a
 </PropertyGroup>
 ```
 
-## Project *StorageClassGenerator* 2
+## Project StorageClassGenerator 2
 Add the external project *StorageClassGenerator* from the *StorageLib* solution you cloned. 
 *StorageClassGenerator* translates the *data model* into the data classes you will use in
 your proagram.
 
-## Project *StorageLib* 3
+## Project StorageLib 3
 Add the external project *StorageLib* from the *StorageLib* solution you cloned. *StorageLib* 
 contains the code needed during runtime to store the data.
 
-## Project *Data Model* 4
+## Project Data Model 4
 Add a new *Console App* project to your solution with any name you like. In the example, the name is 
 *YourAppDataModel*. Remember to verify the project settings as described in chapter *YourApplication 1*. 
 Add a project reference to *StorageClassGenerator*. 
@@ -87,7 +106,7 @@ Update `context` if you want to change the name of the class giving static acces
 stored data. Since this name will be used very often in your code, a really short name is 
 recommended, like 'DC'.
 
-### Data Model file(s)
+### Data Model file
 You must add at least one or more .cs files with any names, which contain your *data model*. The 
 structure of these files could look like this:
 
@@ -129,7 +148,7 @@ namespace YourNamespace {
 Run your *DataModel* console project every time you make a change in your *Data Model*.
 
 
-## Project *Data Context* 5
+## Project Data Context 5
 Add a new Class Library project to your solution with any name you like. In the example, the name is 
 *YourAppDataContext*. Remember to verify the project settings as described in chapter *YourApplication 1*. 
 Add a project reference to *StorageLib*. 
@@ -157,6 +176,8 @@ constructor call.
 * A DC.cs file. It contains a partial *Data Context* class, where you can add your code if you 
 want to extend the behavior of the *Data Context*.
 
+
 # Further Documentation
-+ [Readme.md](Readme.md) gives an overview over *StorageLib*
-+ [Manual.md](Manual.md) describes the design of Storage and how to use it (work in progress).
+* [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.
+* [Design.md](Design.md) gives a high level introduction into the data design principals of *StorageLib* .
+* [DataModel.md](Design.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.

@@ -21,7 +21,10 @@ transactions and data backup.
 [**- Generated Data Model Classes**](#generated-data-model-classes)  
 [**- DC Data Context**](#DC-Data-Context)  
 [**- Transactions**](#transactions)  
-[**- Automatic data files compaction**](#automatic-data-files-compaction)
+[**- Automatic data files compaction**](#automatic-data-files-compaction)  
+  
+[**Further Documentation**](#further-documentation)  
+
 
 # Design principals
 
@@ -251,3 +254,8 @@ might get written and the .csv file contains the history instead. When the appli
 then starts again, the history will be executed, with the result that the data in 
 RAM is the same as when the application stopped suddenly.
 
+
+# Further Documentation
+* [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.
+* [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
+* [DataModel.md](Design.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.
