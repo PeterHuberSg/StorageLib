@@ -230,7 +230,6 @@ namespace DataModelSamples  {
         throw new Exception($"NeedsDictionaryLowerCaseClass.Release(): NeedsDictionaryLowerCaseClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
       DC.Data._NeedsDictionaryLowerCaseClasssByNameLower.Remove(NameLower);
-      DC.Data._NeedsDictionaryLowerCaseClasssByNameLower.Remove(NameLower);
       onReleased();
       DC.Data._NeedsDictionaryLowerCaseClasss.Remove(Key);
     }

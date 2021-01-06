@@ -1835,7 +1835,7 @@ namespace StorageLib {
         }
       }
       foreach (var mi in Members.Values) {
-        if (mi.MemberType<=MemberTypeEnum.Enum) {
+        if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
           writeNeedsDictionaryRemoveStatement(sw, mi, context);
         }
       }
@@ -2818,7 +2818,11 @@ namespace StorageLib {
           } else {
             part = $"{mi.TypeString} {mi.LowerMemberName}";
             if (isConstructor && mi.DefaultValue!=null) {
-              part += $" = {mi.DefaultValue}";
+              if (mi.MemberType==MemberTypeEnum.String) {
+                part += $" = \"{mi.DefaultValue}\"";
+              } else {
+                part += $" = {mi.DefaultValue}";
+              }
             }
           }
           lines.Add(part);

@@ -82,15 +82,15 @@ namespace DataModelSamples  {
       //DateTime dateSeconds, 
       //DateTime dateTimeTicks, 
       //TimeSpan timeSpanTicks, 
-      //decimal decimal, 
+      //decimal decimal_, 
       //decimal decimal2, 
       //decimal decimal4, 
       //decimal decimal5, 
-      //bool bool, 
-      //int int, 
-      //long long, 
-      //char char, 
-      //string string, 
+      //bool bool_, 
+      //int int_, 
+      //long long_, 
+      //char char_, 
+      //string string_, 
       //ref bool isCancelled)
    //{
    //}
