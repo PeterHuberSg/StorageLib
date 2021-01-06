@@ -45,10 +45,9 @@ to all stored data.
 
 
 # Further Documentation
-* [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.
 * [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
 * [Design.md](Design.md) gives a high level introduction into the data design principals of *StorageLib* .
-* [DataModel.md](Design.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.
+* [DataModel.md](DataModel.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.
 
 
 # Project Status
