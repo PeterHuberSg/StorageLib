@@ -45,11 +45,9 @@ to all stored data.
 
 
 # Further Documentation
-[Manual.md](Manual.md) describes the design of Storage and how to use it (work in progress).
+* [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
+* [Manual.md](Manual.md) describes the design of *StorageLib* and how to use it.
 
-See file DataModel.cs in the project SampleDataModel for a description how to setup your 
-application to define the data model, generate your classes and use them from your 
-application.
 
 # Project Status
 Coding completed and tested. However, a new and improved version is under development with
