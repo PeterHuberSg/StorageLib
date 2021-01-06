@@ -258,4 +258,4 @@ RAM is the same as when the application stopped suddenly.
 # Further Documentation
 * [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.
 * [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
-* [DataModel.md](DataModel.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.
+* [DataModel.md](DataModel.md) explains how to write your Data Model code, which defines the classes *StorageClassGenerator* will create for you.

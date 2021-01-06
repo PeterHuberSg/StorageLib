@@ -35,19 +35,55 @@ the storage requirement is not much bigger. Storing '1234567' as string takes th
 This library contains high performance *Readers* and *Writers* for CSV ('comma' separated values) 
 files and a code generator for the object related data model in RAM, using .Net 5.
 
-# Code Usage
-*StorageLib* comes with a code generator. It reads the definition of data classes from a *source
-directory* and writes new versions of the data classes with the abilities to write to and to read 
-from CSV files into the *target directory*, together with a *data context* class, which gives access
-to all stored data.
+
+# Using StorageLib
+*StorageLib* comes with a code generator. It reads the definition of data classes (=*Data 
+Model*) from a *source directory* and writes new versions of the data classes with the 
+abilities to write to and to read from CSV files into the *target directory*, together with 
+a *data context* class, which gives access to all stored data.
 
 ![](Generator.jpg)
+
+
+## Structure of StorageLib Solution
+
+The *StorageLib* solution has 4 parts:
+
+### Storage Libraries
+*StorageLib* consists of 2 .dll, which need to get added to the user's application:
+
+**StorageClassGenerator:** is used to translate the *Data Model* into data classes and a *Data Context*.  
+**StorageLib:** contains the run time code which provides the data storage functionality. 
+
+### Storage Libraries Tests
+The *StorageLib* testing consist of 3 projects:
+
+**TestDataModel:** defines the data used for testing  
+**TestDataContext:** contains the test data classes produced by *StorageClassGenerator*  
+**StorageTest:**  contains the actual tests
+
+### Simple Example Projects for first time user
+The projects with 'Simple' in its name show a new user how to create his own *Data Model* 
+and application cosuming the data.
+
+**SimpleDataModel:** A very simple *Data Model* explaining how to get started
+**SimpleDataContext:** Contains the data classes created based on *SimpleDataModel*
+**SimpleDataConsole:** Console application using SimpleDataContext, showing how to create, 
+update and delete data. 
+
+### Samples for all Data Model functionality
+The projects with 'Sample' in its name provides an sample code for every *Data Model* 
+functionality supported by *StorageLib*.
+
+**SampleDataModel:** Contains one class for each *Data Model* feature  
+**SampleDataContext:** Contains the data classes created based on *SampleDataModel*  
+**SampleDataConsole:** Console application using SampleDataContext, not really used 
 
 
 # Further Documentation
 * [Setup.md](Setup.md) describes how to install a local copy of *StorageLib* on your PC and how to setup VS for your own application using *StorageLib*.
 * [Design.md](Design.md) gives a high level introduction into the data design principals of *StorageLib* .
-* [DataModel.md](DataModel.md) explains how to write your Data Model code, which defines the classes *StorageLib* will create for you.
+* [DataModel.md](DataModel.md) explains how to write your Data Model code, which defines the classes *StorageClassGenerator* will create for you.
 
 
 # Project Status
