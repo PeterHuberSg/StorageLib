@@ -13,7 +13,7 @@ using System.Threading;
 using StorageLib;
 
 
-namespace StorageDataContext  {
+namespace TestContext  {
 
 
   public partial class SortedListParentNR: IStorageItemGeneric<SortedListParentNR> {

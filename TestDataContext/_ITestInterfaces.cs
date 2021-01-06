@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using StorageLib;
 
 
-namespace StorageDataContext {
+namespace TestContext {
 
   public interface ITestSimpleParent<TChild> where TChild: IStorageItem{
     string Text { get; }

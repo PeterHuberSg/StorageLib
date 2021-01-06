@@ -13,7 +13,7 @@ using System.Threading;
 using StorageLib;
 
 
-namespace StorageDataContext  {
+namespace TestContext  {
 
   /// <summary>
   /// A part of DC is static, which gives easy access to all stored data (=context) through DC.Data. But most functionality is in the
@@ -291,6 +291,18 @@ namespace StorageDataContext  {
     /// </summary>
     public IReadonlyDataStore<SortedListParentR> SortedListParentRs => _SortedListParentRs;
     internal DataStore<SortedListParentR> _SortedListParentRs { get; private set; }
+
+    /// <summary>
+    /// Directory of all TestChildren
+    /// </summary>
+    public IReadonlyDataStore<TestChild> TestChildren => _TestChildren;
+    internal DataStore<TestChild> _TestChildren { get; private set; }
+
+    /// <summary>
+    /// Directory of all TestParents
+    /// </summary>
+    public IReadonlyDataStore<TestParent> TestParents => _TestParents;
+    internal DataStore<TestParent> _TestParents { get; private set; }
     #endregion
 
 
@@ -308,7 +320,7 @@ namespace StorageDataContext  {
     /// program terminates. With csvConfig defined, existing data gets read at startup, changes get immediately
     /// written and Dispose() ensures by flushing that all data is permanently stored.
     /// </summary>
-    public DC(CsvConfig? csvConfig): base(DataStoresCount: 33) {
+    public DC(CsvConfig? csvConfig): base(DataStoresCount: 35) {
       data = this;
       IsInitialised = false;
 #if DEBUG
@@ -764,6 +776,32 @@ namespace StorageDataContext  {
           areInstancesReleasable: true);
         DataStores[32] = _NotMatchingChildrenListName_Childs;
         onNotMatchingChildrenListName_ChildsFilled();
+
+        _TestParents = new DataStore<TestParent>(
+          this,
+          33,
+          TestParent.SetKey,
+          TestParent.RollbackItemNew,
+          TestParent.RollbackItemStore,
+          TestParent.RollbackItemUpdate,
+          TestParent.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
+        DataStores[33] = _TestParents;
+        onTestParentsFilled();
+
+        _TestChildren = new DataStore<TestChild>(
+          this,
+          34,
+          TestChild.SetKey,
+          TestChild.RollbackItemNew,
+          TestChild.RollbackItemStore,
+          TestChild.RollbackItemUpdate,
+          TestChild.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
+        DataStores[34] = _TestChildren;
+        onTestChildrenFilled();
 
       } else {
         _LookupParents = new DataStoreCSV<LookupParent>(
@@ -1426,6 +1464,46 @@ namespace StorageDataContext  {
         DataStores[32] = _NotMatchingChildrenListName_Childs;
         onNotMatchingChildrenListName_ChildsFilled();
 
+        _TestParents = new DataStoreCSV<TestParent>(
+          this,
+          33,
+          csvConfig!,
+          TestParent.EstimatedLineLength,
+          TestParent.Headers,
+          TestParent.SetKey,
+          TestParent.Create,
+          null,
+          TestParent.Update,
+          TestParent.Write,
+          TestParent.RollbackItemNew,
+          TestParent.RollbackItemStore,
+          TestParent.RollbackItemUpdate,
+          TestParent.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
+        DataStores[33] = _TestParents;
+        onTestParentsFilled();
+
+        _TestChildren = new DataStoreCSV<TestChild>(
+          this,
+          34,
+          csvConfig!,
+          TestChild.EstimatedLineLength,
+          TestChild.Headers,
+          TestChild.SetKey,
+          TestChild.Create,
+          TestChild.Verify,
+          TestChild.Update,
+          TestChild.Write,
+          TestChild.RollbackItemNew,
+          TestChild.RollbackItemStore,
+          TestChild.RollbackItemUpdate,
+          TestChild.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
+        DataStores[34] = _TestChildren;
+        onTestChildrenFilled();
+
       }
       onConstructed();
       IsInitialised = true;
@@ -1609,6 +1687,16 @@ namespace StorageDataContext  {
     /// Called once the data for NotMatchingChildrenListName_Childs is read.
     /// </summary>}
     partial void onNotMatchingChildrenListName_ChildsFilled();
+
+    /// <summary>}
+    /// Called once the data for TestParents is read.
+    /// </summary>}
+    partial void onTestParentsFilled();
+
+    /// <summary>}
+    /// Called once the data for TestChildren is read.
+    /// </summary>}
+    partial void onTestChildrenFilled();
     #endregion
 
 
@@ -1640,6 +1728,10 @@ namespace StorageDataContext  {
     protected override void Dispose(bool disposing) {
       if (disposing) {
         onDispose();
+        _TestChildren?.Dispose();
+        _TestChildren = null!;
+        _TestParents?.Dispose();
+        _TestParents = null!;
         _NotMatchingChildrenListName_Childs?.Dispose();
         _NotMatchingChildrenListName_Childs = null!;
         _NotMatchingChildrenListName_Parents?.Dispose();

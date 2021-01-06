@@ -285,22 +285,22 @@ namespace TestContext {
 
   public class DictionaryParent {
     public string Text;
-    public Dictionary<string/*Text*/, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChidren;
   }
 
   public class DictionaryParentN {
     public string Text;
-    public Dictionary<string/*Text*/, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChidren;
   }
 
   public class DictionaryParentR {
     public string Text;
-    public Dictionary<string/*Text*/, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChidren;
   }
 
   public class DictionaryParentNR {
     public string Text;
-    public Dictionary<string/*Text*/, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChidren;
   }
 
   [StorageClass(pluralName: "DictionaryChidren")]
@@ -327,22 +327,22 @@ namespace TestContext {
 
   public class SortedListParent {
     public string Text;
-    public SortedList<string/*Text*/, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChidren;
   }
 
   public class SortedListParentN {
     public string Text;
-    public SortedList<string/*Text*/, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChidren;
   }
 
   public class SortedListParentR {
     public string Text;
-    public SortedList<string/*Text*/, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChidren;
   }
 
   public class SortedListParentNR {
     public string Text;
-    public SortedList<string/*Text*/, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChidren;
   }
 
   [StorageClass(pluralName: "SortedListChidren")]
@@ -710,6 +710,21 @@ namespace TestContext {
     /// Deletable children which must have a parent
     /// </summary>
     public NotMatchingChildrenListName_Parent Parent;
+  }
+  #endregion
+
+  #region Simple test child and parent
+  //      ----------------------------
+
+  public class TestParent {
+    public string Text;
+    public List<TestChild> Children;
+  }
+
+  [StorageClass(pluralName: "TestChildren")]
+  public class TestChild {
+    public string Text;
+    public TestParent Parent;
   }
   #endregion
 

@@ -33,7 +33,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
-using StorageDataContext;
+using TestContext;
 using System.Linq;
 
 namespace StorageTest {

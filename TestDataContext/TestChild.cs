@@ -6,7 +6,7 @@ using StorageLib;
 namespace TestContext  {
 
 
-  public partial class ListParentNR: IStorageItemGeneric<ListParentNR> {
+  public partial class TestChild: IStorageItemGeneric<TestChild> {
 
 
     #region Properties
@@ -34,7 +34,7 @@ namespace TestContext  {
     /// <summary>
     /// Called once the cloning constructor has filled all the properties. Clones have no children data.
     /// </summary>
-    partial void onCloned(ListParentNR clone) {
+    partial void onCloned(TestChild clone) {
     }
 
 
@@ -59,79 +59,72 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Called after ListParentNR.Store() is executed
+    /// Called after TestChild.Store() is executed
     /// </summary>
     partial void onStored() {
     }
 
 
     /// <summary>
-    /// Called before ListParentNR gets written to a CSV file
+    /// Called before TestChild gets written to a CSV file
     /// </summary>
     partial void onCsvWrite() {
     }
 
 
     /// <summary>
-    /// Called before any property of ListParentNR is updated and before the HasChanged event gets raised
+    /// Called before any property of TestChild is updated and before the HasChanged event gets raised
     /// </summary>
-    partial void onUpdating(string text, ref bool isCancelled){
+    partial void onUpdating(string text, TestParent parent, ref bool isCancelled){
    }
 
 
     /// <summary>
-    /// Called after all properties of ListParentNR are updated, but before the HasChanged event gets raised
+    /// Called after all properties of TestChild are updated, but before the HasChanged event gets raised
     /// </summary>
-    partial void onUpdated(ListParentNR old) {
+    partial void onUpdated(TestChild old) {
     }
 
 
     /// <summary>
-    /// Called after an update for ListParentNR is read from a CSV file
+    /// Called after an update for TestChild is read from a CSV file
     /// </summary>
     partial void onCsvUpdate() {
     }
 
 
     /// <summary>
-    /// Called after ListParentNR.Release() got executed
+    /// Called after TestChild.Release() got executed
     /// </summary>
     partial void onReleased() {
     }
 
 
     /// <summary>
-    /// Called after 'new ListParentNR()' transaction is rolled back
+    /// Called after 'new TestChild()' transaction is rolled back
     /// </summary>
     partial void onRollbackItemNew() {
     }
 
 
     /// <summary>
-    /// Called after ListParentNR.Store() transaction is rolled back
+    /// Called after TestChild.Store() transaction is rolled back
     /// </summary>
     partial void onRollbackItemStored() {
     }
 
 
     /// <summary>
-    /// Called after ListParentNR.Update() transaction is rolled back
+    /// Called after TestChild.Update() transaction is rolled back
     /// </summary>
-    partial void onRollbackItemUpdated(ListParentNR oldListParentNR) {
+    partial void onRollbackItemUpdated(TestChild oldTestChild) {
     }
 
 
     /// <summary>
-    /// Called after ListParentNR.Release() transaction is rolled back
+    /// Called after TestChild.Release() transaction is rolled back
     /// </summary>
     partial void onRollbackItemRelease() {
-    }
-
-
-    /// <summary>
-    /// Called after a listChild gets added to Children.
-    /// </summary>
-    partial void onAddedToChildren(ListChild listChild){
     }
 
 

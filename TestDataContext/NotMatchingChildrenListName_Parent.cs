@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using StorageLib;
 
 
-namespace StorageDataContext  {
+namespace TestContext  {
 
 
     /// <summary>

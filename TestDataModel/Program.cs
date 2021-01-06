@@ -30,9 +30,12 @@ namespace StorageModel {
 
 
     public static void Main(string[] _) {
-      var storageSolutionDirectory = new DirectoryInfo(Environment.CurrentDirectory).Parent!.Parent!.Parent!.Parent!;
-      var sourceDirectoryPath = storageSolutionDirectory.FullName + @"\StorageModel";
-      var targetDirectoryPath = storageSolutionDirectory.FullName + @"\StorageDataContext";
+      //here are the .cs file(s) with the data model
+      var sourceDirectory = new DirectoryInfo(Environment.CurrentDirectory).Parent!.Parent!.Parent!;
+      //path to VS solution of your project
+      var solutionDirectory = sourceDirectory.Parent!;
+      //path of the VS project where the created code should be generated
+      var targetDirectoryPath = solutionDirectory.FullName + @"\TestDataContext"; 
 
       #region normally not needed code ---------------------------------------------------------------
       //normally, do not delete all files in targetDirectory, because manual changes in Xxx.CS files would get lost.
@@ -48,7 +51,7 @@ namespace StorageModel {
 
       #pragma warning disable CA1806 // Do not ignore method results
       new StorageClassGenerator(
-        sourceDirectoryString: sourceDirectoryPath, //directory from where the .cs files get read.
+        sourceDirectoryString: sourceDirectory.FullName, //directory from where the .cs files get read.
         targetDirectoryString: targetDirectoryPath, //directory where the new .cs files get written.
         context: "DC", //class name of data context, which gives static access to all data stored.
                        //isTracing: TracingEnum.noTracing, //defines if tracing instructions should get added to the code

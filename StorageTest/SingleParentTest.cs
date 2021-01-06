@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
-using StorageDataContext;
+using TestContext;
 
 
 namespace StorageTest {

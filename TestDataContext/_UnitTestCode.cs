@@ -5,7 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StorageDataContext {
+
+namespace TestContext {
 
   //partial class SimpleParent: ITestSimpleParent<SimpleChild> { }
   //partial class SimpleParentN: ITestSimpleParent<SimpleChild> { }

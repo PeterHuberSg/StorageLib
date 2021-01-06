@@ -13,7 +13,7 @@ using System.Threading;
 using StorageLib;
 
 
-namespace StorageDataContext  {
+namespace TestContext  {
 
 
     /// <summary>
@@ -408,14 +408,9 @@ namespace StorageDataContext  {
         DC.Data._PropertyNeedsDictionaryClassesByIdString.Remove(IdString);
       }
       DC.Data._PropertyNeedsDictionaryClassesByTextLower.Remove(TextLower);
-      DC.Data._PropertyNeedsDictionaryClassesByTextLower.Remove(TextLower);
       if (TextNullableLower!=null) {
         DC.Data._PropertyNeedsDictionaryClassesByTextNullableLower.Remove(TextNullableLower);
       }
-      if (TextNullableLower!=null) {
-        DC.Data._PropertyNeedsDictionaryClassesByTextNullableLower.Remove(TextNullableLower);
-      }
-      DC.Data._PropertyNeedsDictionaryClassesByTextReadonlyLower.Remove(TextReadonlyLower);
       DC.Data._PropertyNeedsDictionaryClassesByTextReadonlyLower.Remove(TextReadonlyLower);
       onReleased();
       DC.Data._PropertyNeedsDictionaryClasses.Remove(Key);
