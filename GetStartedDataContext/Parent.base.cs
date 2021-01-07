@@ -13,7 +13,7 @@ using System.Threading;
 using StorageLib;
 
 
-namespace YourNameSpace  {
+namespace YourNamespace  {
 
 
     /// <summary>
@@ -34,13 +34,13 @@ namespace YourNameSpace  {
 
 
     /// <summary>
-    /// Some Text comment
+    /// Some Name comment
     /// </summary>
-    public string Text { get; }
+    public string Name { get; private set; }
 
 
     /// <summary>
-    /// List representing parent child relationship
+    /// Any child created will automatically get added here.
     /// </summary>
     public IReadOnlyList<Child> Children => children;
     readonly List<Child> children;
@@ -49,13 +49,13 @@ namespace YourNameSpace  {
     /// <summary>
     /// Headers written to first line in CSV file
     /// </summary>
-    internal static readonly string[] Headers = {"Text"};
+    internal static readonly string[] Headers = {"Key", "Name"};
 
 
     /// <summary>
     /// None existing Parent
     /// </summary>
-    internal static Parent NoParent = new Parent("NoText", isStoring: false);
+    internal static Parent NoParent = new Parent("NoName", isStoring: false);
     #endregion
 
 
@@ -63,11 +63,9 @@ namespace YourNameSpace  {
     //      ------
 
     /// <summary>
-    /// This event will never be raised, but is needed to comply with IStorage.
+    /// Content of Parent has changed. Gets only raised for changes occurring after loading DC.Data with previously stored data.
     /// </summary>
-#pragma warning disable 67
     public event Action</*old*/Parent, /*new*/Parent>? HasChanged;
-#pragma warning restore 67
     #endregion
 
 
@@ -77,9 +75,9 @@ namespace YourNameSpace  {
     /// <summary>
     /// Parent Constructor. If isStoring is true, adds Parent to DC.Data.Parents.
     /// </summary>
-    public Parent(string text, bool isStoring = true) {
+    public Parent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
-      Text = text;
+      Name = name;
       children = new List<Child>();
       onConstruct();
       if (DC.Data.IsTransaction) {
@@ -100,7 +98,7 @@ namespace YourNameSpace  {
     public Parent(Parent original) {
     #pragma warning restore CS8618 //
       Key = StorageExtensions.NoKey;
-      Text = original.Text;
+      Name = original.Name;
       onCloned(this);
     }
     partial void onCloned(Parent clone);
@@ -111,7 +109,7 @@ namespace YourNameSpace  {
     /// </summary>
     private Parent(int key, CsvReader csvReader){
       Key = key;
-      Text = csvReader.ReadString();
+      Name = csvReader.ReadString();
       children = new List<Child>();
       onCsvConstruct();
     }
@@ -161,9 +159,49 @@ namespace YourNameSpace  {
     /// </summary>
     internal static void Write(Parent parent, CsvWriter csvWriter) {
       parent.onCsvWrite();
-      csvWriter.Write(parent.Text);
+      csvWriter.Write(parent.Name);
     }
     partial void onCsvWrite();
+
+
+    /// <summary>
+    /// Updates Parent with the provided values
+    /// </summary>
+    public void Update(string name) {
+      var clone = new Parent(this);
+      var isCancelled = false;
+      onUpdating(name, ref isCancelled);
+      if (isCancelled) return;
+
+
+      //update properties and detect if any value has changed
+      var isChangeDetected = false;
+      if (Name!=name) {
+        Name = name;
+        isChangeDetected = true;
+      }
+      if (isChangeDetected) {
+        onUpdated(clone);
+        if (Key>=0) {
+          DC.Data._Parents.ItemHasChanged(clone, this);
+        } else if (DC.Data.IsTransaction) {
+          DC.Data.AddTransaction(new TransactionItem(0, TransactionActivityEnum.Update, Key, this, oldItem: clone));
+        }
+        HasChanged?.Invoke(clone, this);
+      }
+    }
+    partial void onUpdating(string name, ref bool isCancelled);
+    partial void onUpdated(Parent old);
+
+
+    /// <summary>
+    /// Updates this Parent with values from CSV file
+    /// </summary>
+    internal static void Update(Parent parent, CsvReader csvReader){
+      parent.Name = csvReader.ReadString();
+      parent.onCsvUpdate();
+    }
+    partial void onCsvUpdate();
 
 
     /// <summary>
@@ -196,11 +234,22 @@ namespace YourNameSpace  {
 
 
     /// <summary>
-    /// Releasing Parent from DC.Data.Parents is not supported.
+    /// Removes Parent from DC.Data.Parents.
     /// </summary>
     public void Release() {
-      throw new NotSupportedException("Release() is not supported, StorageClass attribute AreInstancesReleasable is false.");
+      if (Key<0) {
+        throw new Exception($"Parent.Release(): Parent '{this}' is not stored in DC.Data, key is {Key}.");
+      }
+      foreach (var child in Children) {
+        if (child?.Key>=0) {
+          throw new Exception($"Cannot release Parent '{this}' " + Environment.NewLine + 
+            $"because '{child}' in Parent.Children is still stored.");
+        }
+      }
+      onReleased();
+      DC.Data._Parents.Remove(Key);
     }
+    partial void onReleased();
 
 
     /// <summary>
@@ -230,14 +279,8 @@ namespace YourNameSpace  {
       var oldItem = (Parent) oldStorageItem;//an item clone with the values before item was updated
       var item = (Parent) newStorageItem;//is the instance whose values should be restored
 
-      // if possible, throw exceptions before changing anything
-      if (item.Text!=oldItem.Text) {
-        throw new Exception($"Parent.Update(): Property Text '{item.Text}' is " +
-          $"readonly, Text '{oldItem.Text}' should be the same." + Environment.NewLine + 
-          item.ToString());
-      }
-
       // updated item: restore old values
+      item.Name = oldItem.Name;
       item.onRollbackItemUpdated(oldItem);
     }
     partial void onRollbackItemUpdated(Parent oldParent);
@@ -259,7 +302,7 @@ namespace YourNameSpace  {
     public string ToTraceString() {
       var returnString =
         $"{this.GetKeyOrHash()}|" +
-        $" {Text}";
+        $" {Name}";
       onToTraceString(ref returnString);
       return returnString;
     }
@@ -272,7 +315,7 @@ namespace YourNameSpace  {
     public string ToShortString() {
       var returnString =
         $"{Key.ToKeyString()}," +
-        $" {Text}";
+        $" {Name}";
       onToShortString(ref returnString);
       return returnString;
     }
@@ -285,7 +328,7 @@ namespace YourNameSpace  {
     public override string ToString() {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
-        $" Text: {Text}," +
+        $" Name: {Name}," +
         $" Children: {Children.Count};";
       onToString(ref returnString);
       return returnString;

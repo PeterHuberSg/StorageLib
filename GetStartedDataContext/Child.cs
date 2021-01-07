@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using StorageLib;
 
 
-namespace YourNameSpace  {
+namespace YourNamespace  {
 
 
-    /// <summary>
-    /// Some comment for Child
-    /// </summary>
   public partial class Child: IStorageItemGeneric<Child> {
 
 
@@ -78,7 +75,7 @@ namespace YourNameSpace  {
     /// <summary>
     /// Called before any property of Child is updated and before the HasChanged event gets raised
     /// </summary>
-    //partial void onUpdating(string text, Parent parent, ref bool isCancelled){
+    //partial void onUpdating(Parent parent, ref bool isCancelled){
    //}
 
 

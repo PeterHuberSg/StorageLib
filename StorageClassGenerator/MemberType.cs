@@ -46,38 +46,4 @@ namespace StorageLib {
     SortedList,
     Lenght
   }
-
-
-  ////extension methods for MemberTypeEnum
-  //public static class MemberTypeExtensions {
-
-
-  //  static readonly string?[] baseTypeStrings = {
-  //  null, //Undefined
-  //  "DateTime", //Date,
-  //  "DateTime", //Time,
-  //  "DateTime", //DateMinutes,
-  //  "DateTime", //DateSeconds,
-  //  "DateTime", //DateTime,
-  //  "Decimal", //Decimal,
-  //  "Decimal", //Decimal2,
-  //  "Decimal", //Decimal4,
-  //  "Decimal", //Decimal5,
-  //  "bool", //Bool,
-  //  "int", //Int,
-  //  null, //List,
-  //  null, //Dictionary,
-  //  null, //Parent,
-  //  "string", //String,
-  //  null, //Enum,
-  //  };
-
-
-  //  /// <summary>
-  //  /// Converts a specialised CSV type to a .NET type, like Decimal2 to Decimal or DateMinutes to DateTime
-  //  /// </summary>
-  //  public static string? ToBaseType(this MemberTypeEnum memberType) {
-  //    return baseTypeStrings[(int)memberType];
-  //  }
-  //}
 }

@@ -446,38 +446,6 @@ namespace StorageLib {
               throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
                 mi.MemberText);
 
-            //bool isKeyFound = false;
-            //foreach (var childMI in mi.ChildClassInfo.Members.Values) {
-            //  if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
-            //    isFound = true;
-            //    mi.IsChildReadOnly |= childMI.IsReadOnly;
-            //    foreach (var childKeyMI in mi.ChildClassInfo.Members.Values) {
-            //      //if (mi.ChildKeyPropertyName==childKeyMI.MemberName) {
-            //      if (mi.ChildKeyPropertyName==childKeyMI.MemberName) {
-            //        if (mi.ChildKeyTypeString!=childKeyMI.CsvTypeString && mi.ChildKeyTypeString!=childKeyMI.TypeString) {
-            //          throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-            //            $"{childKeyMI.ClassInfo.ClassName}.{childKeyMI.MemberName}, but it has wrong type: " +
-            //            $"{childKeyMI.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
-            //        }
-            //        isKeyFound = true;
-            //        mi.ChildMemberInfo = childMI;
-            //        if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-            //          //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
-            //          mi.TypeString = $"SortedList<{childKeyMI.TypeString}, {childKeyMI.ClassInfo.ClassName}>";
-            //          mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMI.TypeString}, {childKeyMI.ClassInfo.ClassName}>";
-            //        } else {
-            //          //Dictionary
-            //          //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
-            //          mi.TypeString = $"Dictionary<{childKeyMI.TypeString}, {childKeyMI.ClassInfo.ClassName}>";
-            //          mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMI.TypeString}, {childKeyMI.ClassInfo.ClassName}>";
-            //        }
-            //        break;
-            //      }
-            //    }
-            //    if (isKeyFound) break;
-            //  }
-            //}
-
             //search for member in child class which has a parent linking to mi
             foreach (var childMI in mi.ChildClassInfo.Members.Values) {
               if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
@@ -809,6 +777,7 @@ namespace StorageLib {
         sw.WriteLine();
       }
       sw.WriteLine("      } else {");
+      sw.WriteLine("        IsPartiallyNew = false;");
       foreach (var classInfo in parentChildTree) {
         sw.WriteLine($"        _{classInfo.PluralName} = new DataStoreCSV<{classInfo.ClassName}>(");
         sw.WriteLine("          this,");
@@ -841,13 +810,10 @@ namespace StorageLib {
         } else {
           sw.WriteLine($"          null,");
         }
-        //if (classInfo.AreInstancesReleasable) {
-        //  sw.WriteLine($"          {classInfo.ClassName}.PerformRelease,");
-        //} else {
-        //  sw.WriteLine($"          null,");
-        //}
         sw.WriteLine($"          areInstancesUpdatable: {classInfo.AreInstancesUpdatable.ToString().ToLowerInvariant()},");
         sw.WriteLine($"          areInstancesReleasable: {classInfo.AreInstancesReleasable.ToString().ToLowerInvariant()});");
+        sw.WriteLine($"        IsPartiallyNew |= _{classInfo.PluralName}.IsNew;");
+        sw.WriteLine($"        IsNew &= _{classInfo.PluralName}.IsNew;");
         sw.WriteLine($"        DataStores[{classInfo.StoreKey}] = _{classInfo.PluralName};");
         sw.WriteLine($"        on{classInfo.PluralName}Filled();");
         //WriteLinesTracing(sw, IsTracing,

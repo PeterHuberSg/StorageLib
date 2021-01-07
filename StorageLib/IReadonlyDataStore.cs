@@ -64,6 +64,12 @@ namespace StorageLib {
 
 
     /// <summary>
+    /// Returns true if no permanent stored data was found
+    /// </summary>
+    public bool IsNew { get; }
+
+
+    /// <summary>
     /// AddProtected(), ItemHasChanged() and Remove() set this flag when they discover that a new transaction has started. When that happens,
     /// DataStoreCsv.OnStartTransaction gets called. 
     /// </summary>

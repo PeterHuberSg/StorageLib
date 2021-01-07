@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using StorageLib;
 
 
-namespace YourNameSpace  {
+namespace YourNamespace  {
 
 
-    /// <summary>
-    /// Some comment for Parent.
-    /// </summary>
+  /// <summary>
+  /// Some comment for Parent.
+  /// </summary>
   public partial class Parent: IStorageItemGeneric<Parent> {
 
 

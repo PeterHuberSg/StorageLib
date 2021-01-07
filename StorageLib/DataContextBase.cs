@@ -38,6 +38,18 @@ namespace StorageLib {
     //      ----------
 
     /// <summary>
+    /// Returns true if no permanent stored data was found for any DataStores
+    /// </summary>
+    public bool IsNew { get; protected set; }
+
+
+    /// <summary>
+    /// Returns true if no permanent stored data was found for some DataStores
+    /// </summary>
+    public bool IsPartiallyNew { get; protected set; }
+
+
+    /// <summary>
     /// StartTransaction() sets it true, CommitTransaction() and RollbackTransaction() set it false.
     /// </summary>
     public bool IsTransaction { get; protected set; }
@@ -82,6 +94,8 @@ namespace StorageLib {
       }
       isStaticDisposed = 0;
 
+      IsPartiallyNew = true;
+      IsNew = true;
       DataStores = new DataStore[DataStoresCount];
       TransactionItems = new List<TransactionItem>();
       TransactionStoreFlags = new bool[DataStoresCount];

@@ -89,43 +89,6 @@ namespace StorageLib {
     //Timer? flushTimer;
 
 
-    ///// <summary>
-    ///// Constructs a readonly DataStoreCSV. If a CSV file exists already, its content gets read at startup. If no CSV
-    ///// file exists, an empty one gets created with a header line.
-    ///// </summary>
-    ///// <param name="dataContext">DataContext creating this DataStore</param>
-    ///// <param name="storeKey">Unique number to identify DataStore</param>
-    ///// <param name="csvConfig">File name and other parameters for CSV file</param>
-    ///// <param name="maxLineLenght">Maximal number of bytes needed to write one line</param>
-    ///// <param name="headers">Name for each item property</param>
-    ///// <param name="setKey">Called when an item gets added to set its Key</param>
-    ///// <param name="create">Creates a new item with one line read from the CSV file</param>
-    ///// <param name="verify">Verifies item, for example it parent(s) exist</param>
-    ///// <param name="write">Writes item to CSV file</param>
-    ///// <param name="rollbackItemStore">Undo of data change in item during transaction due to Store()</param>
-    ///// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to Update()</param>
-    ///// <param name="rollbackItemRemove">Undo of data change in item during transaction due to Remove()</param>
-    ///// <param name="capacity">How many items should DataStoreCSV by able to hold initially ?</param>
-    ///// <param name="flushDelay">When the items in DataStoreCSV are not changed for flushDelay milliseconds, the internal
-    ///// buffer gets written to the CSV file.</param>
-    //public DataStoreCSV(
-    //  DataContextBase? dataContext,
-    //  int storeKey,
-    //  CsvConfig csvConfig,
-    //  int maxLineLenght,
-    //  string[] headers,
-    //  Action<IStorageItem, int, /*isRollback*/bool> setKey,
-    //  Func<int, CsvReader, TItemCSV> create,
-    //  Func<TItemCSV, bool>? verify,
-    //  Action<TItemCSV, CsvWriter> write,
-    //  Action<IStorageItem> rollbackItemStore,
-    //  Action</*old*/IStorageItem, /*new*/IStorageItem> rollbackItemUpdate,
-    //  Action<IStorageItem> rollbackItemRemove,
-    //  int capacity = 0,
-    //  int flushDelay = 200) : this(dataContext, storeKey, csvConfig, maxLineLenght, headers, setKey, create, verify, null, 
-    //    write, rollbackItemStore, rollbackItemUpdate, rollbackItemRemove, null, false, false, capacity, flushDelay) {}
-
-
     /// <summary>
     /// Constructs a DataStoreCSV. If a CSV file exists already, its content gets read at startup. If no CSV file 
     /// exists, an empty one gets created with a header line.
@@ -184,6 +147,7 @@ namespace StorageLib {
       PathFileName = Csv.ToPathFileName(csvConfig, typeof(TItemCSV).Name);
       fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, csvConfig.BufferSize, FileOptions.SequentialScan);
       if (fileStream.Length>0) {
+        IsNew = false;
         using (var csvReader = new CsvReader(null, CsvConfig, maxLineLenght, fileStream)) {
           isInitialReading = true;
           readFromCsvFile(csvReader);

@@ -12,7 +12,7 @@ using System.Threading;
 using StorageLib;
 
 
-namespace YourNameSpace  {
+namespace YourNamespace  {
 
   /// <summary>
   /// A part of DC is static, which gives easy access to all stored data (=context) through DC.Data. But most functionality is in the
@@ -104,10 +104,10 @@ namespace YourNameSpace  {
           Parent.SetKey,
           Parent.RollbackItemNew,
           Parent.RollbackItemStore,
-          null,
-          null,
-          areInstancesUpdatable: false,
-          areInstancesReleasable: false);
+          Parent.RollbackItemUpdate,
+          Parent.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
         DataStores[0] = _Parents;
         onParentsFilled();
 
@@ -125,6 +125,7 @@ namespace YourNameSpace  {
         onChildrenFilled();
 
       } else {
+        IsPartiallyNew = false;
         _Parents = new DataStoreCSV<Parent>(
           this,
           0,
@@ -134,14 +135,16 @@ namespace YourNameSpace  {
           Parent.SetKey,
           Parent.Create,
           null,
-          null,
+          Parent.Update,
           Parent.Write,
           Parent.RollbackItemNew,
           Parent.RollbackItemStore,
-          null,
-          null,
-          areInstancesUpdatable: false,
-          areInstancesReleasable: false);
+          Parent.RollbackItemUpdate,
+          Parent.RollbackItemRelease,
+          areInstancesUpdatable: true,
+          areInstancesReleasable: true);
+        IsPartiallyNew |= _Parents.IsNew;
+        IsNew &= _Parents.IsNew;
         DataStores[0] = _Parents;
         onParentsFilled();
 
@@ -162,6 +165,8 @@ namespace YourNameSpace  {
           Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Children.IsNew;
+        IsNew &= _Children.IsNew;
         DataStores[1] = _Children;
         onChildrenFilled();
 

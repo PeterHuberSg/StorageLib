@@ -13,12 +13,9 @@ using System.Threading;
 using StorageLib;
 
 
-namespace YourNameSpace  {
+namespace YourNamespace  {
 
 
-    /// <summary>
-    /// Some comment for Child
-    /// </summary>
   public partial class Child: IStorageItemGeneric<Child> {
 
     #region Properties
@@ -33,14 +30,11 @@ namespace YourNameSpace  {
     }
 
 
-    /// <summary>
-    /// Some Text comment
-    /// </summary>
-    public string Text { get; private set; }
+    public string Name { get; private set; }
 
 
     /// <summary>
-    /// Some Parent comment
+    /// The child will get added to its parent Children collection.
     /// </summary>
     public Parent Parent { get; private set; }
 
@@ -48,13 +42,13 @@ namespace YourNameSpace  {
     /// <summary>
     /// Headers written to first line in CSV file
     /// </summary>
-    internal static readonly string[] Headers = {"Key", "Text", "Parent"};
+    internal static readonly string[] Headers = {"Key", "Name", "Parent"};
 
 
     /// <summary>
     /// None existing Child
     /// </summary>
-    internal static Child NoChild = new Child("NoText", Parent.NoParent, isStoring: false);
+    internal static Child NoChild = new Child("NoName", Parent.NoParent, isStoring: false);
     #endregion
 
 
@@ -74,9 +68,9 @@ namespace YourNameSpace  {
     /// <summary>
     /// Child Constructor. If isStoring is true, adds Child to DC.Data.Children.
     /// </summary>
-    public Child(string text, Parent parent, bool isStoring = true) {
+    public Child(string name, Parent parent, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
-      Text = text;
+      Name = name;
       Parent = parent;
       Parent.AddToChildren(this);
       onConstruct();
@@ -98,7 +92,7 @@ namespace YourNameSpace  {
     public Child(Child original) {
     #pragma warning restore CS8618 //
       Key = StorageExtensions.NoKey;
-      Text = original.Text;
+      Name = original.Name;
       Parent = original.Parent;
       onCloned(this);
     }
@@ -110,7 +104,7 @@ namespace YourNameSpace  {
     /// </summary>
     private Child(int key, CsvReader csvReader){
       Key = key;
-      Text = csvReader.ReadString();
+      Name = csvReader.ReadString();
       var parentKey = csvReader.ReadInt();
       Parent = DC.Data._Parents.GetItem(parentKey)??
         throw new Exception($"Read Child from CSV file: Cannot find Parent with key {parentKey}." + Environment.NewLine + 
@@ -178,7 +172,7 @@ namespace YourNameSpace  {
     /// </summary>
     internal static void Write(Child child, CsvWriter csvWriter) {
       child.onCsvWrite();
-      csvWriter.Write(child.Text);
+      csvWriter.Write(child.Name);
       if (child.Parent.Key<0) throw new Exception($"Cannot write child '{child}' to CSV File, because Parent is not stored in DC.Data.Parents.");
 
       csvWriter.Write(child.Parent.Key.ToString());
@@ -189,7 +183,7 @@ namespace YourNameSpace  {
     /// <summary>
     /// Updates Child with the provided values
     /// </summary>
-    public void Update(string text, Parent parent) {
+    public void Update(string name, Parent parent) {
       if (Key>=0){
         if (parent.Key<0) {
           throw new Exception($"Child.Update(): It is illegal to add stored Child '{this}'" + Environment.NewLine + 
@@ -198,7 +192,7 @@ namespace YourNameSpace  {
       }
       var clone = new Child(this);
       var isCancelled = false;
-      onUpdating(text, parent, ref isCancelled);
+      onUpdating(name, parent, ref isCancelled);
       if (isCancelled) return;
 
 
@@ -210,8 +204,8 @@ namespace YourNameSpace  {
 
       //update properties and detect if any value has changed
       var isChangeDetected = false;
-      if (Text!=text) {
-        Text = text;
+      if (Name!=name) {
+        Name = name;
         isChangeDetected = true;
       }
       if (Parent!=parent) {
@@ -233,7 +227,7 @@ namespace YourNameSpace  {
         HasChanged?.Invoke(clone, this);
       }
     }
-    partial void onUpdating(string text, Parent parent, ref bool isCancelled);
+    partial void onUpdating(string name, Parent parent, ref bool isCancelled);
     partial void onUpdated(Child old);
 
 
@@ -241,7 +235,7 @@ namespace YourNameSpace  {
     /// Updates this Child with values from CSV file
     /// </summary>
     internal static void Update(Child child, CsvReader csvReader){
-      child.Text = csvReader.ReadString();
+      child.Name = csvReader.ReadString();
         var parent = DC.Data._Parents.GetItem(csvReader.ReadInt())??
           Parent.NoParent;
       if (child.Parent!=parent) {
@@ -306,7 +300,7 @@ namespace YourNameSpace  {
       }
 
       // updated item: restore old values
-      item.Text = oldItem.Text;
+      item.Name = oldItem.Name;
       item.Parent = oldItem.Parent;
 
       // add item with previous values to parents
@@ -334,7 +328,7 @@ namespace YourNameSpace  {
     public string ToTraceString() {
       var returnString =
         $"{this.GetKeyOrHash()}|" +
-        $" {Text}|" +
+        $" {Name}|" +
         $" Parent {Parent.GetKeyOrHash()}";
       onToTraceString(ref returnString);
       return returnString;
@@ -348,7 +342,7 @@ namespace YourNameSpace  {
     public string ToShortString() {
       var returnString =
         $"{Key.ToKeyString()}," +
-        $" {Text}," +
+        $" {Name}," +
         $" {Parent.ToShortString()}";
       onToShortString(ref returnString);
       return returnString;
@@ -362,7 +356,7 @@ namespace YourNameSpace  {
     public override string ToString() {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
-        $" Text: {Text}," +
+        $" Name: {Name}," +
         $" Parent: {Parent.ToShortString()};";
       onToString(ref returnString);
       return returnString;

@@ -20,7 +20,7 @@ using System;
 using System.IO;
 using System.Text;
 using StorageLib;
-using YourNameSpace; //The name of this namespace is defined in your Data Model
+using YourNamespace; //The name of this namespace is defined in your Data Model
 
 
 namespace GetStartedConsole {
@@ -46,7 +46,7 @@ namespace GetStartedConsole {
         Parent parent0;
         Parent parent1;
         Child child0;
-        if (dc.Parents.Count==0) {
+        if (dc.IsNew) {
           //new data context, we come here only the very first time Program runs or when the .csv gets deleted
           parent0 = new Parent("Parent0"); //per default, new stores instance in Data Context
           parent1 = new Parent("Parent1", isStoring: false); //example where new instance is not stored yet
@@ -63,7 +63,7 @@ namespace GetStartedConsole {
         }
 
         //update without transaction
-        child0.Update(child0.Text + " updated", parent1);
+        child0.Update(child0.Name + " updated", parent1);
         consoleWriteLine("After simple update", parent0, parent1, child0);
 
         //a normal transaction
@@ -80,7 +80,7 @@ namespace GetStartedConsole {
 
         //showing that transaction rollback really works
         dc.StartTransaction();
-        child0.Update(child0.Text + " updated before rollback", parent1);
+        child0.Update(child0.Name + " updated before rollback", parent1);
         consoleWriteLine("After update, before rollback", parent0, parent1, child0);
         dc.RollbackTransaction(); //normally, a dc.CommitTransaction() would be here
         consoleWriteLine("After transaction rollback", parent0, parent1, child0);

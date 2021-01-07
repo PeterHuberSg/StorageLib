@@ -53,7 +53,7 @@ namespace YourNamespace {
 
   [StorageClass(pluralName: "Children")]
   public class Child {
-    public readonly string Name;
+    public string Name;
 
     /// <summary>
     /// The child will get added to its parent Children collection.

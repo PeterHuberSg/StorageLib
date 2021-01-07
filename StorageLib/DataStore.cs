@@ -73,6 +73,12 @@ namespace StorageLib {
 
 
     /// <summary>
+    /// Returns true if no permanent stored data was found
+    /// </summary>
+    public bool IsNew { get; protected set; }
+
+
+    /// <summary>
     /// AddProtected(), ItemHasChanged() and Remove() set this flag when they discover that a new transaction has started. When that happens,
     /// DataStoreCsv.OnStartTransaction gets called. 
     /// </summary>
@@ -144,6 +150,7 @@ namespace StorageLib {
       StoreKey = storeKey;
       AreInstancesUpdatable = areInstancesUpdatable;
       AreInstancesReleasable = areInstancesReleasable;
+      IsNew = true;
     }
     #endregion
 
