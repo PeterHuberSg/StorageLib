@@ -26,7 +26,8 @@ using YourNamespace; //The name of this namespace is defined in your Data Model
 namespace GetStartedConsole {
   class Program {
     static void Main(string[] args) {
-      Console.ForegroundColor = ConsoleColor.White;
+      Console.BackgroundColor = ConsoleColor.White;
+      Console.ForegroundColor = ConsoleColor.Black;
       Console.SetWindowSize(Console.LargestWindowWidth, Console.LargestWindowHeight);
       Console.WriteLine("StorageLib Get Started Application");
       Console.WriteLine("==================================");
@@ -146,7 +147,7 @@ namespace GetStartedConsole {
               c = newText[++newIndex];
             }
             var oldColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write(newText[startIndex..newIndex]);
             Console.ForegroundColor = oldColor;
             newIndex--;

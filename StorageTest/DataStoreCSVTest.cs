@@ -15,11 +15,6 @@ namespace StorageTest {
     CsvConfig? csvConfig;
     DataStore<TestItemCsv>? dataStore;
 
-    /*+
-    bool wasAdded = false;
-    bool wasChanged = false;
-    bool wasDeleted = false;
-    +*/
     const bool cont = true;
     const bool notC = false;
 
@@ -72,25 +67,8 @@ namespace StorageTest {
         TestItem.RollbackItemUpdate,
         TestItem.RollbackItemRelease);
       Assert.IsTrue(dataStore.IsReadOnly);
-      /*+
-      dataStore.Added += dataStore_Added;
-      dataStore.Updated += illegalChanged;
-      dataStore.Removed += illegalRemoved;
-      +*/
       return dataStore;
     }
-
-
-    //#pragma warning disable IDE0060 // Remove unused parameter newValue
-    //private void illegalChanged(TestItemCsv _, TestItemCsv newValue) {
-    //#pragma warning restore IDE0060 
-    //  throw new Exception();
-    //}
-
-
-    //private void illegalRemoved(TestItemCsv _) {
-    //  throw new Exception();
-    //}
 
 
     private void assertRewriteReadonly(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
@@ -107,10 +85,6 @@ namespace StorageTest {
       expectedList.Add(dataString);
       var testItemCsv = new TestItemCsv(text);
       dataStore.Add(testItemCsv);
-      /*+
-      Assert.IsTrue(wasAdded);
-      wasAdded = false;
-      +*/
       assertRewriteReadonly(expectedList, cont, ref dataStore);
     }
     #endregion
@@ -186,11 +160,6 @@ namespace StorageTest {
         areInstancesUpdatable: true,
         areInstancesReleasable: true);
       Assert.IsFalse(dataStore.IsReadOnly);
-      /*+
-      dataStore.Added += dataStore_Added;
-      dataStore.Updated += dataStore_Changed;
-      dataStore.Removed += dataStore_Deleted;
-      +*/
       return dataStore;
     }
 
@@ -200,38 +169,12 @@ namespace StorageTest {
     }
 
 
-    /*+
-    private void dataStore_Added(TestItemCsv item) {
-      Assert.IsFalse(wasAdded);
-      wasAdded = true;
-      Assert.IsTrue(dataStore![item.Key].Text==item.Text);
-    }
-
-
-    private void dataStore_Changed(TestItemCsv oldItem, TestItemCsv newItem) {
-      Assert.IsFalse(wasChanged);
-      wasChanged = true;
-      Assert.IsTrue(dataStore![newItem.Key].Text==newItem.Text);
-    }
-
-
-    private void dataStore_Deleted(TestItemCsv item) {
-      Assert.IsFalse(wasDeleted);
-      wasDeleted = true;
-      Assert.IsFalse(dataStore!.ContainsKey(item.Key));
-    }
-    +*/
-
     private void add(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, string text, bool isCont) {
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
       var testItemCsv = new TestItemCsv(text);
       Assert.AreEqual(StorageExtensions.NoKey, testItemCsv.Key);
       dataStore.Add(testItemCsv);
-      /*+
-      Assert.IsTrue(wasAdded);
-      wasAdded = false;
-      +*/
       assertRewrite(expectedList, isCont, ref dataStore);
     }
 
@@ -242,11 +185,6 @@ namespace StorageTest {
       expectedList.Add(dataString);
       var item = dataStore[key];
       item.Update(text, dataStore); //fires HasChanged event
-      /*+
-      //+item.Update(text); //fires HasChanged event
-      Assert.IsTrue(wasChanged);
-      wasChanged = false;
-      +*/
       assertRewrite(expectedList, isCont, ref dataStore);
     }
 
@@ -254,10 +192,6 @@ namespace StorageTest {
     private void remove(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, bool isCont) {
       removeExpected(expectedList, key);
       dataStore.Remove(key);
-      /*+
-      Assert.IsTrue(wasDeleted);
-      wasDeleted = false;
-      +*/
       assertRewrite(expectedList, isCont, ref dataStore);
     }
 

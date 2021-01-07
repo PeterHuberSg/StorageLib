@@ -77,27 +77,6 @@ namespace StorageTest {
       remove(dataStore, expectedList, 5, cont);
     }
 
-    /*+
-    private void dictionary_Added(TestItem item) {
-      Assert.IsFalse(wasAdded);
-      wasAdded = true;
-      Assert.IsTrue(dataStore[item.Key].Text==item.Text);
-    }
-
-
-    private void dictionary_Changed(TestItem _, TestItem item) {
-      Assert.IsFalse(wasChanged);
-      wasChanged = true;
-      Assert.IsTrue(dataStore[item.Key].Text==item.Text);
-    }
-
-
-    private void dictionary_Deleted(TestItem item) {
-      Assert.IsFalse(wasDeleted);
-      wasDeleted = true;
-      Assert.IsFalse(dataStore.ContainsKey(item.Key));
-    }
-    +*/
 
     private void add(DataStore<TestItem> dataStore, List<string> expectedList, int key, string text, bool cont) {
       var dataString = $"{key}|{text}";
@@ -105,10 +84,6 @@ namespace StorageTest {
       var testItem = new TestItem(text);
       Assert.AreEqual(StorageExtensions.NoKey, testItem.Key);
       dataStore.Add(testItem);
-      /*+
-      Assert.IsTrue(wasAdded);
-      wasAdded = false;
-      +*/
       assert(expectedList, cont, dataStore);
     }
 
@@ -119,11 +94,6 @@ namespace StorageTest {
       expectedList.Add(dataString);
       var item = dataStore[key];
       item.Update(text);
-      /*+
-      //item.Update(text); //fires HasChanged event
-      Assert.IsTrue(wasChanged);
-      wasChanged = false;
-      +*/
       assert(expectedList, cont, dataStore);
     }
 
@@ -131,10 +101,6 @@ namespace StorageTest {
     private void remove(DataStore<TestItem> dataStore, List<string> expectedList, int key, bool cont) {
       removeExpected(expectedList, key);
       dataStore.Remove(key);
-      /*+
-      Assert.IsTrue(wasDeleted);
-      wasDeleted = false;
-      +*/
       assert(expectedList, cont, dataStore);
     }
 
