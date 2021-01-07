@@ -1,7 +1,7 @@
 ﻿/**************************************************************************************
 
-SimpleDataModel
-===============
+GetStarted DataModel
+====================
 
 Shows how Data Model classes can be defined using parent and child as example
 

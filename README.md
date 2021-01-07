@@ -62,13 +62,13 @@ The *StorageLib* testing consist of 3 projects:
 **TestDataContext:** contains the test data classes produced by *StorageClassGenerator*  
 **StorageTest:**  contains the actual tests
 
-### Simple Example Projects for first time user
+### Get Started Example Projects for first time user
 The projects with 'Simple' in its name show a new user how to create his own *Data Model* 
 and application cosuming the data.
 
-**SimpleDataModel:** A very simple *Data Model* explaining how to get started
-**SimpleDataContext:** Contains the data classes created based on *SimpleDataModel*
-**SimpleDataConsole:** Console application using SimpleDataContext, showing how to create, 
+**GetStartedDataModel:** A very simple *Data Model* explaining how to get started
+**GetStartedContext:** Contains the data classes created based on *SimpleDataModel*
+**GetStartedConsole:** Console application using SimpleDataContext, showing how to create, 
 update and delete data. 
 
 ### Samples for all Data Model functionality

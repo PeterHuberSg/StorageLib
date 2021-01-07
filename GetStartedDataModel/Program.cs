@@ -38,7 +38,7 @@ namespace StorageModel {
       //path to VS solution of your project
       var solutionDirectory = sourceDirectory.Parent!;
       //path of the VS project where the created code should be generated
-      var targetDirectoryPath = solutionDirectory.FullName + @"\SimpleDataContext"; //<== Enter here the name of your data contect project
+      var targetDirectoryPath = solutionDirectory.FullName + @"\GetStartedDataContext"; //<== Enter here the name of your data contect project
 
 #pragma warning disable CA1806 // Do not ignore method results
       new StorageClassGenerator(
