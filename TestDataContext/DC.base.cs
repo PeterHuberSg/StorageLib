@@ -804,6 +804,7 @@ namespace TestContext  {
         onTestChildrenFilled();
 
       } else {
+        IsPartiallyNew = false;
         _LookupParents = new DataStoreCSV<LookupParent>(
           this,
           0,
@@ -821,6 +822,8 @@ namespace TestContext  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _LookupParents.IsNew;
+        IsNew &= _LookupParents.IsNew;
         DataStores[0] = _LookupParents;
         onLookupParentsFilled();
 
@@ -841,6 +844,8 @@ namespace TestContext  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _LookupParentNs.IsNew;
+        IsNew &= _LookupParentNs.IsNew;
         DataStores[1] = _LookupParentNs;
         onLookupParentNsFilled();
 
@@ -861,6 +866,8 @@ namespace TestContext  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _LookupParentRs.IsNew;
+        IsNew &= _LookupParentRs.IsNew;
         DataStores[2] = _LookupParentRs;
         onLookupParentRsFilled();
 
@@ -881,6 +888,8 @@ namespace TestContext  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _LookupParentNRs.IsNew;
+        IsNew &= _LookupParentNRs.IsNew;
         DataStores[3] = _LookupParentNRs;
         onLookupParentNRsFilled();
 
@@ -901,6 +910,8 @@ namespace TestContext  {
           LookupChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _LookupChildren.IsNew;
+        IsNew &= _LookupChildren.IsNew;
         DataStores[4] = _LookupChildren;
         onLookupChildrenFilled();
 
@@ -921,6 +932,8 @@ namespace TestContext  {
           SingleChildParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChildParents.IsNew;
+        IsNew &= _SingleChildParents.IsNew;
         DataStores[5] = _SingleChildParents;
         onSingleChildParentsFilled();
 
@@ -941,6 +954,8 @@ namespace TestContext  {
           SingleChildParentN.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChildParentNs.IsNew;
+        IsNew &= _SingleChildParentNs.IsNew;
         DataStores[6] = _SingleChildParentNs;
         onSingleChildParentNsFilled();
 
@@ -961,6 +976,8 @@ namespace TestContext  {
           SingleChildParentR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChildParentRs.IsNew;
+        IsNew &= _SingleChildParentRs.IsNew;
         DataStores[7] = _SingleChildParentRs;
         onSingleChildParentRsFilled();
 
@@ -981,6 +998,8 @@ namespace TestContext  {
           SingleChildParentNR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChildParentNRs.IsNew;
+        IsNew &= _SingleChildParentNRs.IsNew;
         DataStores[8] = _SingleChildParentNRs;
         onSingleChildParentNRsFilled();
 
@@ -1001,6 +1020,8 @@ namespace TestContext  {
           SingleChildChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChildChildren.IsNew;
+        IsNew &= _SingleChildChildren.IsNew;
         DataStores[9] = _SingleChildChildren;
         onSingleChildChildrenFilled();
 
@@ -1021,6 +1042,8 @@ namespace TestContext  {
           ListParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListParents.IsNew;
+        IsNew &= _ListParents.IsNew;
         DataStores[10] = _ListParents;
         onListParentsFilled();
 
@@ -1041,6 +1064,8 @@ namespace TestContext  {
           ListParentN.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListParentNs.IsNew;
+        IsNew &= _ListParentNs.IsNew;
         DataStores[11] = _ListParentNs;
         onListParentNsFilled();
 
@@ -1061,6 +1086,8 @@ namespace TestContext  {
           ListParentR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListParentRs.IsNew;
+        IsNew &= _ListParentRs.IsNew;
         DataStores[12] = _ListParentRs;
         onListParentRsFilled();
 
@@ -1081,6 +1108,8 @@ namespace TestContext  {
           ListParentNR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListParentNRs.IsNew;
+        IsNew &= _ListParentNRs.IsNew;
         DataStores[13] = _ListParentNRs;
         onListParentNRsFilled();
 
@@ -1101,6 +1130,8 @@ namespace TestContext  {
           ListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListChidren.IsNew;
+        IsNew &= _ListChidren.IsNew;
         DataStores[14] = _ListChidren;
         onListChidrenFilled();
 
@@ -1121,6 +1152,8 @@ namespace TestContext  {
           DictionaryParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryParents.IsNew;
+        IsNew &= _DictionaryParents.IsNew;
         DataStores[15] = _DictionaryParents;
         onDictionaryParentsFilled();
 
@@ -1141,6 +1174,8 @@ namespace TestContext  {
           DictionaryParentN.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryParentNs.IsNew;
+        IsNew &= _DictionaryParentNs.IsNew;
         DataStores[16] = _DictionaryParentNs;
         onDictionaryParentNsFilled();
 
@@ -1161,6 +1196,8 @@ namespace TestContext  {
           DictionaryParentR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryParentRs.IsNew;
+        IsNew &= _DictionaryParentRs.IsNew;
         DataStores[17] = _DictionaryParentRs;
         onDictionaryParentRsFilled();
 
@@ -1181,6 +1218,8 @@ namespace TestContext  {
           DictionaryParentNR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryParentNRs.IsNew;
+        IsNew &= _DictionaryParentNRs.IsNew;
         DataStores[18] = _DictionaryParentNRs;
         onDictionaryParentNRsFilled();
 
@@ -1201,6 +1240,8 @@ namespace TestContext  {
           DictionaryChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryChidren.IsNew;
+        IsNew &= _DictionaryChidren.IsNew;
         DataStores[19] = _DictionaryChidren;
         onDictionaryChidrenFilled();
 
@@ -1221,6 +1262,8 @@ namespace TestContext  {
           SortedListParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListParents.IsNew;
+        IsNew &= _SortedListParents.IsNew;
         DataStores[20] = _SortedListParents;
         onSortedListParentsFilled();
 
@@ -1241,6 +1284,8 @@ namespace TestContext  {
           SortedListParentN.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListParentNs.IsNew;
+        IsNew &= _SortedListParentNs.IsNew;
         DataStores[21] = _SortedListParentNs;
         onSortedListParentNsFilled();
 
@@ -1261,6 +1306,8 @@ namespace TestContext  {
           SortedListParentR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListParentRs.IsNew;
+        IsNew &= _SortedListParentRs.IsNew;
         DataStores[22] = _SortedListParentRs;
         onSortedListParentRsFilled();
 
@@ -1281,6 +1328,8 @@ namespace TestContext  {
           SortedListParentNR.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListParentNRs.IsNew;
+        IsNew &= _SortedListParentNRs.IsNew;
         DataStores[23] = _SortedListParentNRs;
         onSortedListParentNRsFilled();
 
@@ -1301,6 +1350,8 @@ namespace TestContext  {
           SortedListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListChidren.IsNew;
+        IsNew &= _SortedListChidren.IsNew;
         DataStores[24] = _SortedListChidren;
         onSortedListChidrenFilled();
 
@@ -1321,6 +1372,8 @@ namespace TestContext  {
           DataTypeSample.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DataTypeSamples.IsNew;
+        IsNew &= _DataTypeSamples.IsNew;
         DataStores[25] = _DataTypeSamples;
         onDataTypeSamplesFilled();
 
@@ -1341,6 +1394,8 @@ namespace TestContext  {
           PrivateConstructor.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _PrivateConstructors.IsNew;
+        IsNew &= _PrivateConstructors.IsNew;
         DataStores[26] = _PrivateConstructors;
         onPrivateConstructorsFilled();
 
@@ -1361,6 +1416,8 @@ namespace TestContext  {
           PropertyNeedsDictionaryClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _PropertyNeedsDictionaryClasses.IsNew;
+        IsNew &= _PropertyNeedsDictionaryClasses.IsNew;
         DataStores[27] = _PropertyNeedsDictionaryClasses;
         onPropertyNeedsDictionaryClassesFilled();
 
@@ -1381,6 +1438,8 @@ namespace TestContext  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _SampleMasters.IsNew;
+        IsNew &= _SampleMasters.IsNew;
         DataStores[28] = _SampleMasters;
         onSampleMastersFilled();
 
@@ -1401,6 +1460,8 @@ namespace TestContext  {
           Sample.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SampleX.IsNew;
+        IsNew &= _SampleX.IsNew;
         DataStores[29] = _SampleX;
         onSampleXFilled();
 
@@ -1421,6 +1482,8 @@ namespace TestContext  {
           SampleDetail.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SampleDetails.IsNew;
+        IsNew &= _SampleDetails.IsNew;
         DataStores[30] = _SampleDetails;
         onSampleDetailsFilled();
 
@@ -1441,6 +1504,8 @@ namespace TestContext  {
           NotMatchingChildrenListName_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _NotMatchingChildrenListName_Parents.IsNew;
+        IsNew &= _NotMatchingChildrenListName_Parents.IsNew;
         DataStores[31] = _NotMatchingChildrenListName_Parents;
         onNotMatchingChildrenListName_ParentsFilled();
 
@@ -1461,6 +1526,8 @@ namespace TestContext  {
           NotMatchingChildrenListName_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _NotMatchingChildrenListName_Childs.IsNew;
+        IsNew &= _NotMatchingChildrenListName_Childs.IsNew;
         DataStores[32] = _NotMatchingChildrenListName_Childs;
         onNotMatchingChildrenListName_ChildsFilled();
 
@@ -1481,6 +1548,8 @@ namespace TestContext  {
           TestParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _TestParents.IsNew;
+        IsNew &= _TestParents.IsNew;
         DataStores[33] = _TestParents;
         onTestParentsFilled();
 
@@ -1501,6 +1570,8 @@ namespace TestContext  {
           TestChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _TestChildren.IsNew;
+        IsNew &= _TestChildren.IsNew;
         DataStores[34] = _TestChildren;
         onTestChildrenFilled();
 

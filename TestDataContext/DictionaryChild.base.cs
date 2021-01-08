@@ -68,7 +68,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing DictionaryChild
+    /// None existing DictionaryChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionaryChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionaryChild.
     /// </summary>
     internal static DictionaryChild NoDictionaryChild = new DictionaryChild("NoText", DictionaryParent.NoDictionaryParent, null, DictionaryParentR.NoDictionaryParentR, null, isStoring: false);
     #endregion
@@ -151,17 +155,13 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var dictionaryParentKey = csvReader.ReadInt();
-      Parent = DC.Data._DictionaryParents.GetItem(dictionaryParentKey)??
-        throw new Exception($"Read DictionaryChild from CSV file: Cannot find Parent with key {dictionaryParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._DictionaryParents.GetItem(dictionaryParentKey)?? DictionaryParent.NoDictionaryParent;
       var parentNKey = csvReader.ReadIntNull();
       if (parentNKey.HasValue) {
         ParentN = DC.Data._DictionaryParentNs.GetItem(parentNKey.Value)?? DictionaryParentN.NoDictionaryParentN;
       }
       var dictionaryParentRKey = csvReader.ReadInt();
-      ParentR = DC.Data._DictionaryParentRs.GetItem(dictionaryParentRKey)??
-        throw new Exception($"Read DictionaryChild from CSV file: Cannot find ParentR with key {dictionaryParentRKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      ParentR = DC.Data._DictionaryParentRs.GetItem(dictionaryParentRKey)?? DictionaryParentR.NoDictionaryParentR;
       var parentNRKey = csvReader.ReadIntNull();
       if (parentNRKey.HasValue) {
         ParentNR = DC.Data._DictionaryParentNRs.GetItem(parentNRKey.Value)?? DictionaryParentNR.NoDictionaryParentNR;

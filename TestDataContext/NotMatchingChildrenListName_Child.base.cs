@@ -61,7 +61,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing NotMatchingChildrenListName_Child
+    /// None existing NotMatchingChildrenListName_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoNotMatchingChildrenListName_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoNotMatchingChildrenListName_Child.
     /// </summary>
     internal static NotMatchingChildrenListName_Child NoNotMatchingChildrenListName_Child = new NotMatchingChildrenListName_Child("NoText", NotMatchingChildrenListName_Parent.NoNotMatchingChildrenListName_Parent, isStoring: false);
     #endregion
@@ -124,9 +128,7 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var notMatchingChildrenListName_ParentKey = csvReader.ReadInt();
-      Parent = DC.Data._NotMatchingChildrenListName_Parents.GetItem(notMatchingChildrenListName_ParentKey)??
-        throw new Exception($"Read NotMatchingChildrenListName_Child from CSV file: Cannot find Parent with key {notMatchingChildrenListName_ParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._NotMatchingChildrenListName_Parents.GetItem(notMatchingChildrenListName_ParentKey)?? NotMatchingChildrenListName_Parent.NoNotMatchingChildrenListName_Parent;
       if (Parent!=NotMatchingChildrenListName_Parent.NoNotMatchingChildrenListName_Parent) {
         Parent.AddToChildren(this);
       }

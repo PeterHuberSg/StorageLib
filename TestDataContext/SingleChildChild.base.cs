@@ -68,7 +68,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing SingleChildChild
+    /// None existing SingleChildChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSingleChildChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSingleChildChild.
     /// </summary>
     internal static SingleChildChild NoSingleChildChild = new SingleChildChild("NoText", SingleChildParent.NoSingleChildParent, null, SingleChildParentR.NoSingleChildParentR, null, isStoring: false);
     #endregion
@@ -151,17 +155,13 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var singleChildParentKey = csvReader.ReadInt();
-      Parent = DC.Data._SingleChildParents.GetItem(singleChildParentKey)??
-        throw new Exception($"Read SingleChildChild from CSV file: Cannot find Parent with key {singleChildParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._SingleChildParents.GetItem(singleChildParentKey)?? SingleChildParent.NoSingleChildParent;
       var parentNKey = csvReader.ReadIntNull();
       if (parentNKey.HasValue) {
         ParentN = DC.Data._SingleChildParentNs.GetItem(parentNKey.Value)?? SingleChildParentN.NoSingleChildParentN;
       }
       var singleChildParentRKey = csvReader.ReadInt();
-      ParentR = DC.Data._SingleChildParentRs.GetItem(singleChildParentRKey)??
-        throw new Exception($"Read SingleChildChild from CSV file: Cannot find ParentR with key {singleChildParentRKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      ParentR = DC.Data._SingleChildParentRs.GetItem(singleChildParentRKey)?? SingleChildParentR.NoSingleChildParentR;
       var parentNRKey = csvReader.ReadIntNull();
       if (parentNRKey.HasValue) {
         ParentNR = DC.Data._SingleChildParentNRs.GetItem(parentNRKey.Value)?? SingleChildParentNR.NoSingleChildParentNR;

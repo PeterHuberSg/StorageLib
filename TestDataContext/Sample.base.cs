@@ -179,7 +179,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing Sample
+    /// None existing Sample, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSample. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSample.
     /// </summary>
     internal static Sample NoSample = new Sample("NoText", false, int.MinValue, Decimal.MinValue, Decimal.MinValue, null, Decimal.MinValue, 0, DateTime.MinValue.Date, TimeSpan.MinValue, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue, null, null, null, isStoring: false);
     #endregion

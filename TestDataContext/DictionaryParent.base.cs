@@ -53,7 +53,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing DictionaryParent
+    /// None existing DictionaryParent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionaryParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionaryParent.
     /// </summary>
     internal static DictionaryParent NoDictionaryParent = new DictionaryParent("NoText", isStoring: false);
     #endregion

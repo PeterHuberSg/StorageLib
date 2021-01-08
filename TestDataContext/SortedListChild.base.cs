@@ -68,7 +68,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing SortedListChild
+    /// None existing SortedListChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSortedListChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSortedListChild.
     /// </summary>
     internal static SortedListChild NoSortedListChild = new SortedListChild("NoText", SortedListParent.NoSortedListParent, null, SortedListParentR.NoSortedListParentR, null, isStoring: false);
     #endregion
@@ -151,17 +155,13 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var sortedListParentKey = csvReader.ReadInt();
-      Parent = DC.Data._SortedListParents.GetItem(sortedListParentKey)??
-        throw new Exception($"Read SortedListChild from CSV file: Cannot find Parent with key {sortedListParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._SortedListParents.GetItem(sortedListParentKey)?? SortedListParent.NoSortedListParent;
       var parentNKey = csvReader.ReadIntNull();
       if (parentNKey.HasValue) {
         ParentN = DC.Data._SortedListParentNs.GetItem(parentNKey.Value)?? SortedListParentN.NoSortedListParentN;
       }
       var sortedListParentRKey = csvReader.ReadInt();
-      ParentR = DC.Data._SortedListParentRs.GetItem(sortedListParentRKey)??
-        throw new Exception($"Read SortedListChild from CSV file: Cannot find ParentR with key {sortedListParentRKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      ParentR = DC.Data._SortedListParentRs.GetItem(sortedListParentRKey)?? SortedListParentR.NoSortedListParentR;
       var parentNRKey = csvReader.ReadIntNull();
       if (parentNRKey.HasValue) {
         ParentNR = DC.Data._SortedListParentNRs.GetItem(parentNRKey.Value)?? SortedListParentNR.NoSortedListParentNR;

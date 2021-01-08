@@ -646,9 +646,13 @@ namespace StorageLib {
 
 
     private void writeNoClassSingleton(StreamWriter sw) {
-      sw.WriteLine("    /// <summary>");
-      sw.WriteLine("    /// None existing " + ClassName);
-      sw.WriteLine("    /// </summary>");
+      sw.WriteLine($"    /// <summary>");
+      sw.WriteLine($"    /// None existing {ClassName}, used as a temporary place holder when reading a CSV file");
+      sw.WriteLine($"    /// which was not compacted. It might create first a later deleted item linking to a ");
+      sw.WriteLine($"    /// deleted parent. In this case, the parent property gets set to No{ClassName}. Once the CSV");
+      sw.WriteLine($"    /// file is completely read, that child will actually be deleted (released) and Verify()");
+      sw.WriteLine($"    /// ensures that there are no stored children with links to No{ClassName}.");
+      sw.WriteLine($"    /// </summary>");
       sw.Write($"    internal static {ClassName} No{ClassName} = new {ClassName}(");
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.Enum) {
@@ -819,20 +823,15 @@ namespace StorageLib {
           if (mi.IsNullable) {
             sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
             sw.WriteLine($"      if ({mi.LowerMemberName}Key.HasValue) {{");
-
             sw.WriteLine($"        {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)?? {mi.ParentTypeString}.No{mi.ParentTypeString};"); 
-
-
             sw.WriteLine("      }");
           } else {
             sw.WriteLine($"      var {mi.ParentClassInfo!.LowerClassName}Key = csvReader.ReadInt();");
-
-            sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)??");
-            sw.WriteLine($"        throw new Exception($\"Read {mi.ClassInfo.ClassName} from CSV file: Cannot find " +
-              $"{mi.MemberName} with key {{{mi.ParentClassInfo!.LowerClassName}Key}}.\" + Environment.NewLine + ");
-            sw.WriteLine($"          csvReader.PresentContent);");
-
-
+            //sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)??");
+            //sw.WriteLine($"        throw new Exception($\"Read {mi.ClassInfo.ClassName} from CSV file: Cannot find " +
+            //  $"{mi.MemberName} with key {{{mi.ParentClassInfo!.LowerClassName}Key}}.\" + Environment.NewLine + ");
+            //sw.WriteLine($"          csvReader.PresentContent);");
+            sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)?? {mi.ParentTypeString}.No{mi.ParentTypeString};");
           }
         } else {
           //enum, simple data type

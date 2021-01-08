@@ -52,7 +52,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing TestChild
+    /// None existing TestChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoTestChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoTestChild.
     /// </summary>
     internal static TestChild NoTestChild = new TestChild("NoText", TestParent.NoTestParent, isStoring: false);
     #endregion
@@ -115,9 +119,7 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var testParentKey = csvReader.ReadInt();
-      Parent = DC.Data._TestParents.GetItem(testParentKey)??
-        throw new Exception($"Read TestChild from CSV file: Cannot find Parent with key {testParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._TestParents.GetItem(testParentKey)?? TestParent.NoTestParent;
       if (Parent!=TestParent.NoTestParent) {
         Parent.AddToChildren(this);
       }

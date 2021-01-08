@@ -52,7 +52,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing SingleChildParentR
+    /// None existing SingleChildParentR, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSingleChildParentR. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSingleChildParentR.
     /// </summary>
     internal static SingleChildParentR NoSingleChildParentR = new SingleChildParentR("NoText", isStoring: false);
     #endregion

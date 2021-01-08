@@ -75,7 +75,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing LookupChild
+    /// None existing LookupChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoLookupChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoLookupChild.
     /// </summary>
     internal static LookupChild NoLookupChild = new LookupChild("NoText", LookupParent.NoLookupParent, null, LookupParentR.NoLookupParentR, null, isStoring: false);
     #endregion
@@ -150,17 +154,13 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var lookupParentKey = csvReader.ReadInt();
-      Parent = DC.Data._LookupParents.GetItem(lookupParentKey)??
-        throw new Exception($"Read LookupChild from CSV file: Cannot find Parent with key {lookupParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._LookupParents.GetItem(lookupParentKey)?? LookupParent.NoLookupParent;
       var parentNKey = csvReader.ReadIntNull();
       if (parentNKey.HasValue) {
         ParentN = DC.Data._LookupParentNs.GetItem(parentNKey.Value)?? LookupParentN.NoLookupParentN;
       }
       var lookupParentRKey = csvReader.ReadInt();
-      ParentR = DC.Data._LookupParentRs.GetItem(lookupParentRKey)??
-        throw new Exception($"Read LookupChild from CSV file: Cannot find ParentR with key {lookupParentRKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      ParentR = DC.Data._LookupParentRs.GetItem(lookupParentRKey)?? LookupParentR.NoLookupParentR;
       var parentNRKey = csvReader.ReadIntNull();
       if (parentNRKey.HasValue) {
         ParentNR = DC.Data._LookupParentNRs.GetItem(parentNRKey.Value)?? LookupParentNR.NoLookupParentNR;

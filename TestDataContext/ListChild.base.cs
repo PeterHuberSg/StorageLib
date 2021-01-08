@@ -68,7 +68,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing ListChild
+    /// None existing ListChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoListChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoListChild.
     /// </summary>
     internal static ListChild NoListChild = new ListChild("NoText", ListParent.NoListParent, null, ListParentR.NoListParentR, null, isStoring: false);
     #endregion
@@ -151,17 +155,13 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var listParentKey = csvReader.ReadInt();
-      Parent = DC.Data._ListParents.GetItem(listParentKey)??
-        throw new Exception($"Read ListChild from CSV file: Cannot find Parent with key {listParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._ListParents.GetItem(listParentKey)?? ListParent.NoListParent;
       var parentNKey = csvReader.ReadIntNull();
       if (parentNKey.HasValue) {
         ParentN = DC.Data._ListParentNs.GetItem(parentNKey.Value)?? ListParentN.NoListParentN;
       }
       var listParentRKey = csvReader.ReadInt();
-      ParentR = DC.Data._ListParentRs.GetItem(listParentRKey)??
-        throw new Exception($"Read ListChild from CSV file: Cannot find ParentR with key {listParentRKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      ParentR = DC.Data._ListParentRs.GetItem(listParentRKey)?? ListParentR.NoListParentR;
       var parentNRKey = csvReader.ReadIntNull();
       if (parentNRKey.HasValue) {
         ParentNR = DC.Data._ListParentNRs.GetItem(parentNRKey.Value)?? ListParentNR.NoListParentNR;

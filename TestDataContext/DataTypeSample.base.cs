@@ -239,7 +239,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing DataTypeSample
+    /// None existing DataTypeSample, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDataTypeSample. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDataTypeSample.
     /// </summary>
     internal static DataTypeSample NoDataTypeSample = new DataTypeSample(DateTime.MinValue.Date, null, TimeSpan.MinValue, null, DateTime.MinValue, null, DateTime.MinValue, null, DateTime.MinValue, null, TimeSpan.MinValue, null, Decimal.MinValue, null, Decimal.MinValue, null, Decimal.MinValue, null, Decimal.MinValue, null, false, null, int.MinValue, null, long.MinValue, null, char.MaxValue, null, "NoAString", null, 0, null, isStoring: false);
     #endregion

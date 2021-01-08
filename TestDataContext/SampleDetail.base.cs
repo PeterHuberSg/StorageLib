@@ -61,7 +61,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing SampleDetail
+    /// None existing SampleDetail, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSampleDetail. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSampleDetail.
     /// </summary>
     internal static SampleDetail NoSampleDetail = new SampleDetail("NoText", Sample.NoSample, isStoring: false);
     #endregion
@@ -124,9 +128,7 @@ namespace TestContext  {
       Key = key;
       Text = csvReader.ReadString();
       var sampleKey = csvReader.ReadInt();
-      Sample = DC.Data._SampleX.GetItem(sampleKey)??
-        throw new Exception($"Read SampleDetail from CSV file: Cannot find Sample with key {sampleKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Sample = DC.Data._SampleX.GetItem(sampleKey)?? Sample.NoSample;
       if (Sample!=Sample.NoSample) {
         Sample.AddToSampleDetails(this);
       }

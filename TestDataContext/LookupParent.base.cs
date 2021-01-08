@@ -49,7 +49,11 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// None existing LookupParent
+    /// None existing LookupParent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoLookupParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoLookupParent.
     /// </summary>
     internal static LookupParent NoLookupParent = new LookupParent("NoText", isStoring: false);
     #endregion
