@@ -13,6 +13,21 @@ can be found in the file *DataModelSamples.cs* in the *SampleDataModel* project.
 [**Class with none standard plural name**](#class-with-none-standard-plural-name)  
 [**Readonly property**](#readonly-property)  
 [**Nullable (conditional) property**](#nullable-conditional-property)  
+[**Property with default value**](#property-with-default-value)  
+[**Automatic lower case copy of string property**](#automatic-lower-case-copy-of-string-property)  
+[**Enumeration Properties**](#enumeration-properties)  
+[**Parent without maintained relationsip to child, 1:0 or c:0**](#parent-without-maintained-relationsip-to-child)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
+[**xxx**](#xxx)  
 [**Further Documentation**](#further-documentation)  
 
 
@@ -65,7 +80,7 @@ namespace YourNamespace {
 
 ```
 It contains a `Parent` class and a `Child` class. The data of the `Parent` that might get stored in a CSV file 
-is its name. The `Children` list indicates that the `Parent` is involved in a relationship with `Child` and
+is the parent's name. The `Children` list indicates that the `Parent` is involved in a relationship with `Child` and
 that it can have many children.
 
 The `Child` class has also a `Name` property and a `Parent` property. Both get possibly stored in a CSV
@@ -216,6 +231,97 @@ When creating or updating a `Name`, a `FirstName` must be provided, but there mi
 
 A nullable property is also used in *parent child* relationshipd to indicate that the child can have 
 a parent, while a not nullable property requires that the must be a parent.
+
+
+# Property with default value
+In c#, it is possible to give a method argument a default value. When assigning a default value to
+a data class property, the constructor of that class will use that default value.
+```csharp
+public class DefaultValuePropertyClass {
+  public string Name;
+  [StorageProperty(defaultValue: "NoName")]
+  public string DefaultValueProperty;
+}
+```
+The constructur will look like this:
+```csharp
+public DefaultValuePropertyClass(string name, string defaultValueProperty = "NoName", bool isStoring = true) {
+```
+Note:
+The properties arguments in the constructor are in the same sequence like the properties in the data class. Once
+an argument has a default value, all following arguments must have a default value too. The same applies for
+the property definitions in the data class: once one property has a default value, all following properties must
+have a default value too.
+
+
+# Automatic lower case copy of string property
+Sometimes it is nice to have a properly cased version of a string and a lower cased version. The first 
+is used for displaying it to the user, the second for searching the *data class* instance containing it 
+or as key into a dictionary of the *data class*. StorageProperty(toLower: "Xyz") provides a lower case 
+version of Xyz, which gets automatically updated each time Xyz gets updated.
+```csharp
+public class ToLowerCasePropertyClass {
+  public string Name;
+  [StorageProperty(toLower: "Name")]
+  public string NameLower; //will always contain the lower case version of Name
+}
+```
+The code produced for `ToLowerCasePropertyClass` constructor:
+```csharp
+public ToLowerCasePropertyClass(string name, bool isStoring = true) {
+  ...
+  Name = name;
+  NameLower = Name.ToLowerInvariant();
+  ...
+}
+```
+
+
+# Enumeration Properties
+Sometimes it is better to hard code configuration data than creating *data classes* for it. 
+Enumerations are perfect for this purpose:
+```csharp
+  public enum Weekdays { Mo, Tu, We, Th, Fr}
+
+  public class ClassWithEnumProperty {
+    public Weekdays Weekday;
+    public Weekdays? ConditionalWeekDay;
+    readonly public Weekdays ReadonlyWeekdays;
+  }
+```
+ *StorageClassGenerator* will create a file *Enums.base.cs*, which will contain all enumerations 
+defined in the *Data Model*.
+
+
+# Parent without maintained relationsip to child
+Sometimes, one class (parent) is used by one or many children classes. The children have a link to
+the parent, but the parent doesn't maintain any relationship to its children.  
+Example:  
+Parent: ExchangeRates, has for each day an exchange rate  
+Children: Prices, Orders, Invoices, Payments, etc.
+
+It might not make sense for one exchange rate to know which Price, Order, Invoice, Payment, etc,
+links to it. However, if an ExchangeRate later gets deleted, it cannot check easily, if any child
+still links to it. Therefore, ExchangeRate should be undeletable. 
+
+Example:  
+Item: From a catalog of items to sell  
+OrderItem: A line item of a customer order.
+
+```csharp
+[StorageClass(areInstancesReleasable: false)]
+public class Item {
+  public string Name;
+}
+
+public class OrderItem {
+  public Order Order;
+  public int Quantity;
+  [StorageProperty(isLookupOnly: true)]
+  public Item Item;
+}
+```
+Note: Order is a *data class* defined somewhere else in the *Data Model*
 
 
 

@@ -114,7 +114,7 @@ namespace DataModelSamples {
 
   public class DefaultValuePropertyClass {
     public string Name;
-    [StorageProperty(defaultValue: "NoName")]
+    [StorageProperty(defaultValue: "NoValue")]
     public string DefaultValueProperty;
   }
 
@@ -209,7 +209,7 @@ namespace DataModelSamples {
   public class Lookup_C_0_Child {
     public string Name;
     [StorageProperty(isLookupOnly: true)]
-    public Lookup_1_0_Parent Parent;
+    public Lookup_1_0_Parent? Parent;
   }
   #endregion
 
