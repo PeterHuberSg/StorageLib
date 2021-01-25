@@ -843,6 +843,7 @@ namespace DataModelSamples  {
         onNeedsDictionaryLowerCaseClasssFilled();
 
       } else {
+        IsPartiallyNew = false;
         _UpdateableReleasableClasss = new DataStoreCSV<UpdateableReleasableClass>(
           this,
           0,
@@ -860,6 +861,8 @@ namespace DataModelSamples  {
           UpdateableReleasableClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _UpdateableReleasableClasss.IsNew;
+        IsNew &= _UpdateableReleasableClasss.IsNew;
         DataStores[0] = _UpdateableReleasableClasss;
         onUpdateableReleasableClasssFilled();
 
@@ -880,6 +883,8 @@ namespace DataModelSamples  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _UpdateableNoneReleasableClasss.IsNew;
+        IsNew &= _UpdateableNoneReleasableClasss.IsNew;
         DataStores[1] = _UpdateableNoneReleasableClasss;
         onUpdateableNoneReleasableClasssFilled();
 
@@ -900,6 +905,8 @@ namespace DataModelSamples  {
           NoneUpdateableReleasableClass.RollbackItemRelease,
           areInstancesUpdatable: false,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _NoneUpdateableReleasableClasss.IsNew;
+        IsNew &= _NoneUpdateableReleasableClasss.IsNew;
         DataStores[2] = _NoneUpdateableReleasableClasss;
         onNoneUpdateableReleasableClasssFilled();
 
@@ -920,6 +927,8 @@ namespace DataModelSamples  {
           null,
           areInstancesUpdatable: false,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _NoneUpdateableNoneReleasableClasss.IsNew;
+        IsNew &= _NoneUpdateableNoneReleasableClasss.IsNew;
         DataStores[3] = _NoneUpdateableNoneReleasableClasss;
         onNoneUpdateableNoneReleasableClasssFilled();
 
@@ -940,6 +949,8 @@ namespace DataModelSamples  {
           PluralNameNoneStandardClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _PluralNameNoneStandardClasses.IsNew;
+        IsNew &= _PluralNameNoneStandardClasses.IsNew;
         DataStores[4] = _PluralNameNoneStandardClasses;
         onPluralNameNoneStandardClassesFilled();
 
@@ -960,6 +971,8 @@ namespace DataModelSamples  {
           ReadonlyPropertyClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ReadonlyPropertyClasss.IsNew;
+        IsNew &= _ReadonlyPropertyClasss.IsNew;
         DataStores[5] = _ReadonlyPropertyClasss;
         onReadonlyPropertyClasssFilled();
 
@@ -980,6 +993,8 @@ namespace DataModelSamples  {
           ConditionalUnconditionalPropertyClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ConditionalUnconditionalPropertyClasss.IsNew;
+        IsNew &= _ConditionalUnconditionalPropertyClasss.IsNew;
         DataStores[6] = _ConditionalUnconditionalPropertyClasss;
         onConditionalUnconditionalPropertyClasssFilled();
 
@@ -1000,6 +1015,8 @@ namespace DataModelSamples  {
           DefaultValuePropertyClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DefaultValuePropertyClasss.IsNew;
+        IsNew &= _DefaultValuePropertyClasss.IsNew;
         DataStores[7] = _DefaultValuePropertyClasss;
         onDefaultValuePropertyClasssFilled();
 
@@ -1020,6 +1037,8 @@ namespace DataModelSamples  {
           ToLowerCasePropertyClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ToLowerCasePropertyClasss.IsNew;
+        IsNew &= _ToLowerCasePropertyClasss.IsNew;
         DataStores[8] = _ToLowerCasePropertyClasss;
         onToLowerCasePropertyClasssFilled();
 
@@ -1040,6 +1059,8 @@ namespace DataModelSamples  {
           DataModelDataTypes.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DataModelDataTypess.IsNew;
+        IsNew &= _DataModelDataTypess.IsNew;
         DataStores[9] = _DataModelDataTypess;
         onDataModelDataTypessFilled();
 
@@ -1060,6 +1081,8 @@ namespace DataModelSamples  {
           ClassWithEnumProperty.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ClassWithEnumPropertys.IsNew;
+        IsNew &= _ClassWithEnumPropertys.IsNew;
         DataStores[10] = _ClassWithEnumPropertys;
         onClassWithEnumPropertysFilled();
 
@@ -1080,6 +1103,8 @@ namespace DataModelSamples  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _Lookup_1_0_Parents.IsNew;
+        IsNew &= _Lookup_1_0_Parents.IsNew;
         DataStores[11] = _Lookup_1_0_Parents;
         onLookup_1_0_ParentsFilled();
 
@@ -1100,6 +1125,8 @@ namespace DataModelSamples  {
           Lookup_1_0_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Lookup_1_0_Childs.IsNew;
+        IsNew &= _Lookup_1_0_Childs.IsNew;
         DataStores[12] = _Lookup_1_0_Childs;
         onLookup_1_0_ChildsFilled();
 
@@ -1120,6 +1147,8 @@ namespace DataModelSamples  {
           Lookup_C_0_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Lookup_C_0_Childs.IsNew;
+        IsNew &= _Lookup_C_0_Childs.IsNew;
         DataStores[13] = _Lookup_C_0_Childs;
         onLookup_C_0_ChildsFilled();
 
@@ -1140,6 +1169,8 @@ namespace DataModelSamples  {
           null,
           areInstancesUpdatable: true,
           areInstancesReleasable: false);
+        IsPartiallyNew |= _Lookup_C_0_Parents.IsNew;
+        IsNew &= _Lookup_C_0_Parents.IsNew;
         DataStores[14] = _Lookup_C_0_Parents;
         onLookup_C_0_ParentsFilled();
 
@@ -1160,6 +1191,8 @@ namespace DataModelSamples  {
           SingleChild_1_C_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChild_1_C_Parents.IsNew;
+        IsNew &= _SingleChild_1_C_Parents.IsNew;
         DataStores[15] = _SingleChild_1_C_Parents;
         onSingleChild_1_C_ParentsFilled();
 
@@ -1180,6 +1213,8 @@ namespace DataModelSamples  {
           SingleChild_1_C_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChild_1_C_Childs.IsNew;
+        IsNew &= _SingleChild_1_C_Childs.IsNew;
         DataStores[16] = _SingleChild_1_C_Childs;
         onSingleChild_1_C_ChildsFilled();
 
@@ -1200,6 +1235,8 @@ namespace DataModelSamples  {
           SingleChild_C_C_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChild_C_C_Parents.IsNew;
+        IsNew &= _SingleChild_C_C_Parents.IsNew;
         DataStores[17] = _SingleChild_C_C_Parents;
         onSingleChild_C_C_ParentsFilled();
 
@@ -1220,6 +1257,8 @@ namespace DataModelSamples  {
           SingleChild_C_C_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SingleChild_C_C_Childs.IsNew;
+        IsNew &= _SingleChild_C_C_Childs.IsNew;
         DataStores[18] = _SingleChild_C_C_Childs;
         onSingleChild_C_C_ChildsFilled();
 
@@ -1240,6 +1279,8 @@ namespace DataModelSamples  {
           List_1_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _List_1_MC_Parents.IsNew;
+        IsNew &= _List_1_MC_Parents.IsNew;
         DataStores[19] = _List_1_MC_Parents;
         onList_1_MC_ParentsFilled();
 
@@ -1260,6 +1301,8 @@ namespace DataModelSamples  {
           List_1_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _List_1_MC_Childs.IsNew;
+        IsNew &= _List_1_MC_Childs.IsNew;
         DataStores[20] = _List_1_MC_Childs;
         onList_1_MC_ChildsFilled();
 
@@ -1280,6 +1323,8 @@ namespace DataModelSamples  {
           List_C_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _List_C_MC_Parents.IsNew;
+        IsNew &= _List_C_MC_Parents.IsNew;
         DataStores[21] = _List_C_MC_Parents;
         onList_C_MC_ParentsFilled();
 
@@ -1300,6 +1345,8 @@ namespace DataModelSamples  {
           List_C_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _List_C_MC_Childs.IsNew;
+        IsNew &= _List_C_MC_Childs.IsNew;
         DataStores[22] = _List_C_MC_Childs;
         onList_C_MC_ChildsFilled();
 
@@ -1320,6 +1367,8 @@ namespace DataModelSamples  {
           ListWithPropertyNameParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListWithPropertyNameParents.IsNew;
+        IsNew &= _ListWithPropertyNameParents.IsNew;
         DataStores[23] = _ListWithPropertyNameParents;
         onListWithPropertyNameParentsFilled();
 
@@ -1340,6 +1389,8 @@ namespace DataModelSamples  {
           ListWithPropertyNameChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _ListWithPropertyNameChilds.IsNew;
+        IsNew &= _ListWithPropertyNameChilds.IsNew;
         DataStores[24] = _ListWithPropertyNameChilds;
         onListWithPropertyNameChildsFilled();
 
@@ -1360,6 +1411,8 @@ namespace DataModelSamples  {
           Dictionary_1_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Dictionary_1_MC_Parents.IsNew;
+        IsNew &= _Dictionary_1_MC_Parents.IsNew;
         DataStores[25] = _Dictionary_1_MC_Parents;
         onDictionary_1_MC_ParentsFilled();
 
@@ -1380,6 +1433,8 @@ namespace DataModelSamples  {
           Dictionary_1_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Dictionary_1_MC_Childs.IsNew;
+        IsNew &= _Dictionary_1_MC_Childs.IsNew;
         DataStores[26] = _Dictionary_1_MC_Childs;
         onDictionary_1_MC_ChildsFilled();
 
@@ -1400,6 +1455,8 @@ namespace DataModelSamples  {
           Dictionary_C_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Dictionary_C_MC_Parents.IsNew;
+        IsNew &= _Dictionary_C_MC_Parents.IsNew;
         DataStores[27] = _Dictionary_C_MC_Parents;
         onDictionary_C_MC_ParentsFilled();
 
@@ -1420,6 +1477,8 @@ namespace DataModelSamples  {
           Dictionary_C_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _Dictionary_C_MC_Childs.IsNew;
+        IsNew &= _Dictionary_C_MC_Childs.IsNew;
         DataStores[28] = _Dictionary_C_MC_Childs;
         onDictionary_C_MC_ChildsFilled();
 
@@ -1440,6 +1499,8 @@ namespace DataModelSamples  {
           DictionaryWithPropertyNameParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryWithPropertyNameParents.IsNew;
+        IsNew &= _DictionaryWithPropertyNameParents.IsNew;
         DataStores[29] = _DictionaryWithPropertyNameParents;
         onDictionaryWithPropertyNameParentsFilled();
 
@@ -1460,6 +1521,8 @@ namespace DataModelSamples  {
           DictionaryWithPropertyNameChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _DictionaryWithPropertyNameChilds.IsNew;
+        IsNew &= _DictionaryWithPropertyNameChilds.IsNew;
         DataStores[30] = _DictionaryWithPropertyNameChilds;
         onDictionaryWithPropertyNameChildsFilled();
 
@@ -1480,6 +1543,8 @@ namespace DataModelSamples  {
           SortedList_1_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedList_1_MC_Parents.IsNew;
+        IsNew &= _SortedList_1_MC_Parents.IsNew;
         DataStores[31] = _SortedList_1_MC_Parents;
         onSortedList_1_MC_ParentsFilled();
 
@@ -1500,6 +1565,8 @@ namespace DataModelSamples  {
           SortedList_1_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedList_1_MC_Childs.IsNew;
+        IsNew &= _SortedList_1_MC_Childs.IsNew;
         DataStores[32] = _SortedList_1_MC_Childs;
         onSortedList_1_MC_ChildsFilled();
 
@@ -1520,6 +1587,8 @@ namespace DataModelSamples  {
           SortedList_C_MC_Parent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedList_C_MC_Parents.IsNew;
+        IsNew &= _SortedList_C_MC_Parents.IsNew;
         DataStores[33] = _SortedList_C_MC_Parents;
         onSortedList_C_MC_ParentsFilled();
 
@@ -1540,6 +1609,8 @@ namespace DataModelSamples  {
           SortedList_C_MC_Child.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedList_C_MC_Childs.IsNew;
+        IsNew &= _SortedList_C_MC_Childs.IsNew;
         DataStores[34] = _SortedList_C_MC_Childs;
         onSortedList_C_MC_ChildsFilled();
 
@@ -1560,6 +1631,8 @@ namespace DataModelSamples  {
           SortedListWithPropertyNameParent.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListWithPropertyNameParents.IsNew;
+        IsNew &= _SortedListWithPropertyNameParents.IsNew;
         DataStores[35] = _SortedListWithPropertyNameParents;
         onSortedListWithPropertyNameParentsFilled();
 
@@ -1580,6 +1653,8 @@ namespace DataModelSamples  {
           SortedListWithPropertyNameChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _SortedListWithPropertyNameChilds.IsNew;
+        IsNew &= _SortedListWithPropertyNameChilds.IsNew;
         DataStores[36] = _SortedListWithPropertyNameChilds;
         onSortedListWithPropertyNameChildsFilled();
 
@@ -1600,6 +1675,8 @@ namespace DataModelSamples  {
           NeedsDictionaryClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _NeedsDictionaryClasss.IsNew;
+        IsNew &= _NeedsDictionaryClasss.IsNew;
         DataStores[37] = _NeedsDictionaryClasss;
         onNeedsDictionaryClasssFilled();
 
@@ -1620,6 +1697,8 @@ namespace DataModelSamples  {
           NeedsDictionaryLowerCaseClass.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
+        IsPartiallyNew |= _NeedsDictionaryLowerCaseClasss.IsNew;
+        IsNew &= _NeedsDictionaryLowerCaseClasss.IsNew;
         DataStores[38] = _NeedsDictionaryLowerCaseClasss;
         onNeedsDictionaryLowerCaseClasssFilled();
 

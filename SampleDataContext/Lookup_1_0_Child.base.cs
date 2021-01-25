@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing Lookup_1_0_Child
+    /// None existing Lookup_1_0_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoLookup_1_0_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoLookup_1_0_Child.
     /// </summary>
     internal static Lookup_1_0_Child NoLookup_1_0_Child = new Lookup_1_0_Child("NoName", Lookup_1_0_Parent.NoLookup_1_0_Parent, isStoring: false);
     #endregion
@@ -102,9 +106,7 @@ namespace DataModelSamples  {
       Key = key;
       Name = csvReader.ReadString();
       var lookup_1_0_ParentKey = csvReader.ReadInt();
-      Parent = DC.Data._Lookup_1_0_Parents.GetItem(lookup_1_0_ParentKey)??
-        throw new Exception($"Read Lookup_1_0_Child from CSV file: Cannot find Parent with key {lookup_1_0_ParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._Lookup_1_0_Parents.GetItem(lookup_1_0_ParentKey)?? Lookup_1_0_Parent.NoLookup_1_0_Parent;
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -235,8 +237,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"Lookup_1_0_Child.Release(): Lookup_1_0_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._Lookup_1_0_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

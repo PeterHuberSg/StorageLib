@@ -28,47 +28,119 @@ namespace TestContext {
   partial class SingleChildChild: ITestChild<SingleChildParent, SingleChildParentN, SingleChildParentR, SingleChildParentNR> { }
 
 
-  partial class ListParent: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> { }
-  partial class ListParentN: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> { }
-  partial class ListParentR: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> { }
-  partial class ListParentNR: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> { }
+  partial class ListParent: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> {
+    public int CountAllChildren => children.CountAll;
+    public IEnumerable<ListChild> GetAllChildren => children.GetAll();
+    public ListChild? AllChildrenFirst => children.FirstOrDefault();
+  }
+  partial class ListParentN: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> {
+    public int CountAllChildren => children.CountAll;
+    public IEnumerable<ListChild> GetAllChildren => children.GetAll();
+    public ListChild? AllChildrenFirst => children.FirstOrDefault();
+  }
+  partial class ListParentR: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> {
+    public int CountAllChildren => children.CountAll;
+    public IEnumerable<ListChild> GetAllChildren => children.GetAll();
+    public ListChild? AllChildrenFirst => children.FirstOrDefault();
+  }
+  partial class ListParentNR: ICollectionParent<ListParent, ListParentN, ListParentR, ListParentNR, ListChild> {
+    public int CountAllChildren => children.CountAll;
+    public IEnumerable<ListChild> GetAllChildren => children.GetAll();
+    public ListChild? AllChildrenFirst => children.FirstOrDefault();
+  }
   partial class ListChild: ITestChild<ListParent, ListParentN, ListParentR, ListParentNR> { }
 
 
   partial class DictionaryParent: ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild> {
-    IReadOnlyList<DictionaryChild> ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild>.Children =>
-      (IReadOnlyList<DictionaryChild>)DictionaryChidren.Values.ToList();
+    public int CountAllChildren => dictionaryChildren.CountAll;
+    public IEnumerable<DictionaryChild> GetAllChildren {
+      get{
+        foreach (var item in dictionaryChildren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public DictionaryChild? AllChildrenFirst => dictionaryChildren.FirstOrDefault().Value;
   }
   partial class DictionaryParentN: ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild> {
-    IReadOnlyList<DictionaryChild> ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild>.Children =>
-      (IReadOnlyList<DictionaryChild>)DictionaryChidren.Values.ToList();
+    public int CountAllChildren => dictionaryChildren.CountAll;
+    public IEnumerable<DictionaryChild> GetAllChildren {
+      get {
+        foreach (var item in dictionaryChildren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public DictionaryChild? AllChildrenFirst => dictionaryChildren.FirstOrDefault().Value;
   }
   partial class DictionaryParentR: ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild> {
-    IReadOnlyList<DictionaryChild> ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild>.Children =>
-      (IReadOnlyList<DictionaryChild>)DictionaryChidren.Values.ToList();
+    public int CountAllChildren => dictionaryChildren.CountAll;
+    public IEnumerable<DictionaryChild> GetAllChildren {
+      get {
+        foreach (var item in dictionaryChildren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public DictionaryChild? AllChildrenFirst => dictionaryChildren.FirstOrDefault().Value;
   }
   partial class DictionaryParentNR: ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild> {
-    IReadOnlyList<DictionaryChild> ICollectionParent<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild>.Children =>
-      (IReadOnlyList<DictionaryChild>)DictionaryChidren.Values.ToList();
+    public int CountAllChildren => dictionaryChildren.CountAll;
+    public IEnumerable<DictionaryChild> GetAllChildren {
+      get {
+        foreach (var item in dictionaryChildren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public DictionaryChild? AllChildrenFirst => dictionaryChildren.FirstOrDefault().Value;
   }
   partial class DictionaryChild: ITestChild<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR> { }
 
 
   partial class SortedListParent: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    IReadOnlyList<SortedListChild> ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild>.Children =>
-      (IReadOnlyList<SortedListChild>)SortedListChidren.Values.ToList();
+    public int CountAllChildren => sortedListChidren.CountAll;
+    public IEnumerable<SortedListChild> GetAllChildren {
+      get {
+        foreach (var item in sortedListChidren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
   }
   partial class SortedListParentN: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    IReadOnlyList<SortedListChild> ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild>.Children =>
-      (IReadOnlyList<SortedListChild>)SortedListChidren.Values.ToList();
+    public int CountAllChildren => sortedListChidren.CountAll;
+    public IEnumerable<SortedListChild> GetAllChildren {
+      get {
+        foreach (var item in sortedListChidren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
   }
   partial class SortedListParentR: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    IReadOnlyList<SortedListChild> ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild>.Children =>
-      (IReadOnlyList<SortedListChild>)SortedListChidren.Values.ToList();
+    public int CountAllChildren => sortedListChidren.CountAll;
+    public IEnumerable<SortedListChild> GetAllChildren {
+      get {
+        foreach (var item in sortedListChidren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
   }
   partial class SortedListParentNR: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    IReadOnlyList<SortedListChild> ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild>.Children =>
-      (IReadOnlyList<SortedListChild>)SortedListChidren.Values.ToList();
+    public int CountAllChildren => sortedListChidren.CountAll;
+    public IEnumerable<SortedListChild> GetAllChildren {
+      get {
+        foreach (var item in sortedListChidren.GetAll()) {
+          yield return item.Value;
+        }
+      }
+    }
+    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
   }
   partial class SortedListChild: ITestChild<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR> { }
 

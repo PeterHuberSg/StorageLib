@@ -46,7 +46,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing SortedListWithPropertyNameChild
+    /// None existing SortedListWithPropertyNameChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSortedListWithPropertyNameChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSortedListWithPropertyNameChild.
     /// </summary>
     internal static SortedListWithPropertyNameChild NoSortedListWithPropertyNameChild = new SortedListWithPropertyNameChild("NoName", "NoAddress", SortedListWithPropertyNameParent.NoSortedListWithPropertyNameParent, isStoring: false);
     #endregion
@@ -109,9 +113,7 @@ namespace DataModelSamples  {
       Name = csvReader.ReadString();
       Address = csvReader.ReadString();
       var sortedListWithPropertyNameParentKey = csvReader.ReadInt();
-      Parent = DC.Data._SortedListWithPropertyNameParents.GetItem(sortedListWithPropertyNameParentKey)??
-        throw new Exception($"Read SortedListWithPropertyNameChild from CSV file: Cannot find Parent with key {sortedListWithPropertyNameParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._SortedListWithPropertyNameParents.GetItem(sortedListWithPropertyNameParentKey)?? SortedListWithPropertyNameParent.NoSortedListWithPropertyNameParent;
       if (Parent!=SortedListWithPropertyNameParent.NoSortedListWithPropertyNameParent) {
         Parent.AddToChildren(this);
       }
@@ -266,8 +268,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"SortedListWithPropertyNameChild.Release(): SortedListWithPropertyNameChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._SortedListWithPropertyNameChilds.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

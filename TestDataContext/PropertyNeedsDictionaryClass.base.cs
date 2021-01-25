@@ -416,8 +416,8 @@ namespace TestContext  {
         DC.Data._PropertyNeedsDictionaryClassesByTextNullableLower.Remove(TextNullableLower);
       }
       DC.Data._PropertyNeedsDictionaryClassesByTextReadonlyLower.Remove(TextReadonlyLower);
-      onReleased();
       DC.Data._PropertyNeedsDictionaryClasses.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released PropertyNeedsDictionaryClass @{Key} #{GetHashCode()}");
 #endif

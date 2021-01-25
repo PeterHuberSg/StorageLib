@@ -285,25 +285,25 @@ namespace TestContext {
 
   public class DictionaryParent {
     public string Text;
-    public Dictionary<string, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChildren;
   }
 
   public class DictionaryParentN {
     public string Text;
-    public Dictionary<string, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChildren;
   }
 
   public class DictionaryParentR {
     public string Text;
-    public Dictionary<string, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChildren;
   }
 
   public class DictionaryParentNR {
     public string Text;
-    public Dictionary<string, DictionaryChild> DictionaryChidren;
+    public Dictionary<string, DictionaryChild> DictionaryChildren;
   }
 
-  [StorageClass(pluralName: "DictionaryChidren")]
+  [StorageClass(pluralName: "DictionaryChildren")]
   public class DictionaryChild {
     public string Text;
     public DictionaryParent Parent;
@@ -727,6 +727,23 @@ namespace TestContext {
     public TestParent Parent;
   }
   #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   //Todo: TwoListsParent needs StorageProperty to link child property to parent list
   //#region Parent with 2 lists for same child type

@@ -60,16 +60,16 @@ namespace StorageLib {
     public IStorageItem Clone();
     +*/
 
-    /// <summary>
-    /// Item.Store() adds the item to the data context. 
-    /// </summary>
-    public void Store();
+    ///// <summary>
+    ///// Item.Store() adds the item to the data context. 
+    ///// </summary>
+    //public void Store();
 
 
-    /// <summary>
-    /// Removes item from DataStore.
-    /// </summary>
-    public void Release();
+    ///// <summary>
+    ///// Removes item from DataStore.
+    ///// </summary>
+    //public void Release();
 
 
     /// <summary>

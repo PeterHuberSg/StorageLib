@@ -129,7 +129,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing DataModelDataTypes
+    /// None existing DataModelDataTypes, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDataModelDataTypes. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDataModelDataTypes.
     /// </summary>
     internal static DataModelDataTypes NoDataModelDataTypes = new DataModelDataTypes(DateTime.MinValue.Date, TimeSpan.MinValue, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue, TimeSpan.MinValue, Decimal.MinValue, Decimal.MinValue, Decimal.MinValue, Decimal.MinValue, false, int.MinValue, long.MinValue, char.MaxValue, "NoString_", isStoring: false);
     #endregion
@@ -483,8 +487,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"DataModelDataTypes.Release(): DataModelDataTypes '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._DataModelDataTypess.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

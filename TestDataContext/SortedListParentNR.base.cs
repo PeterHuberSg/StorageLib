@@ -42,8 +42,8 @@ namespace TestContext  {
     public string Text { get; private set; }
 
 
-    public IReadOnlyDictionary<string, SortedListChild> SortedListChidren => sortedListChidren;
-    readonly SortedList<string, SortedListChild> sortedListChidren;
+    public IStorageReadOnlyDictionary<string, SortedListChild> SortedListChidren => sortedListChidren;
+    readonly StorageSortedList<SortedListParentNR, string, SortedListChild> sortedListChidren;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public SortedListParentNR(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      sortedListChidren = new SortedList<string, SortedListChild>();
+      sortedListChidren = new StorageSortedList<SortedListParentNR, string, SortedListChild>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new SortedListParentNR: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private SortedListParentNR(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      sortedListChidren = new SortedList<string, SortedListChild>();
+      sortedListChidren = new StorageSortedList<SortedListParentNR, string, SortedListChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -270,8 +270,8 @@ namespace TestContext  {
             $"because '{sortedListChild}' in SortedListParentNR.SortedListChidren is still stored.");
         }
       }
-      onReleased();
       DC.Data._SortedListParentNRs.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SortedListParentNR @{Key} #{GetHashCode()}");
 #endif
@@ -371,7 +371,8 @@ namespace TestContext  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
-        $" SortedListChidren: {SortedListChidren.Count};";
+        $" SortedListChidren: {SortedListChidren.Count}," +
+        $" SortedListChidrenAll: {SortedListChidren.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

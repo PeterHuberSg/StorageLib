@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing SingleChild_1_C_Child
+    /// None existing SingleChild_1_C_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSingleChild_1_C_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSingleChild_1_C_Child.
     /// </summary>
     internal static SingleChild_1_C_Child NoSingleChild_1_C_Child = new SingleChild_1_C_Child("NoName", SingleChild_1_C_Parent.NoSingleChild_1_C_Parent, isStoring: false);
     #endregion
@@ -103,9 +107,7 @@ namespace DataModelSamples  {
       Key = key;
       Name = csvReader.ReadString();
       var singleChild_1_C_ParentKey = csvReader.ReadInt();
-      Parent = DC.Data._SingleChild_1_C_Parents.GetItem(singleChild_1_C_ParentKey)??
-        throw new Exception($"Read SingleChild_1_C_Child from CSV file: Cannot find Parent with key {singleChild_1_C_ParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._SingleChild_1_C_Parents.GetItem(singleChild_1_C_ParentKey)?? SingleChild_1_C_Parent.NoSingleChild_1_C_Parent;
       if (Parent!=SingleChild_1_C_Parent.NoSingleChild_1_C_Parent) {
         Parent.AddToChild(this);
       }
@@ -254,8 +256,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"SingleChild_1_C_Child.Release(): SingleChild_1_C_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._SingleChild_1_C_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

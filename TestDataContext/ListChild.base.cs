@@ -428,8 +428,8 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"ListChild.Release(): ListChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._ListChidren.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released ListChild @{Key} #{GetHashCode()}");
 #endif

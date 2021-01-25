@@ -33,7 +33,7 @@ namespace DataModelSamples  {
     public string Name { get; private set; }
 
 
-    public Lookup_1_0_Parent Parent { get; private set; }
+    public Lookup_1_0_Parent? Parent { get; private set; }
 
 
     /// <summary>
@@ -43,9 +43,13 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing Lookup_C_0_Child
+    /// None existing Lookup_C_0_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoLookup_C_0_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoLookup_C_0_Child.
     /// </summary>
-    internal static Lookup_C_0_Child NoLookup_C_0_Child = new Lookup_C_0_Child("NoName", Lookup_1_0_Parent.NoLookup_1_0_Parent, isStoring: false);
+    internal static Lookup_C_0_Child NoLookup_C_0_Child = new Lookup_C_0_Child("NoName", null, isStoring: false);
     #endregion
 
 
@@ -65,7 +69,7 @@ namespace DataModelSamples  {
     /// <summary>
     /// Lookup_C_0_Child Constructor. If isStoring is true, adds Lookup_C_0_Child to DC.Data.Lookup_C_0_Childs.
     /// </summary>
-    public Lookup_C_0_Child(string name, Lookup_1_0_Parent parent, bool isStoring = true) {
+    public Lookup_C_0_Child(string name, Lookup_1_0_Parent? parent, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
       Parent = parent;
@@ -101,10 +105,10 @@ namespace DataModelSamples  {
     private Lookup_C_0_Child(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      var lookup_1_0_ParentKey = csvReader.ReadInt();
-      Parent = DC.Data._Lookup_1_0_Parents.GetItem(lookup_1_0_ParentKey)??
-        throw new Exception($"Read Lookup_C_0_Child from CSV file: Cannot find Parent with key {lookup_1_0_ParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      var parentKey = csvReader.ReadIntNull();
+      if (parentKey.HasValue) {
+        Parent = DC.Data._Lookup_1_0_Parents.GetItem(parentKey.Value)?? Lookup_1_0_Parent.NoLookup_1_0_Parent;
+      }
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -144,7 +148,7 @@ namespace DataModelSamples  {
       onStoring(ref isCancelled);
       if (isCancelled) return;
 
-      if (Parent.Key<0) {
+      if (Parent?.Key<0) {
         throw new Exception($"Cannot store child Lookup_C_0_Child '{this}'.Parent to Lookup_1_0_Parent '{Parent}' because parent is not stored yet.");
       }
       DC.Data._Lookup_C_0_Childs.Add(this);
@@ -166,9 +170,13 @@ namespace DataModelSamples  {
     internal static void Write(Lookup_C_0_Child lookup_C_0_Child, CsvWriter csvWriter) {
       lookup_C_0_Child.onCsvWrite();
       csvWriter.Write(lookup_C_0_Child.Name);
-      if (lookup_C_0_Child.Parent.Key<0) throw new Exception($"Cannot write lookup_C_0_Child '{lookup_C_0_Child}' to CSV File, because Parent is not stored in DC.Data.Lookup_1_0_Parents.");
+      if (lookup_C_0_Child.Parent is null) {
+        csvWriter.WriteNull();
+      } else {
+        if (lookup_C_0_Child.Parent.Key<0) throw new Exception($"Cannot write lookup_C_0_Child '{lookup_C_0_Child}' to CSV File, because Parent is not stored in DC.Data.Lookup_1_0_Parents.");
 
-      csvWriter.Write(lookup_C_0_Child.Parent.Key.ToString());
+        csvWriter.Write(lookup_C_0_Child.Parent.Key.ToString());
+      }
     }
     partial void onCsvWrite();
 
@@ -176,9 +184,9 @@ namespace DataModelSamples  {
     /// <summary>
     /// Updates Lookup_C_0_Child with the provided values
     /// </summary>
-    public void Update(string name, Lookup_1_0_Parent parent) {
+    public void Update(string name, Lookup_1_0_Parent? parent) {
       if (Key>=0){
-        if (parent.Key<0) {
+        if (parent?.Key<0) {
           throw new Exception($"Lookup_C_0_Child.Update(): It is illegal to add stored Lookup_C_0_Child '{this}'" + Environment.NewLine + 
             $"to Parent '{parent}', which is not stored.");
         }
@@ -209,7 +217,7 @@ namespace DataModelSamples  {
         HasChanged?.Invoke(clone, this);
       }
     }
-    partial void onUpdating(string name, Lookup_1_0_Parent parent, ref bool isCancelled);
+    partial void onUpdating(string name, Lookup_1_0_Parent? parent, ref bool isCancelled);
     partial void onUpdated(Lookup_C_0_Child old);
 
 
@@ -218,10 +226,26 @@ namespace DataModelSamples  {
     /// </summary>
     internal static void Update(Lookup_C_0_Child lookup_C_0_Child, CsvReader csvReader){
       lookup_C_0_Child.Name = csvReader.ReadString();
-        var parent = DC.Data._Lookup_1_0_Parents.GetItem(csvReader.ReadInt())??
+      var parentKey = csvReader.ReadIntNull();
+      Lookup_1_0_Parent? parent;
+      if (parentKey is null) {
+        parent = null;
+      } else {
+        parent = DC.Data._Lookup_1_0_Parents.GetItem(parentKey.Value)??
           Lookup_1_0_Parent.NoLookup_1_0_Parent;
-      if (lookup_C_0_Child.Parent!=parent) {
-        lookup_C_0_Child.Parent = parent;
+      }
+      if (lookup_C_0_Child.Parent is null) {
+        if (parent is null) {
+          //nothing to do
+        } else {
+          lookup_C_0_Child.Parent = parent;
+        }
+      } else {
+        if (parent is null) {
+          lookup_C_0_Child.Parent = null;
+        } else {
+          lookup_C_0_Child.Parent = parent;
+        }
       }
       lookup_C_0_Child.onCsvUpdate();
     }
@@ -235,8 +259,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"Lookup_C_0_Child.Release(): Lookup_C_0_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._Lookup_C_0_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -293,7 +317,7 @@ namespace DataModelSamples  {
       var returnString =
         $"{this.GetKeyOrHash()}|" +
         $" {Name}|" +
-        $" Parent {Parent.GetKeyOrHash()}";
+        $" Parent {Parent?.GetKeyOrHash()}";
       onToTraceString(ref returnString);
       return returnString;
     }
@@ -307,7 +331,7 @@ namespace DataModelSamples  {
       var returnString =
         $"{Key.ToKeyString()}," +
         $" {Name}," +
-        $" {Parent.ToShortString()}";
+        $" {Parent?.ToShortString()}";
       onToShortString(ref returnString);
       return returnString;
     }
@@ -321,7 +345,7 @@ namespace DataModelSamples  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Parent: {Parent.ToShortString()};";
+        $" Parent: {Parent?.ToShortString()};";
       onToString(ref returnString);
       return returnString;
     }

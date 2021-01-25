@@ -129,9 +129,9 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Called after a dictionaryChild gets added to DictionaryChidren.
+    /// Called after a dictionaryChild gets added to DictionaryChildren.
     /// </summary>
-    partial void onAddedToDictionaryChidren(DictionaryChild dictionaryChild){
+    partial void onAddedToDictionaryChildren(DictionaryChild dictionaryChild){
     }
 
 

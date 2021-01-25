@@ -553,7 +553,8 @@ namespace StorageLib {
             IsTransactionRunning = true;
             OnStartTransaction();
           }
-          DataContextBase.TransactionItems.Add(new TransactionItem(StoreKey, TransactionActivityEnum.Release, item.Key, item, index));
+          DataContextBase.TransactionItems.Add(new TransactionItem(StoreKey,
+            TransactionActivityEnum.Release, item.Key, item, index));
           DataContextBase.TransactionStoreFlags[(int)StoreKey] = true;
         }
         OnItemRemoved(item);

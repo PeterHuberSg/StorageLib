@@ -40,7 +40,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing Lookup_1_0_Parent
+    /// None existing Lookup_1_0_Parent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoLookup_1_0_Parent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoLookup_1_0_Parent.
     /// </summary>
     internal static Lookup_1_0_Parent NoLookup_1_0_Parent = new Lookup_1_0_Parent("NoName", isStoring: false);
     #endregion

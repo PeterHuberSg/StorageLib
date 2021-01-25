@@ -92,7 +92,7 @@ namespace TestContext  {
     //      ------------
 
     /// <summary>
-    /// DictionaryChild Constructor. If isStoring is true, adds DictionaryChild to DC.Data.DictionaryChidren.
+    /// DictionaryChild Constructor. If isStoring is true, adds DictionaryChild to DC.Data.DictionaryChildren.
     /// </summary>
     public DictionaryChild(
       string text, 
@@ -111,13 +111,13 @@ namespace TestContext  {
 #if DEBUG
       DC.Trace?.Invoke($"new DictionaryChild: {ToTraceString()}");
 #endif
-      Parent.AddToDictionaryChidren(this);
+      Parent.AddToDictionaryChildren(this);
       if (ParentN!=null) {
-        ParentN.AddToDictionaryChidren(this);
+        ParentN.AddToDictionaryChildren(this);
       }
-      ParentR.AddToDictionaryChidren(this);
+      ParentR.AddToDictionaryChildren(this);
       if (ParentNR!=null) {
-        ParentNR.AddToDictionaryChidren(this);
+        ParentNR.AddToDictionaryChildren(this);
       }
       onConstruct();
       if (DC.Data.IsTransaction) {
@@ -167,16 +167,16 @@ namespace TestContext  {
         ParentNR = DC.Data._DictionaryParentNRs.GetItem(parentNRKey.Value)?? DictionaryParentNR.NoDictionaryParentNR;
       }
       if (Parent!=DictionaryParent.NoDictionaryParent) {
-        Parent.AddToDictionaryChidren(this);
+        Parent.AddToDictionaryChildren(this);
       }
       if (parentNKey.HasValue && ParentN!=DictionaryParentN.NoDictionaryParentN) {
-        ParentN!.AddToDictionaryChidren(this);
+        ParentN!.AddToDictionaryChildren(this);
       }
       if (ParentR!=DictionaryParentR.NoDictionaryParentR) {
-        ParentR.AddToDictionaryChidren(this);
+        ParentR.AddToDictionaryChildren(this);
       }
       if (parentNRKey.HasValue && ParentNR!=DictionaryParentNR.NoDictionaryParentNR) {
-        ParentNR!.AddToDictionaryChidren(this);
+        ParentNR!.AddToDictionaryChildren(this);
       }
       onCsvConstruct();
     }
@@ -211,7 +211,7 @@ namespace TestContext  {
     //      -------
 
     /// <summary>
-    /// Adds DictionaryChild to DC.Data.DictionaryChidren.<br/>
+    /// Adds DictionaryChild to DC.Data.DictionaryChildren.<br/>
     /// Throws an Exception when DictionaryChild is already stored.
     /// </summary>
     public void Store() {
@@ -235,7 +235,7 @@ namespace TestContext  {
       if (ParentNR?.Key<0) {
         throw new Exception($"Cannot store child DictionaryChild '{this}'.ParentNR to DictionaryParentNR '{ParentNR}' because parent is not stored yet.");
       }
-      DC.Data._DictionaryChidren.Add(this);
+      DC.Data._DictionaryChildren.Add(this);
       onStored();
 #if DEBUG
       DC.Trace?.Invoke($"Stored DictionaryChild #{GetHashCode()} @{Key}");
@@ -307,11 +307,11 @@ namespace TestContext  {
       //remove not yet updated item from parents which will be removed by update
       var hasParentChanged = Parent!=parent || Text!=text;
       if (hasParentChanged) {
-        Parent.RemoveFromDictionaryChidren(this);
+        Parent.RemoveFromDictionaryChildren(this);
       }
       var hasParentNChanged = ParentN!=parentN || Text!=text;
       if (ParentN is not null && hasParentNChanged) {
-        ParentN.RemoveFromDictionaryChidren(this);
+        ParentN.RemoveFromDictionaryChildren(this);
       }
 
       //update properties and detect if any value has changed
@@ -331,15 +331,15 @@ namespace TestContext  {
 
       //add updated item to parents which have been newly added during update
       if (hasParentChanged) {
-        Parent.AddToDictionaryChidren(this);
+        Parent.AddToDictionaryChildren(this);
       }
       if (ParentN is not null && hasParentNChanged) {
-        ParentN.AddToDictionaryChidren(this);
+        ParentN.AddToDictionaryChildren(this);
       }
       if (isChangeDetected) {
         onUpdated(clone);
         if (Key>=0) {
-          DC.Data._DictionaryChidren.ItemHasChanged(clone, this);
+          DC.Data._DictionaryChildren.ItemHasChanged(clone, this);
         } else if (DC.Data.IsTransaction) {
           DC.Data.AddTransaction(new TransactionItem(19, TransactionActivityEnum.Update, Key, this, oldItem: clone));
         }
@@ -362,10 +362,10 @@ namespace TestContext  {
           DictionaryParent.NoDictionaryParent;
       if (dictionaryChild.Parent!=parent) {
         if (dictionaryChild.Parent!=DictionaryParent.NoDictionaryParent) {
-          dictionaryChild.Parent.RemoveFromDictionaryChidren(dictionaryChild);
+          dictionaryChild.Parent.RemoveFromDictionaryChildren(dictionaryChild);
         }
         dictionaryChild.Parent = parent;
-        dictionaryChild.Parent.AddToDictionaryChidren(dictionaryChild);
+        dictionaryChild.Parent.AddToDictionaryChildren(dictionaryChild);
       }
       var parentNKey = csvReader.ReadIntNull();
       DictionaryParentN? parentN;
@@ -380,20 +380,20 @@ namespace TestContext  {
           //nothing to do
         } else {
           dictionaryChild.ParentN = parentN;
-          dictionaryChild.ParentN.AddToDictionaryChidren(dictionaryChild);
+          dictionaryChild.ParentN.AddToDictionaryChildren(dictionaryChild);
         }
       } else {
         if (parentN is null) {
           if (dictionaryChild.ParentN!=DictionaryParentN.NoDictionaryParentN) {
-            dictionaryChild.ParentN.RemoveFromDictionaryChidren(dictionaryChild);
+            dictionaryChild.ParentN.RemoveFromDictionaryChildren(dictionaryChild);
           }
           dictionaryChild.ParentN = null;
         } else {
           if (dictionaryChild.ParentN!=DictionaryParentN.NoDictionaryParentN) {
-            dictionaryChild.ParentN.RemoveFromDictionaryChidren(dictionaryChild);
+            dictionaryChild.ParentN.RemoveFromDictionaryChildren(dictionaryChild);
           }
           dictionaryChild.ParentN = parentN;
-          dictionaryChild.ParentN.AddToDictionaryChidren(dictionaryChild);
+          dictionaryChild.ParentN.AddToDictionaryChildren(dictionaryChild);
         }
       }
         var parentR = DC.Data._DictionaryParentRs.GetItem(csvReader.ReadInt())??
@@ -422,14 +422,14 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Removes DictionaryChild from DC.Data.DictionaryChidren.
+    /// Removes DictionaryChild from DC.Data.DictionaryChildren.
     /// </summary>
     public void Release() {
       if (Key<0) {
         throw new Exception($"DictionaryChild.Release(): DictionaryChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      DC.Data._DictionaryChildren.Remove(Key);
       onReleased();
-      DC.Data._DictionaryChidren.Remove(Key);
 #if DEBUG
       DC.Trace?.Invoke($"Released DictionaryChild @{Key} #{GetHashCode()}");
 #endif
@@ -446,16 +446,16 @@ namespace TestContext  {
       DC.Trace?.Invoke($"Rollback new DictionaryChild(): {dictionaryChild.ToTraceString()}");
 #endif
       if (dictionaryChild.Parent!=DictionaryParent.NoDictionaryParent) {
-        dictionaryChild.Parent.RemoveFromDictionaryChidren(dictionaryChild);
+        dictionaryChild.Parent.RemoveFromDictionaryChildren(dictionaryChild);
       }
       if (dictionaryChild.ParentN!=null && dictionaryChild.ParentN!=DictionaryParentN.NoDictionaryParentN) {
-        dictionaryChild.ParentN.RemoveFromDictionaryChidren(dictionaryChild);
+        dictionaryChild.ParentN.RemoveFromDictionaryChildren(dictionaryChild);
       }
       if (dictionaryChild.ParentR!=DictionaryParentR.NoDictionaryParentR) {
-        dictionaryChild.ParentR.RemoveFromDictionaryChidren(dictionaryChild);
+        dictionaryChild.ParentR.RemoveFromDictionaryChildren(dictionaryChild);
       }
       if (dictionaryChild.ParentNR!=null && dictionaryChild.ParentNR!=DictionaryParentNR.NoDictionaryParentNR) {
-        dictionaryChild.ParentNR.RemoveFromDictionaryChidren(dictionaryChild);
+        dictionaryChild.ParentNR.RemoveFromDictionaryChildren(dictionaryChild);
       }
       dictionaryChild.onRollbackItemNew();
     }
@@ -463,7 +463,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Releases DictionaryChild from DC.Data.DictionaryChidren as part of a transaction rollback of Store().
+    /// Releases DictionaryChild from DC.Data.DictionaryChildren as part of a transaction rollback of Store().
     /// </summary>
     internal static void RollbackItemStore(IStorageItem item) {
       var dictionaryChild = (DictionaryChild) item;
@@ -500,11 +500,11 @@ namespace TestContext  {
       // remove updated item from parents
       var hasParentChanged = oldItem.Parent!=item.Parent || oldItem.Text!=item.Text;
       if (hasParentChanged) {
-        item.Parent.RemoveFromDictionaryChidren(item);
+        item.Parent.RemoveFromDictionaryChildren(item);
       }
       var hasParentNChanged = oldItem.ParentN!=item.ParentN || oldItem.Text!=item.Text;
       if (hasParentNChanged && item.ParentN is not null) {
-        item.ParentN.RemoveFromDictionaryChidren(item);
+        item.ParentN.RemoveFromDictionaryChildren(item);
       }
 
       // updated item: restore old values
@@ -514,10 +514,10 @@ namespace TestContext  {
 
       // add item with previous values to parents
       if (hasParentChanged) {
-        item.Parent.AddToDictionaryChidren(item);
+        item.Parent.AddToDictionaryChildren(item);
       }
       if (hasParentNChanged && item.ParentN is not null) {
-        item.ParentN.AddToDictionaryChidren(item);
+        item.ParentN.AddToDictionaryChildren(item);
       }
       item.onRollbackItemUpdated(oldItem);
 #if DEBUG
@@ -528,7 +528,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Adds DictionaryChild to DC.Data.DictionaryChidren as part of a transaction rollback of Release().
+    /// Adds DictionaryChild to DC.Data.DictionaryChildren as part of a transaction rollback of Release().
     /// </summary>
     internal static void RollbackItemRelease(IStorageItem item) {
       var dictionaryChild = (DictionaryChild) item;

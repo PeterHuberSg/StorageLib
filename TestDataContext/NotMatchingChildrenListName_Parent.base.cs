@@ -51,8 +51,8 @@ namespace TestContext  {
     /// <summary>
     /// Deletable children which must have a parent
     /// </summary>
-    public IReadOnlyList<NotMatchingChildrenListName_Child> Children => children;
-    readonly List<NotMatchingChildrenListName_Child> children;
+    public IStorageReadOnlyList<NotMatchingChildrenListName_Child> Children => children;
+    readonly StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child> children;
 
 
     /// <summary>
@@ -91,7 +91,7 @@ namespace TestContext  {
     public NotMatchingChildrenListName_Parent(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      children = new List<NotMatchingChildrenListName_Child>();
+      children = new StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new NotMatchingChildrenListName_Parent: {ToTraceString()}");
 #endif
@@ -126,7 +126,7 @@ namespace TestContext  {
     private NotMatchingChildrenListName_Parent(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      children = new List<NotMatchingChildrenListName_Child>();
+      children = new StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -279,8 +279,8 @@ namespace TestContext  {
             $"because '{notMatchingChildrenListName_Child}' in NotMatchingChildrenListName_Parent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._NotMatchingChildrenListName_Parents.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released NotMatchingChildrenListName_Parent @{Key} #{GetHashCode()}");
 #endif
@@ -380,7 +380,8 @@ namespace TestContext  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

@@ -46,7 +46,11 @@ namespace YourNamespace  {
 
 
     /// <summary>
-    /// None existing Child
+    /// None existing Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoChild.
     /// </summary>
     internal static Child NoChild = new Child("NoName", Parent.NoParent, isStoring: false);
     #endregion
@@ -106,9 +110,7 @@ namespace YourNamespace  {
       Key = key;
       Name = csvReader.ReadString();
       var parentKey = csvReader.ReadInt();
-      Parent = DC.Data._Parents.GetItem(parentKey)??
-        throw new Exception($"Read Child from CSV file: Cannot find Parent with key {parentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._Parents.GetItem(parentKey)?? Parent.NoParent;
       if (Parent!=Parent.NoParent) {
         Parent.AddToChildren(this);
       }
@@ -257,8 +259,8 @@ namespace YourNamespace  {
       if (Key<0) {
         throw new Exception($"Child.Release(): Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._Children.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

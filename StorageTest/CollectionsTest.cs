@@ -83,6 +83,7 @@ namespace StorageTest {
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. 
     public CollectionTestBase() {
     #pragma warning restore CS8618
+      #pragma warning disable IDE0045 // Convert to conditional expression
       if (typeof(TChild)==typeof(ListChild)) {
         collectionType = CollectionTypeEnum.list;
       } else if (typeof(TChild)==typeof(DictionaryChild)) {
@@ -92,6 +93,7 @@ namespace StorageTest {
       } else {
         throw new NotSupportedException();
       }
+      #pragma warning restore IDE0045
 
       var directoryInfo = new DirectoryInfo("TestCsv");
       if (directoryInfo.Exists) {
@@ -147,19 +149,18 @@ namespace StorageTest {
         dc.StartTransaction();
         var child0_ = createChild("c0_Temp", parent0_, null, parentR0_, parentNR0_, isStoring: false);
         dc.RollbackTransaction();
-        Assert.AreEqual(0, parent0_.Children.Count);
-        Assert.AreEqual(0, parentR0_.Children.Count);
-        Assert.AreEqual(0, parentNR0_.Children.Count);
+        Assert.AreEqual(0, parent0_.CountAllChildren);
+        Assert.AreEqual(0, parentR0_.CountAllChildren);
+        Assert.AreEqual(0, parentNR0_.CountAllChildren);
         assertData("p0|");
-        Assert.AreEqual(0, parent0_.Children.Count);
 
         dc.StartTransaction();
         child0_ = createChild("c0_", parent0_, null, parentR0_, parentNR0_, isStoring: false);
         dc.CommitTransaction();
         Assert.AreEqual("c0_", child0_.Text);
-        Assert.AreEqual(child0_, parent0_.Children[0]);
-        Assert.AreEqual(child0_, parentR0_.Children[0]);
-        Assert.AreEqual(child0_, parentNR0_.Children[0]);
+        Assert.AreEqual(child0_, parent0_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parentR0_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parentNR0_.AllChildrenFirst);
         assertDataDisposeDCRecreateDCassertData("p0|");
 
 
@@ -169,9 +170,9 @@ namespace StorageTest {
         dc.StartTransaction();
         var child0__ = createChild("c0__Temp", parent0, null, parentR0, parentNR0, isStoring: false);
         dc.RollbackTransaction();
-        Assert.AreEqual(0, parent0.Children.Count);
-        Assert.AreEqual(0, parentR0.Children.Count);
-        Assert.AreEqual(0, parentNR0.Children.Count);
+        Assert.AreEqual(0, parent0.CountAllChildren);
+        Assert.AreEqual(0, parentR0.CountAllChildren);
+        Assert.AreEqual(0, parentNR0.CountAllChildren);
         assertData("p0|pR0|pNR0|");
 
         dc.StartTransaction();
@@ -193,7 +194,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0 = createChild("c0", parent0, null, parentR0, parentNR0, isStoring: true);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0:c0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0:;c0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
         //Fail to create stored child with not stored parent
         traceHeader("fail to create stored child with not stored parents");
@@ -208,8 +209,8 @@ namespace StorageTest {
         }
         //Todo: Ideally, an exception during create, store or remove should not change any data. Is additional code needed undoing 
         //any potentially changed data ? 
-        //Assert.AreEqual(0, parent0_.Children.Count);
-        assertDataDisposeDCRecreateDCassertData("p0:c0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        //Assert.AreEqual(0, parent0_.CountAllChildren);
+        assertDataDisposeDCRecreateDCassertData("p0:;c0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
         // Update
         // ======
@@ -224,18 +225,18 @@ namespace StorageTest {
         dc.StartTransaction();
         child0_.Update("c0_.1Temp", (TP)parent1_, (TPN)parentN0_);
         dc.RollbackTransaction();
-        Assert.AreEqual(child0_, parent0_.Children[0]);
-        Assert.AreEqual(0, parentN0_.Children.Count);
-        Assert.AreEqual(0, parent1_.Children.Count);
-        assertData("p0:c0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        Assert.AreEqual(child0_, parent0_.AllChildrenFirst);
+        Assert.AreEqual(0, parentN0_.CountAllChildren);
+        Assert.AreEqual(0, parent1_.CountAllChildren);
+        assertData("p0:;c0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0_.Update("c0_.1", (TP)parent1_, (TPN)parentN0_);
         dc.CommitTransaction();
-        Assert.AreEqual(0, parent0_.Children.Count);
-        Assert.AreEqual(child0_, parentN0_.Children[0]);
-        Assert.AreEqual(child0_, parent1_.Children[0]);
-        assertDataDisposeDCRecreateDCassertData("p0:c0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        Assert.AreEqual(0, parent0_.CountAllChildren);
+        Assert.AreEqual(child0_, parentN0_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parent1_.AllChildrenFirst);
+        assertDataDisposeDCRecreateDCassertData("p0:;c0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update with stored parents");
@@ -247,7 +248,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__", child0__.Text);
         Assert.AreEqual(parent0.Text, child0__.Parent.Text);
         Assert.IsNull(child0__.ParentN);
-        assertData("p0:c0|p1|pN0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertData("p0:;c0|p1|pN0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0__.Update("c0__.1", (TP)parent1, (TPN)parentN0);
@@ -256,20 +257,20 @@ namespace StorageTest {
         Assert.AreEqual(parent1, child0__.Parent);
         Assert.AreEqual(parentN0, child0__.ParentN);
         assertDataDisposeDCRecreateDCassertData(
-          "p0:c0|p1:c0__.1|pN0:c0__.1|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|",
-          "p0:c0|p1|pN0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+          "p0:;c0|p1:c0__.1|pN0:c0__.1|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|",
+          "p0:;c0|p1|pN0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
 
         traceHeader("stored child: update with stored parents");
         dc.StartTransaction();
         child0.Update("c0.1Temp", (TP)parent1, (TPN)parentN0);
         dc.RollbackTransaction();
-        assertData("p0:c0|p1|pN0|pR0:c0|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertData("p0:;c0|p1|pN0|pR0:;c0|pNR0:;c0|c0:p0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0.Update("c0.1", (TP)parent1, (TPN)parentN0);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.1|pN0:c0.1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.1|pN0:;c0.1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         // Update child.ParentN to parentN1
         // --------------------------------
@@ -280,20 +281,20 @@ namespace StorageTest {
         child0_.Update("c0_.2Temp", (TP)parent1_, (TPN)parentN1_);
         dc.RollbackTransaction();
         Assert.AreEqual("c0_.1", child0_.Text);
-        Assert.AreEqual(child0_, parent1_.Children[0]);
-        Assert.AreEqual(child0_, parentN0_.Children[0]);
-        Assert.AreEqual(0, parentN1_.Children.Count);
-        assertData("p0|p1:c0.1|pN0:c0.1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        Assert.AreEqual(child0_, parent1_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parentN0_.AllChildrenFirst);
+        Assert.AreEqual(0, parentN1_.CountAllChildren);
+        assertData("p0|p1:;c0.1|pN0:;c0.1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0_.Update("c0_.2", (TP)parent1_, (TPN)parentN1_);
         dc.CommitTransaction();
         Assert.AreEqual("c0_.2", child0_.Text);
-        Assert.AreEqual(0, parent0_.Children.Count);
-        Assert.AreEqual(0, parentN0_.Children.Count);
-        Assert.AreEqual(child0_, parent1_.Children[0]);
-        Assert.AreEqual(child0_, parentN1_.Children[0]);
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.1|pN0:c0.1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        Assert.AreEqual(0, parent0_.CountAllChildren);
+        Assert.AreEqual(0, parentN0_.CountAllChildren);
+        Assert.AreEqual(child0_, parent1_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parentN1_.AllChildrenFirst);
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.1|pN0:;c0.1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update stored ParentN");
@@ -304,7 +305,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.1", child0__.Text);
         Assert.AreEqual(parent1.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN0.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.1|pN0:c0.1|pN1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.1|pN0:;c0.1|pN1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0__.Update("c0__.2", (TP)parent1, (TPN)parentN1);
@@ -313,20 +314,20 @@ namespace StorageTest {
         Assert.AreEqual(parent1, child0__.Parent);
         Assert.AreEqual(parentN1, child0__.ParentN);
         assertDataDisposeDCRecreateDCassertData(
-          "p0|p1:c0__.2,c0.1|pN0:c0.1|pN1:c0__.2|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|",
-          "p0|p1:c0.1|pN0:c0.1|pN1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+          "p0|p1:c0__.2;,c0.1|pN0:;c0.1|pN1:c0__.2|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|",
+          "p0|p1:;c0.1|pN0:;c0.1|pN1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
 
         traceHeader("stored child: update stored ParentN");
         dc.StartTransaction();
         child0.Update("c0.2Temp", (TP)parent1, (TPN)parentN1);
         dc.RollbackTransaction();
-        assertData("p0|p1:c0.1|pN0:c0.1|pN1|pR0:c0.1|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        assertData("p0|p1:;c0.1|pN0:;c0.1|pN1|pR0:;c0.1|pNR0:;c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         dc.StartTransaction();
         child0.Update("c0.2", (TP)parent1, (TPN)parentN1);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         // Update child.ParentN to null
         // ----------------------------
@@ -336,17 +337,17 @@ namespace StorageTest {
         child0_.Update("c0_.3Temp", (TP)parent1_, null);
         dc.RollbackTransaction();
         Assert.AreEqual("c0_.2", child0_.Text);
-        Assert.AreEqual(child0_, parent1_.Children[0]);
-        Assert.AreEqual(child0_, parentN1_.Children[0]);
-        assertData("p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+        Assert.AreEqual(child0_, parent1_.AllChildrenFirst);
+        Assert.AreEqual(child0_, parentN1_.AllChildrenFirst);
+        assertData("p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
         child0_.Update("c0_.3", (TP)parent1_, null);
         dc.CommitTransaction();
         Assert.AreEqual("c0_.3", child0_.Text);
-        Assert.AreEqual(0, parentN0_.Children.Count);
-        Assert.AreEqual(child0_, parent1_.Children[0]);
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+        Assert.AreEqual(0, parentN0_.CountAllChildren);
+        Assert.AreEqual(child0_, parent1_.AllChildrenFirst);
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
 
         traceHeader("not stored child: update stored ParentN to null");
@@ -356,7 +357,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.2", child0__.Text);
         Assert.AreEqual(parent1.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN1.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
         child0__.Update("c0__.3", (TP)parent1, null);
@@ -365,20 +366,20 @@ namespace StorageTest {
         Assert.AreEqual(parent1, child0__.Parent);
         Assert.IsNull(child0__.ParentN);
         assertDataDisposeDCRecreateDCassertData(
-          "p0|p1:c0__.3,c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|",
-          "p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+          "p0|p1:c0__.3;,c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|",
+          "p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
 
         traceHeader("stored child: update stored ParentN to null");
         dc.StartTransaction();
         child0.Update("c0.3Temp", (TP)parent1, null);
         dc.RollbackTransaction();
-        assertData("p0|p1:c0.2|pN0|pN1:c0.2|pR0:c0.2|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
+        assertData("p0|p1:;c0.2|pN0|pN1:;c0.2|pR0:;c0.2|pNR0:;c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
         child0.Update("c0.3", (TP)parent1, null);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p1:c0.3|pN0|pN1|pR0:c0.3|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
 
         // Release
@@ -391,38 +392,40 @@ namespace StorageTest {
           Assert.Fail();
         } catch {
         }
-        assertData("p0|p1:c0.3|pN0|pN1|pR0:c0.3|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
+        assertData("p0|p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
         //Release child
         //-------------
+        traceHeader("stored child: release child");
         child1 = createChild("c1", parent1, parentN1, parentR0, parentNR0, isStoring: true);
         assertDataDisposeDCRecreateDCassertData(
-          "p0|p1:c0.3,c1|pN0|pN1:c1|pR0:c0.3,c1|pNR0:c0.3,c1|c0.3:p1,pR0,pNR0|c1:p1,pN1,pR0,pNR0|");
+          "p0|p1:;c0.3,c1|pN0|pN1:;c1|pR0:;c0.3,c1|pNR0:;c0.3,c1|c0.3:p1,pR0,pNR0|c1:p1,pN1,pR0,pNR0|");
         dc.StartTransaction();
         child1.Release();
         dc.RollbackTransaction();
-        assertData("p0|p1:c0.3,c1|pN0|pN1:c1|pR0:c0.3,c1|pNR0:c0.3,c1|c0.3:p1,pR0,pNR0|c1:p1,pN1,pR0,pNR0|");
+        assertData("p0|p1:;c0.3,c1|pN0|pN1:;c1|pR0:;c0.3,c1|pNR0:;c0.3,c1|c0.3:p1,pR0,pNR0|c1:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
         child1.Release();
         dc.CommitTransaction();
         child1 = null;
         assertDataDisposeDCRecreateDCassertData(
-          "p0|p1:c0.3,c1|pN0|pN1:c1|pR0:c0.3,c1|pNR0:c0.3,c1|c0.3:p1,pR0,pNR0|",
-          "p0|p1:c0.3|pN0|pN1|pR0:c0.3|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
+          "p0|p1:;c0.3,c1|pN0|pN1:c1|pR0:;c0.3,c1|pNR0:;c0.3,c1|c0.3:p1,pR0,pNR0|",
+          "p0|p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
         //Release parent
         //--------------
+        traceHeader("stored parent: release parent");
         dc.StartTransaction();
         parent0.Release();
         dc.RollbackTransaction();
-        assertData("p0|p1:c0.3|pN0|pN1|pR0:c0.3|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
+        assertData("p0|p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
         dc.StartTransaction();
         parent0.Release();
         dc.CommitTransaction();
         parent0 = null;
-        assertDataDisposeDCRecreateDCassertData("p1:c0.3|pN0|pN1|pR0:c0.3|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCassertData("p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
 
       } finally {
@@ -563,7 +566,7 @@ namespace StorageTest {
         dcParents[(int)parentTypeEnum.parentN] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.DictionaryParentNs;
         dcParents[(int)parentTypeEnum.parentR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.DictionaryParentRs;
         dcParents[(int)parentTypeEnum.parentNR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.DictionaryParentNRs;
-        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.DictionaryChidren;
+        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.DictionaryChildren;
         break;
       case CollectionTypeEnum.sortedList:
         dcParents[(int)parentTypeEnum.parent] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParents;
@@ -577,7 +580,8 @@ namespace StorageTest {
       }
     }
 
-    List<string> childrenStrings = new();
+
+    readonly List<(bool IsStored,string Text)> childrenStrings = new();
 
 
     private void append(ref string s, parentTypeEnum parentType) {
@@ -585,21 +589,33 @@ namespace StorageTest {
 
       foreach (var parent in parents) {
         s += parent.Text;
-        if (parent.Children.Count>0) {
+        if (parent.CountAllChildren>0) {
           s += ':';
           childrenStrings.Clear();
-          foreach (var child in parent.Children) {
-            childrenStrings.Add(child.Text);
+          foreach (var child in parent.GetAllChildren) {
+            childrenStrings.Add((child.Key>=0, child.Text));
           }
           var isFirstChild = true;
-          childrenStrings.Sort();
-          foreach (var childString in childrenStrings) {
+          var isFirstStoredMissing = true;
+          var l1 = childrenStrings.OrderBy(cs => cs.Text).ThenBy(cs => cs.IsStored).ToList();
+          var l2 = childrenStrings.OrderByDescending(cs => cs.Text).ThenBy(cs => cs.IsStored).ToList();
+          var l3 = childrenStrings.OrderBy(cs => cs.Text).ThenByDescending(cs => cs.IsStored).ToList();
+          var l4 = childrenStrings.OrderByDescending(cs => cs.Text).ThenByDescending(cs => cs.IsStored).ToList();
+          var l5 = childrenStrings.OrderBy(cs => cs.IsStored).ThenBy(cs => cs.Text).ToList();
+          var l6 = childrenStrings.OrderByDescending(cs => cs.IsStored).ThenBy(cs => cs.Text).ToList();
+          var l7 = childrenStrings.OrderBy(cs => cs.IsStored).ThenByDescending(cs => cs.Text).ToList();
+          var l8 = childrenStrings.OrderByDescending(cs => cs.IsStored).ThenByDescending(cs => cs.Text).ToList();
+          foreach (var (isStored, text) in childrenStrings.OrderBy(cs => cs.Text).ThenBy(cs => cs.IsStored)) {
+            if (isFirstStoredMissing && isStored) {
+              isFirstStoredMissing = false;
+              s += ';';
+            }
             if (isFirstChild) {
               isFirstChild = false;
             } else {
               s += ',';
             }
-            s += childString;
+            s += text;
           }
         }
         s += '|';

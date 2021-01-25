@@ -52,7 +52,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing ListWithPropertyNameChild
+    /// None existing ListWithPropertyNameChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoListWithPropertyNameChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoListWithPropertyNameChild.
     /// </summary>
     internal static ListWithPropertyNameChild NoListWithPropertyNameChild = new ListWithPropertyNameChild(DateTime.MinValue.Date, DateTime.MinValue.Date, ListWithPropertyNameParent.NoListWithPropertyNameParent, isStoring: false);
     #endregion
@@ -115,9 +119,7 @@ namespace DataModelSamples  {
       Date1 = csvReader.ReadDate();
       Date2 = csvReader.ReadDate();
       var listWithPropertyNameParentKey = csvReader.ReadInt();
-      Parent = DC.Data._ListWithPropertyNameParents.GetItem(listWithPropertyNameParentKey)??
-        throw new Exception($"Read ListWithPropertyNameChild from CSV file: Cannot find Parent with key {listWithPropertyNameParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._ListWithPropertyNameParents.GetItem(listWithPropertyNameParentKey)?? ListWithPropertyNameParent.NoListWithPropertyNameParent;
       if (Parent!=ListWithPropertyNameParent.NoListWithPropertyNameParent) {
         Parent.AddToChildren(this);
       }
@@ -274,8 +276,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"ListWithPropertyNameChild.Release(): ListWithPropertyNameChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._ListWithPropertyNameChilds.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

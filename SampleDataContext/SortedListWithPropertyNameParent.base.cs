@@ -33,8 +33,8 @@ namespace DataModelSamples  {
     public string Name { get; private set; }
 
 
-    public IReadOnlyDictionary<string, SortedListWithPropertyNameChild> Children => children;
-    readonly SortedList<string, SortedListWithPropertyNameChild> children;
+    public IStorageReadOnlyDictionary<string, SortedListWithPropertyNameChild> Children => children;
+    readonly StorageSortedList<SortedListWithPropertyNameParent, string, SortedListWithPropertyNameChild> children;
 
 
     /// <summary>
@@ -44,7 +44,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing SortedListWithPropertyNameParent
+    /// None existing SortedListWithPropertyNameParent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSortedListWithPropertyNameParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSortedListWithPropertyNameParent.
     /// </summary>
     internal static SortedListWithPropertyNameParent NoSortedListWithPropertyNameParent = new SortedListWithPropertyNameParent("NoName", isStoring: false);
     #endregion
@@ -69,7 +73,7 @@ namespace DataModelSamples  {
     public SortedListWithPropertyNameParent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new SortedList<string, SortedListWithPropertyNameChild>();
+      children = new StorageSortedList<SortedListWithPropertyNameParent, string, SortedListWithPropertyNameChild>(this);
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(35,TransactionActivityEnum.New, Key, this));
@@ -101,7 +105,7 @@ namespace DataModelSamples  {
     private SortedListWithPropertyNameParent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new SortedList<string, SortedListWithPropertyNameChild>();
+      children = new StorageSortedList<SortedListWithPropertyNameParent, string, SortedListWithPropertyNameChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -237,8 +241,8 @@ namespace DataModelSamples  {
             $"because '{sortedListWithPropertyNameChild}' in SortedListWithPropertyNameParent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._SortedListWithPropertyNameParents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -320,7 +324,8 @@ namespace DataModelSamples  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

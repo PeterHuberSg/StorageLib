@@ -16,10 +16,9 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
+using StorageLib;
 using System;
 using System.IO;
-using System.Text;
-using StorageLib;
 using YourNamespace; //The name of this namespace is defined in your Data Model
 
 
@@ -28,7 +27,7 @@ namespace GetStartedConsole {
     static void Main(string[] args) {
       Console.BackgroundColor = ConsoleColor.White;
       Console.ForegroundColor = ConsoleColor.Black;
-      Console.SetWindowSize(Console.LargestWindowWidth, Console.LargestWindowHeight);
+      Console.SetWindowSize(Console.LargestWindowWidth*8/10, Console.LargestWindowHeight*9/10);
       Console.WriteLine("StorageLib Get Started Application");
       Console.WriteLine("==================================");
       Console.WriteLine();
@@ -49,7 +48,7 @@ namespace GetStartedConsole {
         Child child0;
         if (dc.IsNew) {
           //new data context, we come here only the very first time Program runs or when the .csv gets deleted
-          parent0 = new Parent("Parent0"); //per default, new stores instance in Data Context
+          parent0 = new Parent("Parent0"); //per default, new() stores instance in Data Context
           parent1 = new Parent("Parent1", isStoring: false); //example where new instance is not stored yet
           parent1.Store(); //this can be done much later, but before application shuts down
           child0 = new Child("Child0", parent0);//this adds child0 automatically to parent0.Children
@@ -86,8 +85,18 @@ namespace GetStartedConsole {
         dc.RollbackTransaction(); //normally, a dc.CommitTransaction() would be here
         consoleWriteLine("After transaction rollback", parent0, parent1, child0);
 
-        child0.Release(); // removing child0 from dc.Children, but it is still in parent0.Children
+        child0.Release(); // removing child0 from dc.Children
         consoleWriteLine("After child0.Release", parent0, parent1, child0);
+
+        //child0 is still in parent0.Children. 
+        //Since parent0 is stored, not stored child0 will not show when using:
+        //foreach (var child in parent0.Children) {
+        // To see all children when a parent is stored, use:
+        //foreach (var child in parent0.Children.GetAll()) {
+
+        //Similarly, parent0.Children.Count will only count stored children when parent is stored.
+        //Use, parent0.Children.Count will only count stored children when parent is stored.
+
 
         child0.Store();
         consoleWriteLine("After child0.Store", parent0, parent1, child0);

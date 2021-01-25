@@ -377,6 +377,7 @@ namespace StorageTest {
 
         //Release child
         //-------------
+        traceHeader("stored child: release child");
         parentR1 = new SingleChildParentR("pR1", isStoring: true);
         parentNR1 = new SingleChildParentNR("pNR1", isStoring: true);
         child1 = new SingleChildChild("c1", parent0, parentN1, parentR1, parentNR1, isStoring: true);
@@ -397,6 +398,7 @@ namespace StorageTest {
 
         //Release parent
         //--------------
+        traceHeader("stored parent: release parent");
         dc.StartTransaction();
         parent0.Release();
         dc.RollbackTransaction();

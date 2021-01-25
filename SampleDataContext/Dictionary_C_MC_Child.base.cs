@@ -46,7 +46,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing Dictionary_C_MC_Child
+    /// None existing Dictionary_C_MC_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionary_C_MC_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionary_C_MC_Child.
     /// </summary>
     internal static Dictionary_C_MC_Child NoDictionary_C_MC_Child = new Dictionary_C_MC_Child(DateTime.MinValue.Date, null, isStoring: false);
     #endregion
@@ -284,8 +288,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"Dictionary_C_MC_Child.Release(): Dictionary_C_MC_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._Dictionary_C_MC_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

@@ -150,8 +150,8 @@ namespace TestContext  {
     /// <summary>
     /// Some SampleDetails comment
     /// </summary>
-    public IReadOnlyList<SampleDetail> SampleDetails => sampleDetails;
-    readonly List<SampleDetail> sampleDetails;
+    public IStorageReadOnlyList<SampleDetail> SampleDetails => sampleDetails;
+    readonly StorageList<Sample, SampleDetail> sampleDetails;
 
 
     /// <summary>
@@ -241,7 +241,7 @@ namespace TestContext  {
       OneMaster = oneMaster;
       OtherMaster = otherMaster;
       Optional = optional;
-      sampleDetails = new List<SampleDetail>();
+      sampleDetails = new StorageList<Sample, SampleDetail>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new Sample: {ToTraceString()}");
 #endif
@@ -318,7 +318,7 @@ namespace TestContext  {
         OtherMaster = DC.Data._SampleMasters.GetItem(otherMasterKey.Value)?? SampleMaster.NoSampleMaster;
       }
       Optional = csvReader.ReadStringNull();
-      sampleDetails = new List<SampleDetail>();
+      sampleDetails = new StorageList<Sample, SampleDetail>(this);
       if (oneMasterKey.HasValue && OneMaster!=SampleMaster.NoSampleMaster) {
         OneMaster!.AddToSampleX(this);
       }
@@ -738,8 +738,8 @@ namespace TestContext  {
             $"because '{sampleDetail}' in Sample.SampleDetails is still stored.");
         }
       }
-      onReleased();
       DC.Data._SampleX.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released Sample @{Key} #{GetHashCode()}");
 #endif
@@ -923,7 +923,8 @@ namespace TestContext  {
         $" OneMaster: {OneMaster?.ToShortString()}," +
         $" OtherMaster: {OtherMaster?.ToShortString()}," +
         $" Optional: {Optional}," +
-        $" SampleDetails: {SampleDetails.Count};";
+        $" SampleDetails: {SampleDetails.Count}," +
+        $" SampleDetailsAll: {SampleDetails.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

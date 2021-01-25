@@ -129,16 +129,16 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Called after a dictionaryChild gets added to DictionaryChidren.
+    /// Called after a dictionaryChild gets added to DictionaryChildren.
     /// </summary>
-    partial void onAddedToDictionaryChidren(DictionaryChild dictionaryChild){
+    partial void onAddedToDictionaryChildren(DictionaryChild dictionaryChild){
     }
 
 
     /// <summary>
-    /// Called after a dictionaryChild gets removed from DictionaryChidren.
+    /// Called after a dictionaryChild gets removed from DictionaryChildren.
     /// </summary>
-    partial void onRemovedFromDictionaryChidren(DictionaryChild dictionaryChild){
+    partial void onRemovedFromDictionaryChildren(DictionaryChild dictionaryChild){
     }
 
 

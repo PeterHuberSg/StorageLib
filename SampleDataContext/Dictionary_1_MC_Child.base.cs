@@ -46,7 +46,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing Dictionary_1_MC_Child
+    /// None existing Dictionary_1_MC_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionary_1_MC_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionary_1_MC_Child.
     /// </summary>
     internal static Dictionary_1_MC_Child NoDictionary_1_MC_Child = new Dictionary_1_MC_Child(DateTime.MinValue.Date, Dictionary_1_MC_Parent.NoDictionary_1_MC_Parent, isStoring: false);
     #endregion
@@ -106,9 +110,7 @@ namespace DataModelSamples  {
       Key = key;
       Date = csvReader.ReadDate();
       var dictionary_1_MC_ParentKey = csvReader.ReadInt();
-      Parent = DC.Data._Dictionary_1_MC_Parents.GetItem(dictionary_1_MC_ParentKey)??
-        throw new Exception($"Read Dictionary_1_MC_Child from CSV file: Cannot find Parent with key {dictionary_1_MC_ParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._Dictionary_1_MC_Parents.GetItem(dictionary_1_MC_ParentKey)?? Dictionary_1_MC_Parent.NoDictionary_1_MC_Parent;
       if (Parent!=Dictionary_1_MC_Parent.NoDictionary_1_MC_Parent) {
         Parent.AddToChildren(this);
       }
@@ -258,8 +260,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"Dictionary_1_MC_Child.Release(): Dictionary_1_MC_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._Dictionary_1_MC_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

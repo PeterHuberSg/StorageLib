@@ -33,8 +33,8 @@ namespace DataModelSamples  {
     public string Name { get; private set; }
 
 
-    public IReadOnlyList<ListWithPropertyNameChild> Children => children;
-    readonly List<ListWithPropertyNameChild> children;
+    public IStorageReadOnlyList<ListWithPropertyNameChild> Children => children;
+    readonly StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild> children;
 
 
     /// <summary>
@@ -44,7 +44,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing ListWithPropertyNameParent
+    /// None existing ListWithPropertyNameParent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoListWithPropertyNameParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoListWithPropertyNameParent.
     /// </summary>
     internal static ListWithPropertyNameParent NoListWithPropertyNameParent = new ListWithPropertyNameParent("NoName", isStoring: false);
     #endregion
@@ -69,7 +73,7 @@ namespace DataModelSamples  {
     public ListWithPropertyNameParent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new List<ListWithPropertyNameChild>();
+      children = new StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild>(this);
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(23,TransactionActivityEnum.New, Key, this));
@@ -101,7 +105,7 @@ namespace DataModelSamples  {
     private ListWithPropertyNameParent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new List<ListWithPropertyNameChild>();
+      children = new StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -237,8 +241,8 @@ namespace DataModelSamples  {
             $"because '{listWithPropertyNameChild}' in ListWithPropertyNameParent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._ListWithPropertyNameParents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -320,7 +324,8 @@ namespace DataModelSamples  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

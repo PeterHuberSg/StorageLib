@@ -501,15 +501,35 @@ namespace StorageLib {
                 } else {
                   isFound = true;
                   mi.ChildMemberInfo = childMI;
+                  //////if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
+                  //////  //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
+                  //////  mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                  //////  mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                  //////} else {
+                  //////  //Dictionary
+                  //////  //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
+                  //////  mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                  //////  mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                  //////}
                   if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
                     //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
-                    mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    if (childMI.ClassInfo.AreInstancesReleasable) {
+                      mi.TypeString = $"StorageSortedList<{mi.ClassInfo.ClassName}, {childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    } else {
+                      mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    }
                   } else {
                     //Dictionary
                     //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
-                    mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    if (childMI.ClassInfo.AreInstancesReleasable) {
+                      mi.TypeString = $"StorageDictionary<{mi.ClassInfo.ClassName}, {childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    } else {
+                      mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                    }
                   }
                   if (mi.ChildKeyPropertyName is null) {
                     mi.ChildKeyPropertyName = childKeyMIFound.MemberName;

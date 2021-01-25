@@ -42,8 +42,8 @@ namespace TestContext  {
     public string Text { get; private set; }
 
 
-    public IReadOnlyList<TestChild> Children => children;
-    readonly List<TestChild> children;
+    public IStorageReadOnlyList<TestChild> Children => children;
+    readonly StorageList<TestParent, TestChild> children;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public TestParent(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      children = new List<TestChild>();
+      children = new StorageList<TestParent, TestChild>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new TestParent: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private TestParent(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      children = new List<TestChild>();
+      children = new StorageList<TestParent, TestChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -270,8 +270,8 @@ namespace TestContext  {
             $"because '{testChild}' in TestParent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._TestParents.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released TestParent @{Key} #{GetHashCode()}");
 #endif
@@ -371,7 +371,8 @@ namespace TestContext  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

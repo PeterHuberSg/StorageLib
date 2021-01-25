@@ -71,10 +71,10 @@ namespace TestContext  {
     internal DataStore<DataTypeSample> _DataTypeSamples { get; private set; }
 
     /// <summary>
-    /// Directory of all DictionaryChidren
+    /// Directory of all DictionaryChildren
     /// </summary>
-    public IReadonlyDataStore<DictionaryChild> DictionaryChidren => _DictionaryChidren;
-    internal DataStore<DictionaryChild> _DictionaryChidren { get; private set; }
+    public IReadonlyDataStore<DictionaryChild> DictionaryChildren => _DictionaryChildren;
+    internal DataStore<DictionaryChild> _DictionaryChildren { get; private set; }
 
     /// <summary>
     /// Directory of all DictionaryParents
@@ -595,7 +595,7 @@ namespace TestContext  {
         DataStores[18] = _DictionaryParentNRs;
         onDictionaryParentNRsFilled();
 
-        _DictionaryChidren = new DataStore<DictionaryChild>(
+        _DictionaryChildren = new DataStore<DictionaryChild>(
           this,
           19,
           DictionaryChild.SetKey,
@@ -605,8 +605,8 @@ namespace TestContext  {
           DictionaryChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        DataStores[19] = _DictionaryChidren;
-        onDictionaryChidrenFilled();
+        DataStores[19] = _DictionaryChildren;
+        onDictionaryChildrenFilled();
 
         _SortedListParents = new DataStore<SortedListParent>(
           this,
@@ -1223,7 +1223,7 @@ namespace TestContext  {
         DataStores[18] = _DictionaryParentNRs;
         onDictionaryParentNRsFilled();
 
-        _DictionaryChidren = new DataStoreCSV<DictionaryChild>(
+        _DictionaryChildren = new DataStoreCSV<DictionaryChild>(
           this,
           19,
           csvConfig!,
@@ -1240,10 +1240,10 @@ namespace TestContext  {
           DictionaryChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        IsPartiallyNew |= _DictionaryChidren.IsNew;
-        IsNew &= _DictionaryChidren.IsNew;
-        DataStores[19] = _DictionaryChidren;
-        onDictionaryChidrenFilled();
+        IsPartiallyNew |= _DictionaryChildren.IsNew;
+        IsNew &= _DictionaryChildren.IsNew;
+        DataStores[19] = _DictionaryChildren;
+        onDictionaryChildrenFilled();
 
         _SortedListParents = new DataStoreCSV<SortedListParent>(
           this,
@@ -1690,9 +1690,9 @@ namespace TestContext  {
     partial void onDictionaryParentNRsFilled();
 
     /// <summary>}
-    /// Called once the data for DictionaryChidren is read.
+    /// Called once the data for DictionaryChildren is read.
     /// </summary>}
-    partial void onDictionaryChidrenFilled();
+    partial void onDictionaryChildrenFilled();
 
     /// <summary>}
     /// Called once the data for SortedListParents is read.
@@ -1834,8 +1834,8 @@ namespace TestContext  {
         _SortedListParentNs = null!;
         _SortedListParents?.Dispose();
         _SortedListParents = null!;
-        _DictionaryChidren?.Dispose();
-        _DictionaryChidren = null!;
+        _DictionaryChildren?.Dispose();
+        _DictionaryChildren = null!;
         _DictionaryParentNRs?.Dispose();
         _DictionaryParentNRs = null!;
         _DictionaryParentRs?.Dispose();

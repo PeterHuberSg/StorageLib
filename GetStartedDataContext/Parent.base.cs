@@ -42,8 +42,8 @@ namespace YourNamespace  {
     /// <summary>
     /// Any child created will automatically get added here.
     /// </summary>
-    public IReadOnlyList<Child> Children => children;
-    readonly List<Child> children;
+    public IStorageReadOnlyList<Child> Children => children;
+    readonly StorageList<Parent, Child> children;
 
 
     /// <summary>
@@ -53,7 +53,11 @@ namespace YourNamespace  {
 
 
     /// <summary>
-    /// None existing Parent
+    /// None existing Parent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoParent.
     /// </summary>
     internal static Parent NoParent = new Parent("NoName", isStoring: false);
     #endregion
@@ -78,7 +82,7 @@ namespace YourNamespace  {
     public Parent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new List<Child>();
+      children = new StorageList<Parent, Child>(this);
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(0,TransactionActivityEnum.New, Key, this));
@@ -110,7 +114,7 @@ namespace YourNamespace  {
     private Parent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new List<Child>();
+      children = new StorageList<Parent, Child>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -246,8 +250,8 @@ namespace YourNamespace  {
             $"because '{child}' in Parent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._Parents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -329,7 +333,8 @@ namespace YourNamespace  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

@@ -42,8 +42,8 @@ namespace TestContext  {
     public string Text { get; private set; }
 
 
-    public IReadOnlyDictionary<string, DictionaryChild> DictionaryChidren => dictionaryChidren;
-    readonly Dictionary<string, DictionaryChild> dictionaryChidren;
+    public IStorageReadOnlyDictionary<string, DictionaryChild> DictionaryChildren => dictionaryChildren;
+    readonly StorageDictionary<DictionaryParentNR, string, DictionaryChild> dictionaryChildren;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public DictionaryParentNR(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      dictionaryChidren = new Dictionary<string, DictionaryChild>();
+      dictionaryChildren = new StorageDictionary<DictionaryParentNR, string, DictionaryChild>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new DictionaryParentNR: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private DictionaryParentNR(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      dictionaryChidren = new Dictionary<string, DictionaryChild>();
+      dictionaryChildren = new StorageDictionary<DictionaryParentNR, string, DictionaryChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -221,40 +221,40 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Add dictionaryChild to DictionaryChidren.
+    /// Add dictionaryChild to DictionaryChildren.
     /// </summary>
-    internal void AddToDictionaryChidren(DictionaryChild dictionaryChild) {
+    internal void AddToDictionaryChildren(DictionaryChild dictionaryChild) {
 #if DEBUG
       if (dictionaryChild==DictionaryChild.NoDictionaryChild) throw new Exception();
       if ((dictionaryChild.Key>=0)&&(Key<0)) throw new Exception();
-      if (dictionaryChidren.ContainsKey(dictionaryChild.Text)) throw new Exception();
+      if (dictionaryChildren.ContainsKey(dictionaryChild.Text)) throw new Exception();
 #endif
-      dictionaryChidren.Add(dictionaryChild.Text, dictionaryChild);
-      onAddedToDictionaryChidren(dictionaryChild);
+      dictionaryChildren.Add(dictionaryChild.Text, dictionaryChild);
+      onAddedToDictionaryChildren(dictionaryChild);
 #if DEBUG
       DC.Trace?.Invoke($"Add DictionaryChild {dictionaryChild.GetKeyOrHash()} to " +
-        $"{this.GetKeyOrHash()} DictionaryParentNR.DictionaryChidren");
+        $"{this.GetKeyOrHash()} DictionaryParentNR.DictionaryChildren");
 #endif
     }
-    partial void onAddedToDictionaryChidren(DictionaryChild dictionaryChild);
+    partial void onAddedToDictionaryChildren(DictionaryChild dictionaryChild);
 
 
     /// <summary>
     /// Removes dictionaryChild from DictionaryParentNR.
     /// </summary>
-    internal void RemoveFromDictionaryChidren(DictionaryChild dictionaryChild) {
+    internal void RemoveFromDictionaryChildren(DictionaryChild dictionaryChild) {
 #if DEBUG
-      if (!dictionaryChidren.Remove(dictionaryChild.Text)) throw new Exception();
+      if (!dictionaryChildren.Remove(dictionaryChild.Text)) throw new Exception();
 #else
-        dictionaryChidren.Remove(dictionaryChild.Text);
+        dictionaryChildren.Remove(dictionaryChild.Text);
 #endif
-      onRemovedFromDictionaryChidren(dictionaryChild);
+      onRemovedFromDictionaryChildren(dictionaryChild);
 #if DEBUG
       DC.Trace?.Invoke($"Remove DictionaryChild {dictionaryChild.GetKeyOrHash()} from " +
-        $"{this.GetKeyOrHash()} DictionaryParentNR.DictionaryChidren");
+        $"{this.GetKeyOrHash()} DictionaryParentNR.DictionaryChildren");
 #endif
     }
-    partial void onRemovedFromDictionaryChidren(DictionaryChild dictionaryChild);
+    partial void onRemovedFromDictionaryChildren(DictionaryChild dictionaryChild);
 
 
     /// <summary>
@@ -264,14 +264,14 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"DictionaryParentNR.Release(): DictionaryParentNR '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      foreach (var dictionaryChild in DictionaryChidren.Values) {
+      foreach (var dictionaryChild in DictionaryChildren.Values) {
         if (dictionaryChild?.Key>=0) {
           throw new Exception($"Cannot release DictionaryParentNR '{this}' " + Environment.NewLine + 
-            $"because '{dictionaryChild}' in DictionaryParentNR.DictionaryChidren is still stored.");
+            $"because '{dictionaryChild}' in DictionaryParentNR.DictionaryChildren is still stored.");
         }
       }
-      onReleased();
       DC.Data._DictionaryParentNRs.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released DictionaryParentNR @{Key} #{GetHashCode()}");
 #endif
@@ -371,7 +371,8 @@ namespace TestContext  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
-        $" DictionaryChidren: {DictionaryChidren.Count};";
+        $" DictionaryChildren: {DictionaryChildren.Count}," +
+        $" DictionaryChildrenAll: {DictionaryChildren.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

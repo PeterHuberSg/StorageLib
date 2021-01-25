@@ -41,9 +41,12 @@ namespace TestContext {
     where TChild : ITestChild<TParent, TParentN, TParentR, TParentNR> 
   {
     string Text { get; }
-    IReadOnlyList<TChild> Children { get; }
-
+    int CountAllChildren { get; }
+    IEnumerable<TChild> GetAllChildren { get; }
+    TChild? AllChildrenFirst { get; }
     void Update(string text);
+
+    void Release();
   }
 
 
@@ -60,5 +63,7 @@ namespace TestContext {
     TParentNR? ParentNR { get; }
 
     void Update(string text, TParent parent, TParentN? parentN);
+
+    void Release();
   }
 }

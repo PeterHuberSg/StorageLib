@@ -52,7 +52,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing DictionaryWithPropertyNameChild
+    /// None existing DictionaryWithPropertyNameChild, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionaryWithPropertyNameChild. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionaryWithPropertyNameChild.
     /// </summary>
     internal static DictionaryWithPropertyNameChild NoDictionaryWithPropertyNameChild = new DictionaryWithPropertyNameChild(DateTime.MinValue.Date, DateTime.MinValue.Date, DictionaryWithPropertyNameParent.NoDictionaryWithPropertyNameParent, isStoring: false);
     #endregion
@@ -115,9 +119,7 @@ namespace DataModelSamples  {
       Date1 = csvReader.ReadDate();
       Date2 = csvReader.ReadDate();
       var dictionaryWithPropertyNameParentKey = csvReader.ReadInt();
-      Parent = DC.Data._DictionaryWithPropertyNameParents.GetItem(dictionaryWithPropertyNameParentKey)??
-        throw new Exception($"Read DictionaryWithPropertyNameChild from CSV file: Cannot find Parent with key {dictionaryWithPropertyNameParentKey}." + Environment.NewLine + 
-          csvReader.PresentContent);
+      Parent = DC.Data._DictionaryWithPropertyNameParents.GetItem(dictionaryWithPropertyNameParentKey)?? DictionaryWithPropertyNameParent.NoDictionaryWithPropertyNameParent;
       if (Parent!=DictionaryWithPropertyNameParent.NoDictionaryWithPropertyNameParent) {
         Parent.AddToChildren(this);
       }
@@ -274,8 +276,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"DictionaryWithPropertyNameChild.Release(): DictionaryWithPropertyNameChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._DictionaryWithPropertyNameChilds.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

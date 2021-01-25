@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing ToLowerCasePropertyClass
+    /// None existing ToLowerCasePropertyClass, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoToLowerCasePropertyClass. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoToLowerCasePropertyClass.
     /// </summary>
     internal static ToLowerCasePropertyClass NoToLowerCasePropertyClass = new ToLowerCasePropertyClass("NoName", isStoring: false);
     #endregion
@@ -204,8 +208,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"ToLowerCasePropertyClass.Release(): ToLowerCasePropertyClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._ToLowerCasePropertyClasss.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

@@ -163,6 +163,8 @@ namespace StorageLib {
       //flushTimer = new Timer(flushTimerMethod, null, Timeout.Infinite, Timeout.Infinite);
       FlushDelay = flushDelay;
     }
+
+    //todo: Add constructor with capacity, store number of records per DataStore in additional file, size datastore properly at startup
     #endregion
 
 
@@ -370,7 +372,8 @@ namespace StorageLib {
         lock (csvWriter!) {
           csvWriter.WriteFirstLineChar(CsvConfig.LineCharDelete);
           csvWriter.Write(item.Key);
-          write!(item, csvWriter);
+          //Todo: cannot write content of deleted item, because it might link to an already deleted parent
+          //write!(item, csvWriter);
           csvWriter.WriteEndOfLine();
         }
         //kickFlushTimer();

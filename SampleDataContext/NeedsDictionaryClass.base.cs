@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing NeedsDictionaryClass
+    /// None existing NeedsDictionaryClass, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoNeedsDictionaryClass. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoNeedsDictionaryClass.
     /// </summary>
     internal static NeedsDictionaryClass NoNeedsDictionaryClass = new NeedsDictionaryClass("NoName", "NoAddress", isStoring: false);
     #endregion
@@ -219,8 +223,8 @@ namespace DataModelSamples  {
         throw new Exception($"NeedsDictionaryClass.Release(): NeedsDictionaryClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
       DC.Data._NeedsDictionaryClasssByName.Remove(Name);
-      onReleased();
       DC.Data._NeedsDictionaryClasss.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

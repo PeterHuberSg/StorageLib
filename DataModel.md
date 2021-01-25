@@ -1,6 +1,6 @@
 # Introduction  
-This document specifies the content of a *Data Model* .cs file. Code samples of the functionality 
-can be found in the file *DataModelSamples.cs* in the *SampleDataModel* project.
+This document specifies the content of a *Data Model* .cs file. Code samples for the functionality 
+described here can be found in the file *DataModelSamples.cs* in the *SampleDataModel* project.
 
 
 # Table of Contents  
@@ -16,9 +16,9 @@ can be found in the file *DataModelSamples.cs* in the *SampleDataModel* project.
 [**Property with default value**](#property-with-default-value)  
 [**Automatic lower case copy of string property**](#automatic-lower-case-copy-of-string-property)  
 [**Enumeration Properties**](#enumeration-properties)  
-[**Parent without maintained relationsip to child, 1:0 or c:0**](#parent-without-maintained-relationsip-to-child)  
-[**xxx**](#xxx)  
-[**xxx**](#xxx)  
+[**Parent without maintained relationsip to child, 1:0 or c:0**](#parent-without-maintained-relationsip-to-child-10-or-c0)  
+[**Parent with single child, 1:c or c:c**](#parent-with-single-child-1c-or-cc)  
+[**One to one relationships cannot be implemented, 1:1**](#One-to-one-relationships-cannot-be-implemented-11)  
 [**xxx**](#xxx)  
 [**xxx**](#xxx)  
 [**xxx**](#xxx)  
@@ -293,16 +293,21 @@ Enumerations are perfect for this purpose:
 defined in the *Data Model*.
 
 
-# Parent without maintained relationsip to child
+# Parent without maintained relationsip to child, 1:0 or c:0
+```
+1:0 = child must have one parent, parent has no child
+c:0 = child might have parent, parent has no child
+```
 Sometimes, one class (parent) is used by one or many children classes. The children have a link to
-the parent, but the parent doesn't maintain any relationship to its children.  
+the parent, but the parent doesn't maintain any relationship to its children.
+
 Example:  
 Parent: ExchangeRates, has for each day an exchange rate  
 Children: Prices, Orders, Invoices, Payments, etc.
 
 It might not make sense for one exchange rate to know which Price, Order, Invoice, Payment, etc,
 links to it. However, if an ExchangeRate later gets deleted, it cannot check easily, if any child
-still links to it. Therefore, ExchangeRate should be undeletable. 
+still links to it. Therefore, ExchangeRate should be undeletable (`areInstancesReleasable: false`). 
 
 Example:  
 Item: From a catalog of items to sell  
@@ -322,6 +327,56 @@ public class OrderItem {
 }
 ```
 Note: Order is a *data class* defined somewhere else in the *Data Model*
+
+
+# Parent with single child, 1:c or c:c
+```
+1:c = child must have one parent, parent might have one child
+c:c = child might have one parent, parent might have one child
+```
+Sometimes, a parent can have only 1 single child as opposed to many children. An example could be 
+department which can have only 1 manager and every manager must be assigned to a department:
+```csharp
+  public class Department {
+    public string Name;
+    [StorageProperty(isParentOneChild: true)]
+    public Manager? Manager;
+  }
+  public class Manager {
+    public string Name;
+    public Department Department;
+  }
+```
+Note that the `Manager` property in the `Department` must be *nullable*.
+
+
+# One to one relationships cannot be implemented, 1:1
+
+Example:  
+A country has exactly one capital, a capital belongs exactly to one country. This would actually be 
+a 1:1 relationship. A 1:1 relationship cannot be created, because one item cannot
+exist without the other item. However, *StorageLib* can read and create only one instance at a time.
+
+Usually, a 1:1 relationship can be designed as one single object. Instead a 1:1, a 1:c 
+relationship is used:
+```csharp
+  public class Country {
+    public string Name;
+    public Capital City;
+  }
+  public class City {
+    public string Name;
+    [StorageProperty(isParentOneChild: true)]
+    public Country? CountryCapital;
+  }
+```
+Note: A `Capital` class is missing here. It might also surprise that the `Country` becomes a *child* 
+of the `City`. In *storageLib*, the child defines membership in a relationship and it makes sense 
+that the information which `City` is the capital is defined in the `Capital` class.
+
+Question: If some properties would be needed for the `Capital` class, where would they go ? Of 
+course to the `Country` class.
+
 
 
 

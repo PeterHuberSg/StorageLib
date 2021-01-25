@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing DefaultValuePropertyClass
+    /// None existing DefaultValuePropertyClass, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDefaultValuePropertyClass. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDefaultValuePropertyClass.
     /// </summary>
     internal static DefaultValuePropertyClass NoDefaultValuePropertyClass = new DefaultValuePropertyClass("NoName", "NoDefaultValueProperty", isStoring: false);
     #endregion
@@ -65,7 +69,7 @@ namespace DataModelSamples  {
     /// <summary>
     /// DefaultValuePropertyClass Constructor. If isStoring is true, adds DefaultValuePropertyClass to DC.Data.DefaultValuePropertyClasss.
     /// </summary>
-    public DefaultValuePropertyClass(string name, string defaultValueProperty = "NoName", bool isStoring = true) {
+    public DefaultValuePropertyClass(string name, string defaultValueProperty = "NoValue", bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
       DefaultValueProperty = defaultValueProperty;
@@ -208,8 +212,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"DefaultValuePropertyClass.Release(): DefaultValuePropertyClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._DefaultValuePropertyClasss.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

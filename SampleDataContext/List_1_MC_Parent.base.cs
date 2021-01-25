@@ -33,8 +33,8 @@ namespace DataModelSamples  {
     public string Name { get; private set; }
 
 
-    public IReadOnlyList<List_1_MC_Child> Children => children;
-    readonly List<List_1_MC_Child> children;
+    public IStorageReadOnlyList<List_1_MC_Child> Children => children;
+    readonly StorageList<List_1_MC_Parent, List_1_MC_Child> children;
 
 
     /// <summary>
@@ -44,7 +44,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing List_1_MC_Parent
+    /// None existing List_1_MC_Parent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoList_1_MC_Parent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoList_1_MC_Parent.
     /// </summary>
     internal static List_1_MC_Parent NoList_1_MC_Parent = new List_1_MC_Parent("NoName", isStoring: false);
     #endregion
@@ -69,7 +73,7 @@ namespace DataModelSamples  {
     public List_1_MC_Parent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new List<List_1_MC_Child>();
+      children = new StorageList<List_1_MC_Parent, List_1_MC_Child>(this);
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(19,TransactionActivityEnum.New, Key, this));
@@ -101,7 +105,7 @@ namespace DataModelSamples  {
     private List_1_MC_Parent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new List<List_1_MC_Child>();
+      children = new StorageList<List_1_MC_Parent, List_1_MC_Child>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -237,8 +241,8 @@ namespace DataModelSamples  {
             $"because '{list_1_MC_Child}' in List_1_MC_Parent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._List_1_MC_Parents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -320,7 +324,8 @@ namespace DataModelSamples  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

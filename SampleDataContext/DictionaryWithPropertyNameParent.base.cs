@@ -33,8 +33,8 @@ namespace DataModelSamples  {
     public string Name { get; private set; }
 
 
-    public IReadOnlyDictionary<DateTime, DictionaryWithPropertyNameChild> Children => children;
-    readonly Dictionary<DateTime, DictionaryWithPropertyNameChild> children;
+    public IStorageReadOnlyDictionary<DateTime, DictionaryWithPropertyNameChild> Children => children;
+    readonly StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild> children;
 
 
     /// <summary>
@@ -44,7 +44,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing DictionaryWithPropertyNameParent
+    /// None existing DictionaryWithPropertyNameParent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoDictionaryWithPropertyNameParent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoDictionaryWithPropertyNameParent.
     /// </summary>
     internal static DictionaryWithPropertyNameParent NoDictionaryWithPropertyNameParent = new DictionaryWithPropertyNameParent("NoName", isStoring: false);
     #endregion
@@ -69,7 +73,7 @@ namespace DataModelSamples  {
     public DictionaryWithPropertyNameParent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new Dictionary<DateTime, DictionaryWithPropertyNameChild>();
+      children = new StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild>(this);
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(29,TransactionActivityEnum.New, Key, this));
@@ -101,7 +105,7 @@ namespace DataModelSamples  {
     private DictionaryWithPropertyNameParent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new Dictionary<DateTime, DictionaryWithPropertyNameChild>();
+      children = new StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -237,8 +241,8 @@ namespace DataModelSamples  {
             $"because '{dictionaryWithPropertyNameChild}' in DictionaryWithPropertyNameParent.Children is still stored.");
         }
       }
-      onReleased();
       DC.Data._DictionaryWithPropertyNameParents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 
@@ -320,7 +324,8 @@ namespace DataModelSamples  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
-        $" Children: {Children.Count};";
+        $" Children: {Children.Count}," +
+        $" ChildrenAll: {Children.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

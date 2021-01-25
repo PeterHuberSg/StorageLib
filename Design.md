@@ -10,6 +10,13 @@ removes `child` from `Parent1.Children` and adds `child` to `Parent2.Children`. 
 transactions and data backup.
 
 # Table of Contents  
+[**Introduction StorageLib usage**](#introduction=storageLib-usage)  
+[**- Data Model**](#data-model)  
+[**- Generated Code**](#generated-code)  
+[**-- Data Class**](#data-class)  
+[**-- Data Context**](#data-context)  
+[**- Application Code**](#Application-code)  
+
 [**Design principals**](#design-principals)  
 [**- Supported relationships**](#supported-relationships)  
 [**- Parents first**](#parents-first)  
@@ -21,10 +28,292 @@ transactions and data backup.
 [**- Generated Data Model Classes**](#generated-data-model-classes)  
 [**- DC Data Context**](#DC-Data-Context)  
 [**- Transactions**](#transactions)  
-[**- Automatic data files compaction**](#automatic-data-files-compaction)  
-  
+[**- Automatic data files compaction**](#automatic-data-files-compaction)
+
+[**Challenges**](#challenges)  
+[**- What should happen when a child gets "deleted"**](#What-should-happen-when-a-child-gets-deleted)  
+ 
 [**Further Documentation**](#further-documentation)  
 
+
+# Introduction StorageLib usage
+
+## Data Model
+
+In a first step, the developer makes a *Data Model*. Here is the `GetStartedDataModel`:
+```csharp
+namespace YourNamespace {
+  public class Parent {
+    public string Name;
+    public List<Child> Children;
+  }
+  [StorageClass(pluralName: "Children")]
+  public class Child {
+    public string Name;
+    public Parent Parent;
+  }
+}
+```
+
+It shows a `Parent` class which can have many children, and a `Child` class which must have 
+exactly one parent. Of course, it would be possible to make the `Parent` conditional (nullable) 
+to cater for orphans, but the goal here is to use a very simple *Data Model*.
+
+
+## Generated Code
+Based on the *Data Model*, the *StorageClassGenerator* creates some code like this (extremly 
+simplified):
+
+### Data Class
+
+```csharp
+namespace YourNamespace {
+  public partial class Parent: IStorageItemGeneric<Parent> {
+    public int Key { get; private set; }
+    public string Name { get; private set; }
+    public IReadOnlyList<Child> Children => children;
+    readonly List<Child> children;
+  
+    public Parent(string name, bool isStoring = true) {
+      Key = StorageExtensions.NoKey;
+      Name = name;
+      children = new List<Child>();
+      if (isStoring) {
+        Store();
+      }
+    }
+
+    public void Store() {DC.Data._Parents.Add(this);}
+
+    public void Update(string name) {
+      var isChangeDetected = false;
+      if (Name!=name) {
+        Name = name;
+        isChangeDetected = true;
+      }
+      if (isChangeDetected) {
+        if (Key>=0) {
+          DC.Data._Parents.ItemHasChanged(clone, this);
+        }
+      }
+    }
+
+    internal void AddToChildren(Child child) {children.Add(child);}
+
+    internal void RemoveFromChildren(Child child) {children.Remove(child);}
+
+    public void Release() {DC.Data._Parents.Remove(Key);}
+
+    public override string ToString() {
+      var returnString =
+        $"Key: {Key.ToKeyString()}," +
+        $" Name: {Name}," +
+        $" Children: {Children.Count};";
+      return returnString;
+    }
+  }
+}
+```
+
+In reality, the `Parent.base.cs` class has over 300 lines of code to support reading the
+property values from and writing to a CSV file, transactions and more. 
+
+`StorageClassGenerator.cs` creates for each *data class* (= a  class defined in a *Data 
+Model*) a `Key` property (gets later updated by the *Data Store*), a constructor and the following methods:
+* `Store()`: Adds the instance to its *Data Store* in the *Data Context*
+* `Update()`: Alows to change the property values of an instance
+* `Release()`: Removes the instance from its *Data Store* in the *Data Context*
+* `ToString()`: Shows the property values of the instance
+
+If the class is a parent of another class, the following gets added:
+* a `Child` collection (`List`, `Dictionary` or `SortedList`) with the name `Children` (can have any name)
+* `AddToChildren()`: Adds a `Child` to `Children`
+* `RemoveFromToChildren()`: Removes a `Child` from `Children`
+
+Note: `AddToChildren()` and `RemoveFromToChildren()` are `internal`. They get only called 
+from the `Child` class.
+
+Note: `Parent.base.cs` is a `partial class`. You can add your own code to `Parent.cs`, which
+will not be overwritten by `StorageClassGenerator`. `Parent.base.cs` calls many `partial` methods 
+so that you can add additianl functionality. They are not shown in the code samples here.
+
+`Child.base.cs` code:
+
+```csharp
+namespace YourNamespace  {
+  public partial class Child: IStorageItemGeneric<Child> {
+    public int Key { get; private set; }
+    public string Name { get; private set; }
+    public Parent Parent { get; private set; }
+
+    public Child(string name, Parent parent, bool isStoring = true) {
+      Key = StorageExtensions.NoKey;
+      Name = name;
+      Parent = parent;
+      Parent.AddToChildren(this);
+      if (isStoring) {
+        Store();
+      }
+    }
+
+    public void Store() {DC.Data._Children.Add(this)}
+
+    public void Update(string name, Parent parent) {
+      var hasParentChanged = Parent!=parent;
+      if (hasParentChanged) {
+        Parent.RemoveFromChildren(this);
+      }
+      var isChangeDetected = false;
+      if (Name!=name) {
+        Name = name;
+        isChangeDetected = true;
+      }
+      if (Parent!=parent) {
+        Parent = parent;
+        isChangeDetected = true;
+      }
+      if (hasParentChanged) {
+        Parent.AddToChildren(this);
+      }
+      if (isChangeDetected) {
+        if (Key>=0) {
+          DC.Data._Children.ItemHasChanged(clone, this);
+        }
+      }
+    }
+
+    public void Release() {DC.Data._Children.Remove(Key);}
+
+
+    public override string ToString() {
+      var returnString =
+        $"Key: {Key.ToKeyString()}," +
+        $" Name: {Name}," +
+        $" Parent: {Parent.ToShortString()};";
+      onToString(ref returnString);
+      return returnString;
+    }
+    partial void onToString(ref string returnString);
+    #endregion
+  }
+}
+```
+
+The `Child` code looks similar to the `Parent` code, although `Update()` is more complicated. The
+additional lines keep the *parent child relationship* updated.
+
+
+### Data Context
+Finally, the `StorageClassGenerator.cs` creates a *Data Context*, a file called `DC.base.cs`. It 
+gives `static` access to all stored *data classes* instances:
+
+```csharp
+namespace YourNamespace  {
+  public partial class DC: DataContextBase {
+
+    public static DC? Data {get;}
+
+    public static void DisposeData() {dataLocal?.Dispose();}
+
+    public CsvConfig? CsvConfig { get; }
+    public bool IsInitialised { get; private set; }
+    public IReadonlyDataStore<Child> Children => _Children;
+    internal DataStore<Child> _Children { get; private set; }
+    public IReadonlyDataStore<Parent> Parents => _Parents;
+    internal DataStore<Parent> _Parents { get; private set; }
+
+    public DC(CsvConfig? csvConfig): base(DataStoresCount: 2) {
+      Data = this;
+      CsvConfig = csvConfig;
+
+      if (csvConfig==null) {
+        _Parents = new DataStore<Parent>();
+        DataStores[0] = _Parents;
+        _Children = new DataStore<Child>();
+        DataStores[1] = _Children;
+      } else {
+        _Parents = new DataStoreCSV<Parent>();
+        DataStores[0] = _Parents;
+        _Children = new DataStoreCSV<Child>();
+        DataStores[1] = _Children;
+      }
+      IsInitialised = true;
+    }
+
+    protected override void Dispose(bool disposing) {
+      if (disposing) {
+        _Children?.Dispose();
+        _Children = null!;
+        _Parents?.Dispose();
+        _Parents = null!;
+        data = null;
+      }
+      base.Dispose(disposing);
+    }
+  }
+}
+```
+
+The *Data Context* has for every *Data Class* a `DataStore` (data only in RAM) or `DataStoreCSV` (data stored in a CSV 
+file), depending on the `CsvConfig` settings given in the constructor of `DC`. A `DataStore` is 
+like a dictionary, it gives access to a stored instance through the instance's `Key` property.
+
+Note: In C#, a child uses a reference to point to its parent. When stored in a CSV file, the 
+child uses the parent's `Key` to link to it. During application startup, `DC` reads all CSV files. 
+When it finds a `Child` with a key value in the CSV file for a parent, it searches `DC.Parents` 
+for the parent with that key and sets `Child.Parent` to that `Parent`. `DC` then adds the `Child` 
+to `Parent.Children`. The application code usually doesn't need to read `Key`, except to determine 
+if the instance is stored (`Key>=0`) or not (`Key<0`). 
+
+## Application Code
+After the `StorageClassGenerator.cs` has written all this code, the developer writes now his 
+application code:
+```csharp
+using StorageLib;
+using System;
+using System.IO;
+using YourNamespace; 
+namespace GetStartedConsole {
+  class Program {
+    static void Main(string[] args) {
+      try {
+        _ = new DC(new CsvConfig(...)); // 1)
+        var parent0 = new Parent("Parent0"); // 2)
+        var child0 = new Child("Child0", parent0); // 3)
+        var parent1 = new Parent("Parent1");
+        DC.Data.StartTransaction(); // 4)
+        try {
+          child0.Update(child0.Name + " updated", parent1); // 5)
+          parent0.Release(); // 6)
+          DC.Data.CommitTransaction(); // 7)
+        } catch (Exception exception) {
+          DC.Data.RollbackTransaction(); // 8)
+          reportException(exception);
+        }
+      } catch (Exception exception) {
+          reportException(exception);
+      } finally {
+        DC.DisposeData(); // 9)
+      }
+    }
+  }
+}
+```
+
+Some steps in this very simple example:
+
+1) creates a new *Data Context*. `CsvConfig` provides configuration information like if CSV files should be used and where they are stored.
+2) A parent gets created and stored in the *Data Context*, i.e. in `DC.Data.Parents` and in the CSV file.
+3) A child gets created, stored and added to its parent's `Children` collection.
+4) It is not mandantory to use transactions, but often helpful.
+5) The child's `Name` gets changed and `parent1` becomes the new parent. This automatically removes `child0` from `parent0.Children` and adds it to `parent1.Children`. In the child's CSV file, a new line gets added with that update information.
+6) `parent0` gets removed from the *Data Context* (=deleted). In the parent's CSV file, a new line gets added indicating that `parent0` is removed.
+7) During `CommitTransaction()` not much needs to be done, since the data is already written to the CSV files.
+8) Upon a `RollbackTransaction()`, all lines written to the CSV files since `StartTransaction()` get deleted and the instances in the RAM set back to the values they had before `StartTransaction()`.
+9) For performance reason, CSV file changes get written first into a RAM buffer and only written to the CSV file once the buffer is full or a short time has passed. `DC.DisposeData()` guarantees that all buffers are written to the CSV files when the application shuts down.  
+
+When the application starts again and the transaction was successful, the *Data Context* just 
+contains `child0` linked to `parent1`.
 
 # Design principals
 
@@ -253,6 +542,34 @@ If the application does not shut down properly because of an exception, no compa
 might get written and the .csv file contains the history instead. When the application 
 then starts again, the history will be executed, with the result that the data in 
 RAM is the same as when the application stopped suddenly.
+
+
+# Challenges
+## What should happen when a child gets "deleted"
+
+One challenge is that an instance cannot get truly deleted in .NET. It's only possible to remove 
+all references to an instance.
+
+Another challenge is that in a 1:c relationship, the child is not nullable and must always have 
+a parent. If a child has a parent, then *StorageLib* ensures that that parent has a link (reference) 
+back to that child. So if the child gets released, i.e. removed from the `Children` `DataStore` 
+in the *Data Context*, the parent has still a reference to the child.
+
+In theory, this problem could be solved by updating the `Parent` property in the child 
+to null, which would remove the child from the `Children` `List` in the parent. That's not "nice"
+from a design point of view, because releasing an item from the *Data Context* should not change the 
+property values of that instance. Also, in an 1:c relationship, it is not possible to set the 
+`Parent` to null.
+
+Even worse is a *readonly* 1:c relationship, where the `Parent` property in the child is readonly. 
+When the child gets created, immediately a parent child relationship gets established. Once the
+child should get "deleted", C# doesn't allow the reference to its parent to be changed, meaning 
+the garbage collector can never remove that child.
+
+As a consequence, even a deleted (released) child is still part of its parent's `Children` collection.
+
+
+
 
 
 # Further Documentation

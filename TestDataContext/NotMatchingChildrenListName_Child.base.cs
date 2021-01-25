@@ -286,8 +286,8 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"NotMatchingChildrenListName_Child.Release(): NotMatchingChildrenListName_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._NotMatchingChildrenListName_Childs.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released NotMatchingChildrenListName_Child @{Key} #{GetHashCode()}");
 #endif

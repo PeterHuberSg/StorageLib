@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing SingleChild_1_C_Parent
+    /// None existing SingleChild_1_C_Parent, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSingleChild_1_C_Parent. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSingleChild_1_C_Parent.
     /// </summary>
     internal static SingleChild_1_C_Parent NoSingleChild_1_C_Parent = new SingleChild_1_C_Parent("NoName", isStoring: false);
     #endregion
@@ -236,8 +240,8 @@ namespace DataModelSamples  {
         throw new Exception($"Cannot release SingleChild_1_C_Parent '{this}' " + Environment.NewLine + 
           $"because '{Child}' in SingleChild_1_C_Parent.Child is still stored.");
       }
-      onReleased();
       DC.Data._SingleChild_1_C_Parents.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

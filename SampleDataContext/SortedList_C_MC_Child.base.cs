@@ -43,7 +43,11 @@ namespace DataModelSamples  {
 
 
     /// <summary>
-    /// None existing SortedList_C_MC_Child
+    /// None existing SortedList_C_MC_Child, used as a temporary place holder when reading a CSV file
+    /// which was not compacted. It might create first a later deleted item linking to a 
+    /// deleted parent. In this case, the parent property gets set to NoSortedList_C_MC_Child. Once the CSV
+    /// file is completely read, that child will actually be deleted (released) and Verify()
+    /// ensures that there are no stored children with links to NoSortedList_C_MC_Child.
     /// </summary>
     internal static SortedList_C_MC_Child NoSortedList_C_MC_Child = new SortedList_C_MC_Child("NoName", null, isStoring: false);
     #endregion
@@ -280,8 +284,8 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"SortedList_C_MC_Child.Release(): SortedList_C_MC_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._SortedList_C_MC_Childs.Remove(Key);
+      onReleased();
     }
     partial void onReleased();
 

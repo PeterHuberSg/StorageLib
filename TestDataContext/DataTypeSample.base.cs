@@ -837,8 +837,8 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"DataTypeSample.Release(): DataTypeSample '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._DataTypeSamples.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released DataTypeSample @{Key} #{GetHashCode()}");
 #endif

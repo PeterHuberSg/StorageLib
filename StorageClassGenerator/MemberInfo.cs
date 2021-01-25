@@ -546,11 +546,11 @@ namespace StorageLib {
     }
 
 
-    internal void WriteProperty(StreamWriter streamWriter, bool isRaw = false) {
+    internal void WriteProperty(StreamWriter sw, bool isRaw = false) {
       if (isRaw && MemberType>=MemberTypeEnum.ParentOneChild) return;
 
-      streamWriter.WriteLine();
-      streamWriter.WriteLine();
+      sw.WriteLine();
+      sw.WriteLine();
       bool hasWrittenComment = false;
       if (Comment!=null) {
         var linesArray = Comment.Split(Environment.NewLine);
@@ -558,50 +558,70 @@ namespace StorageLib {
           if (!string.IsNullOrWhiteSpace(line)) {
             if (PrecissionComment!=null && line.Contains("/// </summary>")) {
               hasWrittenComment = true;
-              streamWriter.WriteLine($"    /// {PrecissionComment}");
+              sw.WriteLine($"    /// {PrecissionComment}");
             }
-            streamWriter.WriteLine($"    {line}");
+            sw.WriteLine($"    {line}");
           }
         }
       }
       if (PrecissionComment!=null && !hasWrittenComment) {
-        streamWriter.WriteLine("    /// <summary>");
-        streamWriter.WriteLine($"    /// {PrecissionComment}");
-        streamWriter.WriteLine("    ///  </summary>");
+        sw.WriteLine("    /// <summary>");
+        sw.WriteLine($"    /// {PrecissionComment}");
+        sw.WriteLine("    ///  </summary>");
       }
       if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
         if (ChildCount<1) {
           throw new Exception();
         } else if (ChildCount==1) {
-          streamWriter.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-          streamWriter.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
+          if (ChildClassInfo!.AreInstancesReleasable) {
+            sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+            sw.WriteLine($"    readonly StorageList<{ClassInfo.ClassName}, {ChildTypeName}> {LowerMemberName};");
+          } else {
+            sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
+            sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
+          }
         } else {
-          streamWriter.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-          streamWriter.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
+          sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+          sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
         }
+        //////} else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary) {
+        //////  if (ChildClassInfo!.AreInstancesReleasable) {
+        //////    sw.WriteLine($"    public IStorageReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //////    sw.WriteLine($"    readonly StorageDictionary<{ClassInfo.ClassName}, {ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
+        //////  } else {
+        //////    sw.WriteLine($"    public IReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //////    sw.WriteLine($"    readonly Dictionary<{ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
+        //////  }
+        //////} else if (MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
+        //////  if (ChildClassInfo!.AreInstancesReleasable) {
+        //////    sw.WriteLine($"    public IStorageReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //////    sw.WriteLine($"    readonly StorageSortedList<{ClassInfo.ClassName}, {ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
+        //////  } else {
+        //////    sw.WriteLine($"    public IReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //////    sw.WriteLine($"    readonly SortedList<{ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
+        //////  }
       } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
         MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
       {
-        //streamWriter.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-        streamWriter.WriteLine($"    public {ReadOnlyTypeString} {MemberName} => {LowerMemberName};");
-        streamWriter.WriteLine($"    readonly {TypeString} {LowerMemberName};");
+        sw.WriteLine($"    public {ReadOnlyTypeString} {MemberName} => {LowerMemberName};");
+        sw.WriteLine($"    readonly {TypeString} {LowerMemberName};");
 
       } else {
         if (isRaw) {
           if (MemberType==MemberTypeEnum.LinkToParent) {
-            streamWriter.WriteLine($"    public int{QMark} {MemberName}Key {{ get; set; }}");
+            sw.WriteLine($"    public int{QMark} {MemberName}Key {{ get; set; }}");
           } else {
             if (TypeString=="string") {
-              streamWriter.WriteLine($"    public string {MemberName} {{ get; set; }} =\"\";");
+              sw.WriteLine($"    public string {MemberName} {{ get; set; }} =\"\";");
             } else {
-              streamWriter.WriteLine($"    public {TypeString} {MemberName} {{ get; set; }}");
+              sw.WriteLine($"    public {TypeString} {MemberName} {{ get; set; }}");
             }
           }
         } else {
           if (IsReadOnly) {
-            streamWriter.WriteLine($"    public {TypeString} {MemberName} {{ get; }}");
+            sw.WriteLine($"    public {TypeString} {MemberName} {{ get; }}");
           } else {
-            streamWriter.WriteLine($"    public {TypeString} {MemberName} {{ get; private set; }}");
+            sw.WriteLine($"    public {TypeString} {MemberName} {{ get; private set; }}");
           }
         }
       }

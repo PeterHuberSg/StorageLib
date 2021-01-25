@@ -428,8 +428,8 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"SingleChildChild.Release(): SingleChildChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      onReleased();
       DC.Data._SingleChildChildren.Remove(Key);
+      onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SingleChildChild @{Key} #{GetHashCode()}");
 #endif
