@@ -99,48 +99,48 @@ namespace TestContext {
 
 
   partial class SortedListParent: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    public int CountAllChildren => sortedListChidren.CountAll;
+    public int CountAllChildren => sortedListChildren.CountAll;
     public IEnumerable<SortedListChild> GetAllChildren {
       get {
-        foreach (var item in sortedListChidren.GetAll()) {
+        foreach (var item in sortedListChildren.GetAll()) {
           yield return item.Value;
         }
       }
     }
-    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
+    public SortedListChild? AllChildrenFirst => sortedListChildren.FirstOrDefault().Value;
   }
   partial class SortedListParentN: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    public int CountAllChildren => sortedListChidren.CountAll;
+    public int CountAllChildren => sortedListChildren.CountAll;
     public IEnumerable<SortedListChild> GetAllChildren {
       get {
-        foreach (var item in sortedListChidren.GetAll()) {
+        foreach (var item in sortedListChildren.GetAll()) {
           yield return item.Value;
         }
       }
     }
-    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
+    public SortedListChild? AllChildrenFirst => sortedListChildren.FirstOrDefault().Value;
   }
   partial class SortedListParentR: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    public int CountAllChildren => sortedListChidren.CountAll;
+    public int CountAllChildren => sortedListChildren.CountAll;
     public IEnumerable<SortedListChild> GetAllChildren {
       get {
-        foreach (var item in sortedListChidren.GetAll()) {
+        foreach (var item in sortedListChildren.GetAll()) {
           yield return item.Value;
         }
       }
     }
-    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
+    public SortedListChild? AllChildrenFirst => sortedListChildren.FirstOrDefault().Value;
   }
   partial class SortedListParentNR: ICollectionParent<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild> {
-    public int CountAllChildren => sortedListChidren.CountAll;
+    public int CountAllChildren => sortedListChildren.CountAll;
     public IEnumerable<SortedListChild> GetAllChildren {
       get {
-        foreach (var item in sortedListChidren.GetAll()) {
+        foreach (var item in sortedListChildren.GetAll()) {
           yield return item.Value;
         }
       }
     }
-    public SortedListChild? AllChildrenFirst => sortedListChidren.FirstOrDefault().Value;
+    public SortedListChild? AllChildrenFirst => sortedListChildren.FirstOrDefault().Value;
   }
   partial class SortedListChild: ITestChild<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR> { }
 

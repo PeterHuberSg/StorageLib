@@ -129,16 +129,16 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Called after a sortedListChild gets added to SortedListChidren.
+    /// Called after a sortedListChild gets added to SortedListChildren.
     /// </summary>
-    partial void onAddedToSortedListChidren(SortedListChild sortedListChild){
+    partial void onAddedToSortedListChildren(SortedListChild sortedListChild){
     }
 
 
     /// <summary>
-    /// Called after a sortedListChild gets removed from SortedListChidren.
+    /// Called after a sortedListChild gets removed from SortedListChildren.
     /// </summary>
-    partial void onRemovedFromSortedListChidren(SortedListChild sortedListChild){
+    partial void onRemovedFromSortedListChildren(SortedListChild sortedListChild){
     }
 
 

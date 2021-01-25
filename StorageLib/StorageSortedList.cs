@@ -24,7 +24,7 @@ namespace StorageLib {
 
   /// <summary>
   /// StorageSortedList is a replacement for StoredList used by parent classes with releasable children. A stored parent might
-  /// have stored and not stored children. Enumerating StorageSortedList shows only stored chidren. GetAll() supports
+  /// have stored and not stored children. Enumerating StorageSortedList shows only stored children. GetAll() supports
   /// enumerating all children. Count() counts only stored children, while CountAll() counts all. 
   /// </summary>
   public class StorageSortedList<TParent, TKey, TChild>: IDictionary<TKey, TChild>, IStorageReadOnlyDictionary<TKey, TChild>

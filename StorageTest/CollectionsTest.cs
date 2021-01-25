@@ -501,7 +501,7 @@ namespace StorageTest {
     //  append(ref s, dc.ListParentNsTest);
     //  append(ref s, dc.ListParentRsTest);
     //  append(ref s, dc.ListParentNRsTest);
-    //  foreach (var child in dc.ListChidrenTest) {
+    //  foreach (var child in dc.ListChildrenTest) {
     //    s += child.Text + ':' + child.Parent.Text;
     //    if (child.ParentN is not null) {
     //      s += ',' + child.ParentN.Text;
@@ -559,7 +559,7 @@ namespace StorageTest {
         dcParents[(int)parentTypeEnum.parentN] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.ListParentNs;
         dcParents[(int)parentTypeEnum.parentR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.ListParentRs;
         dcParents[(int)parentTypeEnum.parentNR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.ListParentNRs;
-        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.ListChidren;
+        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.ListChildren;
         break;
       case CollectionTypeEnum.dictionary:
         dcParents[(int)parentTypeEnum.parent] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.DictionaryParents;
@@ -573,7 +573,7 @@ namespace StorageTest {
         dcParents[(int)parentTypeEnum.parentN] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParentNs;
         dcParents[(int)parentTypeEnum.parentR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParentRs;
         dcParents[(int)parentTypeEnum.parentNR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParentNRs;
-        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.SortedListChidren;
+        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.SortedListChildren;
         break;
       default:
         throw new NotSupportedException();

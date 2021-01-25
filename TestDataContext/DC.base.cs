@@ -101,10 +101,10 @@ namespace TestContext  {
     internal DataStore<DictionaryParentR> _DictionaryParentRs { get; private set; }
 
     /// <summary>
-    /// Directory of all ListChidren
+    /// Directory of all ListChildren
     /// </summary>
-    public IReadonlyDataStore<ListChild> ListChidren => _ListChidren;
-    internal DataStore<ListChild> _ListChidren { get; private set; }
+    public IReadonlyDataStore<ListChild> ListChildren => _ListChildren;
+    internal DataStore<ListChild> _ListChildren { get; private set; }
 
     /// <summary>
     /// Directory of all ListParents
@@ -263,10 +263,10 @@ namespace TestContext  {
     internal DataStore<SingleChildParentR> _SingleChildParentRs { get; private set; }
 
     /// <summary>
-    /// Directory of all SortedListChidren
+    /// Directory of all SortedListChildren
     /// </summary>
-    public IReadonlyDataStore<SortedListChild> SortedListChidren => _SortedListChidren;
-    internal DataStore<SortedListChild> _SortedListChidren { get; private set; }
+    public IReadonlyDataStore<SortedListChild> SortedListChildren => _SortedListChildren;
+    internal DataStore<SortedListChild> _SortedListChildren { get; private set; }
 
     /// <summary>
     /// Directory of all SortedListParents
@@ -530,7 +530,7 @@ namespace TestContext  {
         DataStores[13] = _ListParentNRs;
         onListParentNRsFilled();
 
-        _ListChidren = new DataStore<ListChild>(
+        _ListChildren = new DataStore<ListChild>(
           this,
           14,
           ListChild.SetKey,
@@ -540,8 +540,8 @@ namespace TestContext  {
           ListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        DataStores[14] = _ListChidren;
-        onListChidrenFilled();
+        DataStores[14] = _ListChildren;
+        onListChildrenFilled();
 
         _DictionaryParents = new DataStore<DictionaryParent>(
           this,
@@ -660,7 +660,7 @@ namespace TestContext  {
         DataStores[23] = _SortedListParentNRs;
         onSortedListParentNRsFilled();
 
-        _SortedListChidren = new DataStore<SortedListChild>(
+        _SortedListChildren = new DataStore<SortedListChild>(
           this,
           24,
           SortedListChild.SetKey,
@@ -670,8 +670,8 @@ namespace TestContext  {
           SortedListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        DataStores[24] = _SortedListChidren;
-        onSortedListChidrenFilled();
+        DataStores[24] = _SortedListChildren;
+        onSortedListChildrenFilled();
 
         _DataTypeSamples = new DataStore<DataTypeSample>(
           this,
@@ -1113,7 +1113,7 @@ namespace TestContext  {
         DataStores[13] = _ListParentNRs;
         onListParentNRsFilled();
 
-        _ListChidren = new DataStoreCSV<ListChild>(
+        _ListChildren = new DataStoreCSV<ListChild>(
           this,
           14,
           csvConfig!,
@@ -1130,10 +1130,10 @@ namespace TestContext  {
           ListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        IsPartiallyNew |= _ListChidren.IsNew;
-        IsNew &= _ListChidren.IsNew;
-        DataStores[14] = _ListChidren;
-        onListChidrenFilled();
+        IsPartiallyNew |= _ListChildren.IsNew;
+        IsNew &= _ListChildren.IsNew;
+        DataStores[14] = _ListChildren;
+        onListChildrenFilled();
 
         _DictionaryParents = new DataStoreCSV<DictionaryParent>(
           this,
@@ -1333,7 +1333,7 @@ namespace TestContext  {
         DataStores[23] = _SortedListParentNRs;
         onSortedListParentNRsFilled();
 
-        _SortedListChidren = new DataStoreCSV<SortedListChild>(
+        _SortedListChildren = new DataStoreCSV<SortedListChild>(
           this,
           24,
           csvConfig!,
@@ -1350,10 +1350,10 @@ namespace TestContext  {
           SortedListChild.RollbackItemRelease,
           areInstancesUpdatable: true,
           areInstancesReleasable: true);
-        IsPartiallyNew |= _SortedListChidren.IsNew;
-        IsNew &= _SortedListChidren.IsNew;
-        DataStores[24] = _SortedListChidren;
-        onSortedListChidrenFilled();
+        IsPartiallyNew |= _SortedListChildren.IsNew;
+        IsNew &= _SortedListChildren.IsNew;
+        DataStores[24] = _SortedListChildren;
+        onSortedListChildrenFilled();
 
         _DataTypeSamples = new DataStoreCSV<DataTypeSample>(
           this,
@@ -1665,9 +1665,9 @@ namespace TestContext  {
     partial void onListParentNRsFilled();
 
     /// <summary>}
-    /// Called once the data for ListChidren is read.
+    /// Called once the data for ListChildren is read.
     /// </summary>}
-    partial void onListChidrenFilled();
+    partial void onListChildrenFilled();
 
     /// <summary>}
     /// Called once the data for DictionaryParents is read.
@@ -1715,9 +1715,9 @@ namespace TestContext  {
     partial void onSortedListParentNRsFilled();
 
     /// <summary>}
-    /// Called once the data for SortedListChidren is read.
+    /// Called once the data for SortedListChildren is read.
     /// </summary>}
-    partial void onSortedListChidrenFilled();
+    partial void onSortedListChildrenFilled();
 
     /// <summary>}
     /// Called once the data for DataTypeSamples is read.
@@ -1824,8 +1824,8 @@ namespace TestContext  {
         _PrivateConstructors = null!;
         _DataTypeSamples?.Dispose();
         _DataTypeSamples = null!;
-        _SortedListChidren?.Dispose();
-        _SortedListChidren = null!;
+        _SortedListChildren?.Dispose();
+        _SortedListChildren = null!;
         _SortedListParentNRs?.Dispose();
         _SortedListParentNRs = null!;
         _SortedListParentRs?.Dispose();
@@ -1844,8 +1844,8 @@ namespace TestContext  {
         _DictionaryParentNs = null!;
         _DictionaryParents?.Dispose();
         _DictionaryParents = null!;
-        _ListChidren?.Dispose();
-        _ListChidren = null!;
+        _ListChildren?.Dispose();
+        _ListChildren = null!;
         _ListParentNRs?.Dispose();
         _ListParentNRs = null!;
         _ListParentRs?.Dispose();

@@ -24,7 +24,7 @@ namespace StorageLib {
 
   /// <summary>
   /// StorageDictionary is a replacement for Dictionary used by parent classes with releasable children. A stored parent might
-  /// have stored and not stored children. Enumerating StorageDictionary shows only stored chidren. GetAll() supports
+  /// have stored and not stored children. Enumerating StorageDictionary shows only stored children. GetAll() supports
   /// enumerating all children. Count() counts only stored children, while CountAll() counts all. 
   /// </summary>
   public class StorageDictionary<TParent, TKey, TChild>: IDictionary<TKey, TChild>, IStorageReadOnlyDictionary<TKey, TChild>

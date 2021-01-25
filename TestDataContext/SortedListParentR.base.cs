@@ -42,8 +42,8 @@ namespace TestContext  {
     public string Text { get; private set; }
 
 
-    public IStorageReadOnlyDictionary<string, SortedListChild> SortedListChidren => sortedListChidren;
-    readonly StorageSortedList<SortedListParentR, string, SortedListChild> sortedListChidren;
+    public IStorageReadOnlyDictionary<string, SortedListChild> SortedListChildren => sortedListChildren;
+    readonly StorageSortedList<SortedListParentR, string, SortedListChild> sortedListChildren;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public SortedListParentR(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      sortedListChidren = new StorageSortedList<SortedListParentR, string, SortedListChild>(this);
+      sortedListChildren = new StorageSortedList<SortedListParentR, string, SortedListChild>(this);
 #if DEBUG
       DC.Trace?.Invoke($"new SortedListParentR: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private SortedListParentR(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      sortedListChidren = new StorageSortedList<SortedListParentR, string, SortedListChild>(this);
+      sortedListChildren = new StorageSortedList<SortedListParentR, string, SortedListChild>(this);
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -221,40 +221,40 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Add sortedListChild to SortedListChidren.
+    /// Add sortedListChild to SortedListChildren.
     /// </summary>
-    internal void AddToSortedListChidren(SortedListChild sortedListChild) {
+    internal void AddToSortedListChildren(SortedListChild sortedListChild) {
 #if DEBUG
       if (sortedListChild==SortedListChild.NoSortedListChild) throw new Exception();
       if ((sortedListChild.Key>=0)&&(Key<0)) throw new Exception();
-      if (sortedListChidren.ContainsKey(sortedListChild.Text)) throw new Exception();
+      if (sortedListChildren.ContainsKey(sortedListChild.Text)) throw new Exception();
 #endif
-      sortedListChidren.Add(sortedListChild.Text, sortedListChild);
-      onAddedToSortedListChidren(sortedListChild);
+      sortedListChildren.Add(sortedListChild.Text, sortedListChild);
+      onAddedToSortedListChildren(sortedListChild);
 #if DEBUG
       DC.Trace?.Invoke($"Add SortedListChild {sortedListChild.GetKeyOrHash()} to " +
-        $"{this.GetKeyOrHash()} SortedListParentR.SortedListChidren");
+        $"{this.GetKeyOrHash()} SortedListParentR.SortedListChildren");
 #endif
     }
-    partial void onAddedToSortedListChidren(SortedListChild sortedListChild);
+    partial void onAddedToSortedListChildren(SortedListChild sortedListChild);
 
 
     /// <summary>
     /// Removes sortedListChild from SortedListParentR.
     /// </summary>
-    internal void RemoveFromSortedListChidren(SortedListChild sortedListChild) {
+    internal void RemoveFromSortedListChildren(SortedListChild sortedListChild) {
 #if DEBUG
-      if (!sortedListChidren.Remove(sortedListChild.Text)) throw new Exception();
+      if (!sortedListChildren.Remove(sortedListChild.Text)) throw new Exception();
 #else
-        sortedListChidren.Remove(sortedListChild.Text);
+        sortedListChildren.Remove(sortedListChild.Text);
 #endif
-      onRemovedFromSortedListChidren(sortedListChild);
+      onRemovedFromSortedListChildren(sortedListChild);
 #if DEBUG
       DC.Trace?.Invoke($"Remove SortedListChild {sortedListChild.GetKeyOrHash()} from " +
-        $"{this.GetKeyOrHash()} SortedListParentR.SortedListChidren");
+        $"{this.GetKeyOrHash()} SortedListParentR.SortedListChildren");
 #endif
     }
-    partial void onRemovedFromSortedListChidren(SortedListChild sortedListChild);
+    partial void onRemovedFromSortedListChildren(SortedListChild sortedListChild);
 
 
     /// <summary>
@@ -264,10 +264,10 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"SortedListParentR.Release(): SortedListParentR '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      foreach (var sortedListChild in SortedListChidren.Values) {
+      foreach (var sortedListChild in SortedListChildren.Values) {
         if (sortedListChild?.Key>=0) {
           throw new Exception($"Cannot release SortedListParentR '{this}' " + Environment.NewLine + 
-            $"because '{sortedListChild}' in SortedListParentR.SortedListChidren is still stored.");
+            $"because '{sortedListChild}' in SortedListParentR.SortedListChildren is still stored.");
         }
       }
       DC.Data._SortedListParentRs.Remove(Key);
@@ -371,8 +371,8 @@ namespace TestContext  {
       var returnString =
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
-        $" SortedListChidren: {SortedListChidren.Count}," +
-        $" SortedListChidrenAll: {SortedListChidren.CountAll};";
+        $" SortedListChildren: {SortedListChildren.Count}," +
+        $" SortedListChildrenAll: {SortedListChildren.CountAll};";
       onToString(ref returnString);
       return returnString;
     }

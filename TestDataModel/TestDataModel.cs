@@ -266,7 +266,7 @@ namespace TestContext {
     public List<ListChild> Children;
   }
 
-  [StorageClass(pluralName: "ListChidren")]
+  [StorageClass(pluralName: "ListChildren")]
   public class ListChild {
     public string Text;
     public ListParent Parent;
@@ -327,25 +327,25 @@ namespace TestContext {
 
   public class SortedListParent {
     public string Text;
-    public SortedList<string, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChildren;
   }
 
   public class SortedListParentN {
     public string Text;
-    public SortedList<string, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChildren;
   }
 
   public class SortedListParentR {
     public string Text;
-    public SortedList<string, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChildren;
   }
 
   public class SortedListParentNR {
     public string Text;
-    public SortedList<string, SortedListChild> SortedListChidren;
+    public SortedList<string, SortedListChild> SortedListChildren;
   }
 
-  [StorageClass(pluralName: "SortedListChidren")]
+  [StorageClass(pluralName: "SortedListChildren")]
   public class SortedListChild {
     public string Text;
     public SortedListParent Parent;

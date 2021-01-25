@@ -19,7 +19,10 @@ described here can be found in the file *DataModelSamples.cs* in the *SampleData
 [**Parent without maintained relationsip to child, 1:0 or c:0**](#parent-without-maintained-relationsip-to-child-10-or-c0)  
 [**Parent with single child, 1:c or c:c**](#parent-with-single-child-1c-or-cc)  
 [**One to one relationships cannot be implemented, 1:1**](#One-to-one-relationships-cannot-be-implemented-11)  
-[**xxx**](#xxx)  
+[**Parent with multiple children, 1:mc or c:mc**](#parent-with-multiple-children-1mc-or-cmc)  
+[**-Parent with multiple children using List<>**](#parent-with-multiple-children-using-list)  
+[**-Parent with multiple children using Dictionary<> or SortedList<>**](#parent-with-multiple-children-using-dictionary-or-sortedList)  
+
 [**xxx**](#xxx)  
 [**xxx**](#xxx)  
 [**xxx**](#xxx)  
@@ -377,6 +380,115 @@ that the information which `City` is the capital is defined in the `Capital` cla
 Question: If some properties would be needed for the `Capital` class, where would they go ? Of 
 course to the `Country` class.
 
+
+# Parent with multiple children, 1:mc or c:mc
+```
+1:m = child must have one parent, parent might have one or many children
+c:m = child might have one parent, parent might have one many children
+```
+
+*c:m* is probably the most common relationship. One might think that *1:m* is more common, i.e. there
+cannot be a child without parent. But there is very often good reason why the design should allow a
+child to exist with no parent, for example when the user created the child with the wrong parent or
+the proper parent is not available yet. In *StorageLib*, the parent cannot remove and child form its
+children collection. The child only gets removed when the child updates its parent. But if `Parent`
+is not conditional (not `nullable`), `Parent` cannot be set to null and therefore not removed.
+
+Note: As there are no *1:1* relationships, there are also no *1:m* nor *c:m* relationships. The reason
+is the same. It must be possible to read the parent form the permanent storage (CSV file) before 
+the child. Each parent must be able to exist without children.
+
+The `Children` are stored in RAM in a collection. When the parent gets read during startup, that
+collection is empty. *StorageLib* supports 3 type of selections:
+
+## Parent with multiple children using List<>
+
+```charp
+public class Parent {
+  public string Text;
+  public List<Child> Children;
+}
+
+public class Child {
+  public string Text;
+  public Parent Parent;
+}
+```
+
+After reading the Parent class declaration, *StorageClassGenerator* searches for a *data class* 
+`Child` in the DataModel and within `Child` for a property with type `Parent`. Once *StorageClassGenerator*
+can match the 2 participating properties of a relationshop, it creates code which will keep the
+data on both ends synchronised. The idea is that if the child links to a parent, it must be 
+in the children collection of the parent. The programmer does not need to do anything to maintain 
+this relationship.
+
+```csharp
+var parent0 = new Parent("Parent0"); 
+var child0 = new Child("Child0", parent0);
+```
+
+These 2 lines create and store `parent0` and `child0`. `child0.Parent` links to `parent0` and 
+`parent0.Children` contains `child0`;
+
+```csharp
+parent1 = new Parent("Parent1");
+child0.Update(child0.Name, parent1);
+```
+
+Here a new parent `parent1` gets created and `child0.Parent` links now to `parent1`. 
+`parent0.Children` is empty.
+
+Depending wether child is releasable or not, *StorageClassGenerator* creates a `StorageList<>` or 
+just a `List<>` for the children collection. A challeng with released children is that they still 
+link to their parents, especially when the `Parent` property in the child is not nullable. On the 
+other hand, when looping through the children of a stored parent, one would expect to see only stored 
+children, because `Release()` is the best we can do when wanting to delete something. There is nothing 
+in C# that allows to delete an object. `StorageList<>` behaves like a `List<>`, but when enumerating  
+its items, only stored children are shown when the parent is stored. A not stored parent can have 
+only not stored children, which are shown when enumerating the children of a not stored parent. 
+`Getall()` allows to enumerate all children regardless if they are stored and `CountAll` returns 
+the number of all children. `StorageList<>.Count` counts only the stored children for a stored 
+parent. 
+
+
+## Parent with multiple children using Dictionary<> or SortedList<>
+
+Sometimes it is necessary to find a child in the parent's children collection based on a child's 
+property value (=key). Example: Exchange rates (=children) stored in a currency (=parent) should 
+be accessible by the date this exchange rate is valid for:
+
+```csharp
+public class Currency {
+  public string Name;
+  public SortedList<Date, ExchangeRate> Rates;
+}
+
+public class ExchangeRate {
+  public Currency Currency;
+  public Date Date;
+  public Decimal2 Rate;
+}
+```
+
+After reading the Currency class declaration and the property `Rates`, *StorageClassGenerator* 
+searches for a *data class* `ExchangeRate` in the DataModel and within `ExchangeRate` for a 
+property with type `Currency`, which defines the relationship, and property with type 
+`Date` which will be used as key into `Rates`.
+
+`SortedList` is functionally equivalent to `Dictionary`, the main difference is how they store 
+their items. `SortedList` is like a `List`. If a new item needs to be inserted into a `SortedList`, 
+all items after the insertion point need to be moved to one slot higher, meaning insertion and 
+deletion can be rather expensive. On the other hand, appending is cheap, it doesn't involve moving 
+any other items around. Like with exchange rates, there are many cases where new data gets always 
+appended at the end. For these cases, `SortedList` is more efficient than 'Dictionary'. 
+
+The functionality described in `List` applies also for `SortedList` and `Dictionary`. Maintaining 
+the relationship is a bit more challenging in the second case, because if the key property in the 
+child (in the example: `Date`) changes, the child needs to get removed from the parent's children 
+and added again so that the child will be found with the new key value and not the old one.
+
+
+# Generated class with private constructor
 
 
 

@@ -92,7 +92,7 @@ namespace TestContext  {
     //      ------------
 
     /// <summary>
-    /// SortedListChild Constructor. If isStoring is true, adds SortedListChild to DC.Data.SortedListChidren.
+    /// SortedListChild Constructor. If isStoring is true, adds SortedListChild to DC.Data.SortedListChildren.
     /// </summary>
     public SortedListChild(
       string text, 
@@ -111,13 +111,13 @@ namespace TestContext  {
 #if DEBUG
       DC.Trace?.Invoke($"new SortedListChild: {ToTraceString()}");
 #endif
-      Parent.AddToSortedListChidren(this);
+      Parent.AddToSortedListChildren(this);
       if (ParentN!=null) {
-        ParentN.AddToSortedListChidren(this);
+        ParentN.AddToSortedListChildren(this);
       }
-      ParentR.AddToSortedListChidren(this);
+      ParentR.AddToSortedListChildren(this);
       if (ParentNR!=null) {
-        ParentNR.AddToSortedListChidren(this);
+        ParentNR.AddToSortedListChildren(this);
       }
       onConstruct();
       if (DC.Data.IsTransaction) {
@@ -167,16 +167,16 @@ namespace TestContext  {
         ParentNR = DC.Data._SortedListParentNRs.GetItem(parentNRKey.Value)?? SortedListParentNR.NoSortedListParentNR;
       }
       if (Parent!=SortedListParent.NoSortedListParent) {
-        Parent.AddToSortedListChidren(this);
+        Parent.AddToSortedListChildren(this);
       }
       if (parentNKey.HasValue && ParentN!=SortedListParentN.NoSortedListParentN) {
-        ParentN!.AddToSortedListChidren(this);
+        ParentN!.AddToSortedListChildren(this);
       }
       if (ParentR!=SortedListParentR.NoSortedListParentR) {
-        ParentR.AddToSortedListChidren(this);
+        ParentR.AddToSortedListChildren(this);
       }
       if (parentNRKey.HasValue && ParentNR!=SortedListParentNR.NoSortedListParentNR) {
-        ParentNR!.AddToSortedListChidren(this);
+        ParentNR!.AddToSortedListChildren(this);
       }
       onCsvConstruct();
     }
@@ -211,7 +211,7 @@ namespace TestContext  {
     //      -------
 
     /// <summary>
-    /// Adds SortedListChild to DC.Data.SortedListChidren.<br/>
+    /// Adds SortedListChild to DC.Data.SortedListChildren.<br/>
     /// Throws an Exception when SortedListChild is already stored.
     /// </summary>
     public void Store() {
@@ -235,7 +235,7 @@ namespace TestContext  {
       if (ParentNR?.Key<0) {
         throw new Exception($"Cannot store child SortedListChild '{this}'.ParentNR to SortedListParentNR '{ParentNR}' because parent is not stored yet.");
       }
-      DC.Data._SortedListChidren.Add(this);
+      DC.Data._SortedListChildren.Add(this);
       onStored();
 #if DEBUG
       DC.Trace?.Invoke($"Stored SortedListChild #{GetHashCode()} @{Key}");
@@ -307,11 +307,11 @@ namespace TestContext  {
       //remove not yet updated item from parents which will be removed by update
       var hasParentChanged = Parent!=parent || Text!=text;
       if (hasParentChanged) {
-        Parent.RemoveFromSortedListChidren(this);
+        Parent.RemoveFromSortedListChildren(this);
       }
       var hasParentNChanged = ParentN!=parentN || Text!=text;
       if (ParentN is not null && hasParentNChanged) {
-        ParentN.RemoveFromSortedListChidren(this);
+        ParentN.RemoveFromSortedListChildren(this);
       }
 
       //update properties and detect if any value has changed
@@ -331,15 +331,15 @@ namespace TestContext  {
 
       //add updated item to parents which have been newly added during update
       if (hasParentChanged) {
-        Parent.AddToSortedListChidren(this);
+        Parent.AddToSortedListChildren(this);
       }
       if (ParentN is not null && hasParentNChanged) {
-        ParentN.AddToSortedListChidren(this);
+        ParentN.AddToSortedListChildren(this);
       }
       if (isChangeDetected) {
         onUpdated(clone);
         if (Key>=0) {
-          DC.Data._SortedListChidren.ItemHasChanged(clone, this);
+          DC.Data._SortedListChildren.ItemHasChanged(clone, this);
         } else if (DC.Data.IsTransaction) {
           DC.Data.AddTransaction(new TransactionItem(24, TransactionActivityEnum.Update, Key, this, oldItem: clone));
         }
@@ -362,10 +362,10 @@ namespace TestContext  {
           SortedListParent.NoSortedListParent;
       if (sortedListChild.Parent!=parent) {
         if (sortedListChild.Parent!=SortedListParent.NoSortedListParent) {
-          sortedListChild.Parent.RemoveFromSortedListChidren(sortedListChild);
+          sortedListChild.Parent.RemoveFromSortedListChildren(sortedListChild);
         }
         sortedListChild.Parent = parent;
-        sortedListChild.Parent.AddToSortedListChidren(sortedListChild);
+        sortedListChild.Parent.AddToSortedListChildren(sortedListChild);
       }
       var parentNKey = csvReader.ReadIntNull();
       SortedListParentN? parentN;
@@ -380,20 +380,20 @@ namespace TestContext  {
           //nothing to do
         } else {
           sortedListChild.ParentN = parentN;
-          sortedListChild.ParentN.AddToSortedListChidren(sortedListChild);
+          sortedListChild.ParentN.AddToSortedListChildren(sortedListChild);
         }
       } else {
         if (parentN is null) {
           if (sortedListChild.ParentN!=SortedListParentN.NoSortedListParentN) {
-            sortedListChild.ParentN.RemoveFromSortedListChidren(sortedListChild);
+            sortedListChild.ParentN.RemoveFromSortedListChildren(sortedListChild);
           }
           sortedListChild.ParentN = null;
         } else {
           if (sortedListChild.ParentN!=SortedListParentN.NoSortedListParentN) {
-            sortedListChild.ParentN.RemoveFromSortedListChidren(sortedListChild);
+            sortedListChild.ParentN.RemoveFromSortedListChildren(sortedListChild);
           }
           sortedListChild.ParentN = parentN;
-          sortedListChild.ParentN.AddToSortedListChidren(sortedListChild);
+          sortedListChild.ParentN.AddToSortedListChildren(sortedListChild);
         }
       }
         var parentR = DC.Data._SortedListParentRs.GetItem(csvReader.ReadInt())??
@@ -422,13 +422,13 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Removes SortedListChild from DC.Data.SortedListChidren.
+    /// Removes SortedListChild from DC.Data.SortedListChildren.
     /// </summary>
     public void Release() {
       if (Key<0) {
         throw new Exception($"SortedListChild.Release(): SortedListChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      DC.Data._SortedListChidren.Remove(Key);
+      DC.Data._SortedListChildren.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SortedListChild @{Key} #{GetHashCode()}");
@@ -446,16 +446,16 @@ namespace TestContext  {
       DC.Trace?.Invoke($"Rollback new SortedListChild(): {sortedListChild.ToTraceString()}");
 #endif
       if (sortedListChild.Parent!=SortedListParent.NoSortedListParent) {
-        sortedListChild.Parent.RemoveFromSortedListChidren(sortedListChild);
+        sortedListChild.Parent.RemoveFromSortedListChildren(sortedListChild);
       }
       if (sortedListChild.ParentN!=null && sortedListChild.ParentN!=SortedListParentN.NoSortedListParentN) {
-        sortedListChild.ParentN.RemoveFromSortedListChidren(sortedListChild);
+        sortedListChild.ParentN.RemoveFromSortedListChildren(sortedListChild);
       }
       if (sortedListChild.ParentR!=SortedListParentR.NoSortedListParentR) {
-        sortedListChild.ParentR.RemoveFromSortedListChidren(sortedListChild);
+        sortedListChild.ParentR.RemoveFromSortedListChildren(sortedListChild);
       }
       if (sortedListChild.ParentNR!=null && sortedListChild.ParentNR!=SortedListParentNR.NoSortedListParentNR) {
-        sortedListChild.ParentNR.RemoveFromSortedListChidren(sortedListChild);
+        sortedListChild.ParentNR.RemoveFromSortedListChildren(sortedListChild);
       }
       sortedListChild.onRollbackItemNew();
     }
@@ -463,7 +463,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Releases SortedListChild from DC.Data.SortedListChidren as part of a transaction rollback of Store().
+    /// Releases SortedListChild from DC.Data.SortedListChildren as part of a transaction rollback of Store().
     /// </summary>
     internal static void RollbackItemStore(IStorageItem item) {
       var sortedListChild = (SortedListChild) item;
@@ -500,11 +500,11 @@ namespace TestContext  {
       // remove updated item from parents
       var hasParentChanged = oldItem.Parent!=item.Parent || oldItem.Text!=item.Text;
       if (hasParentChanged) {
-        item.Parent.RemoveFromSortedListChidren(item);
+        item.Parent.RemoveFromSortedListChildren(item);
       }
       var hasParentNChanged = oldItem.ParentN!=item.ParentN || oldItem.Text!=item.Text;
       if (hasParentNChanged && item.ParentN is not null) {
-        item.ParentN.RemoveFromSortedListChidren(item);
+        item.ParentN.RemoveFromSortedListChildren(item);
       }
 
       // updated item: restore old values
@@ -514,10 +514,10 @@ namespace TestContext  {
 
       // add item with previous values to parents
       if (hasParentChanged) {
-        item.Parent.AddToSortedListChidren(item);
+        item.Parent.AddToSortedListChildren(item);
       }
       if (hasParentNChanged && item.ParentN is not null) {
-        item.ParentN.AddToSortedListChidren(item);
+        item.ParentN.AddToSortedListChildren(item);
       }
       item.onRollbackItemUpdated(oldItem);
 #if DEBUG
@@ -528,7 +528,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Adds SortedListChild to DC.Data.SortedListChidren as part of a transaction rollback of Release().
+    /// Adds SortedListChild to DC.Data.SortedListChildren as part of a transaction rollback of Release().
     /// </summary>
     internal static void RollbackItemRelease(IStorageItem item) {
       var sortedListChild = (SortedListChild) item;

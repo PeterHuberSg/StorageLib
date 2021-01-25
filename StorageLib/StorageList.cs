@@ -27,7 +27,7 @@ namespace StorageLib {
 
   /// <summary>
   /// StorageList is a replacement for List used by parent classes with releasable children. A stored parent might
-  /// have stored and not stored children. For a stored parent, Enumerating StorageList shows only stored chidren. 
+  /// have stored and not stored children. For a stored parent, Enumerating StorageList shows only stored children. 
   /// GetAll() supports enumerating all children. Count() counts only stored children, while CountAll() counts all.
   /// </summary>
   public class StorageList<TParent, TChild>: ICollection<TChild>, IStorageReadOnlyList<TChild>

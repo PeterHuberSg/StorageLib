@@ -92,7 +92,7 @@ namespace TestContext  {
     //      ------------
 
     /// <summary>
-    /// ListChild Constructor. If isStoring is true, adds ListChild to DC.Data.ListChidren.
+    /// ListChild Constructor. If isStoring is true, adds ListChild to DC.Data.ListChildren.
     /// </summary>
     public ListChild(
       string text, 
@@ -211,7 +211,7 @@ namespace TestContext  {
     //      -------
 
     /// <summary>
-    /// Adds ListChild to DC.Data.ListChidren.<br/>
+    /// Adds ListChild to DC.Data.ListChildren.<br/>
     /// Throws an Exception when ListChild is already stored.
     /// </summary>
     public void Store() {
@@ -235,7 +235,7 @@ namespace TestContext  {
       if (ParentNR?.Key<0) {
         throw new Exception($"Cannot store child ListChild '{this}'.ParentNR to ListParentNR '{ParentNR}' because parent is not stored yet.");
       }
-      DC.Data._ListChidren.Add(this);
+      DC.Data._ListChildren.Add(this);
       onStored();
 #if DEBUG
       DC.Trace?.Invoke($"Stored ListChild #{GetHashCode()} @{Key}");
@@ -339,7 +339,7 @@ namespace TestContext  {
       if (isChangeDetected) {
         onUpdated(clone);
         if (Key>=0) {
-          DC.Data._ListChidren.ItemHasChanged(clone, this);
+          DC.Data._ListChildren.ItemHasChanged(clone, this);
         } else if (DC.Data.IsTransaction) {
           DC.Data.AddTransaction(new TransactionItem(14, TransactionActivityEnum.Update, Key, this, oldItem: clone));
         }
@@ -422,13 +422,13 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Removes ListChild from DC.Data.ListChidren.
+    /// Removes ListChild from DC.Data.ListChildren.
     /// </summary>
     public void Release() {
       if (Key<0) {
         throw new Exception($"ListChild.Release(): ListChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
-      DC.Data._ListChidren.Remove(Key);
+      DC.Data._ListChildren.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released ListChild @{Key} #{GetHashCode()}");
@@ -463,7 +463,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Releases ListChild from DC.Data.ListChidren as part of a transaction rollback of Store().
+    /// Releases ListChild from DC.Data.ListChildren as part of a transaction rollback of Store().
     /// </summary>
     internal static void RollbackItemStore(IStorageItem item) {
       var listChild = (ListChild) item;
@@ -528,7 +528,7 @@ namespace TestContext  {
 
 
     /// <summary>
-    /// Adds ListChild to DC.Data.ListChidren as part of a transaction rollback of Release().
+    /// Adds ListChild to DC.Data.ListChildren as part of a transaction rollback of Release().
     /// </summary>
     internal static void RollbackItemRelease(IStorageItem item) {
       var listChild = (ListChild) item;
