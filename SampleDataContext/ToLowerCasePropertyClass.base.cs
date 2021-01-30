@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class ToLowerCasePropertyClass: IStorageItemGeneric<ToLowerCasePropertyClass> {
+  public partial class ToLowerCasePropertyClass: IStorageItem<ToLowerCasePropertyClass> {
 
     #region Properties
     //      ----------

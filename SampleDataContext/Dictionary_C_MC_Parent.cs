@@ -6,7 +6,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class Dictionary_C_MC_Parent: IStorageItemGeneric<Dictionary_C_MC_Parent> {
+  public partial class Dictionary_C_MC_Parent: IStorageItem<Dictionary_C_MC_Parent> {
 
 
     #region Properties

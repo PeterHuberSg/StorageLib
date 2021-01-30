@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Some comment for PropertyNeedsDictionaryClass
     /// </summary>
-  public partial class PropertyNeedsDictionaryClass: IStorageItemGeneric<PropertyNeedsDictionaryClass> {
+  public partial class PropertyNeedsDictionaryClass: IStorageItem<PropertyNeedsDictionaryClass> {
 
 
     #region Properties

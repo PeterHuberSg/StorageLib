@@ -125,7 +125,6 @@ namespace StorageTest {
         dc.StartTransaction();
         parent0_ = createParent("p_", isStoring: false);
         dc.CommitTransaction();
-        //parent0 = null;
         assertDataDisposeDCRecreateDCassertData("");
 
 
@@ -137,7 +136,6 @@ namespace StorageTest {
 
         dc.StartTransaction();
         parent0 = createParent("p0", isStoring: true);
-        //parents.Add(parent0);
         dc.CommitTransaction();
         assertDataDisposeDCRecreateDCassertData("p0|");
 
@@ -597,14 +595,6 @@ namespace StorageTest {
           }
           var isFirstChild = true;
           var isFirstStoredMissing = true;
-          var l1 = childrenStrings.OrderBy(cs => cs.Text).ThenBy(cs => cs.IsStored).ToList();
-          var l2 = childrenStrings.OrderByDescending(cs => cs.Text).ThenBy(cs => cs.IsStored).ToList();
-          var l3 = childrenStrings.OrderBy(cs => cs.Text).ThenByDescending(cs => cs.IsStored).ToList();
-          var l4 = childrenStrings.OrderByDescending(cs => cs.Text).ThenByDescending(cs => cs.IsStored).ToList();
-          var l5 = childrenStrings.OrderBy(cs => cs.IsStored).ThenBy(cs => cs.Text).ToList();
-          var l6 = childrenStrings.OrderByDescending(cs => cs.IsStored).ThenBy(cs => cs.Text).ToList();
-          var l7 = childrenStrings.OrderBy(cs => cs.IsStored).ThenByDescending(cs => cs.Text).ToList();
-          var l8 = childrenStrings.OrderByDescending(cs => cs.IsStored).ThenByDescending(cs => cs.Text).ToList();
           foreach (var (isStored, text) in childrenStrings.OrderBy(cs => cs.Text).ThenBy(cs => cs.IsStored)) {
             if (isFirstStoredMissing && isStored) {
               isFirstStoredMissing = false;

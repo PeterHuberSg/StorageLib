@@ -6,7 +6,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class UpdateableNoneReleasableClass: IStorageItemGeneric<UpdateableNoneReleasableClass> {
+  public partial class UpdateableNoneReleasableClass: IStorageItem<UpdateableNoneReleasableClass> {
 
 
     #region Properties

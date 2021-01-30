@@ -21,8 +21,6 @@ This software is distributed without any warranty.
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 
@@ -270,7 +268,7 @@ namespace StorageLib {
   /// sets the Key property of that item. DataStroe does not publicly support DataStore.Add(item). Use item.Store() instead.
   /// </summary>
   public class DataStore<TItem>: DataStore, IReadonlyDataStore<TItem> 
-    where TItem : class, IStorageItemGeneric<TItem>
+    where TItem : class, IStorageItem<TItem>
   {
 
     #region Properties
@@ -371,30 +369,6 @@ namespace StorageLib {
     int version;
 
 
-    ///// <summary>
-    ///// Constructs an add-only DataStore with a given initial capacity. It is initially empty, but will have room for 
-    ///// the given number of items. When too many items get added, the capacity gets increased.
-    ///// </summary>
-    ///// <param name="dataContext">DataContext creating this DataStore</param>
-    ///// <param name="storeKey">Unique number to identify DataStore</param>
-    ///// <param name="setKey">Called when an item gets added to set its Key</param>
-    ///// <param name="rollbackItemNew">Undo of data change in item during transaction due to constructor</param>
-    ///// <param name="rollbackItemStore">Undo of data change in item during transaction due to Store()</param>
-    ///// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to Update()</param>
-    ///// <param name="rollbackItemRemove">Undo of data change in item during transaction due to Remove()</param>
-    ///// <param name="capacity">How many items should DataStore by able to hold initially ?</param>
-    //public DataStore(
-    //  DataContextBase? dataContext,
-    //  int storeKey,
-    //  Action<IStorageItem, int, /*isRollback*/bool> setKey,
-    //  Action<IStorageItem> rollbackItemNew,
-    //  Action<IStorageItem> rollbackItemStore,
-    //  Action</*old*/IStorageItem, /*new*/IStorageItem>? rollbackItemUpdate,
-    //  Action<IStorageItem>? rollbackItemRemove,
-    //  int capacity = 0): this(dataContext, storeKey, setKey, rollbackItemNew, rollbackItemStore, rollbackItemUpdate, 
-    //    rollbackItemRemove, null, false, false, capacity) {}
-
-
     /// <summary>
     /// Constructs DataStore with a given initial capacity. It is initially empty, but will have room for the given 
     /// number of items. When too many items get added, the capacity gets increased.
@@ -406,8 +380,6 @@ namespace StorageLib {
     /// <param name="rollbackItemStore">Undo of data change in item during transaction due to item.Store()</param>
     /// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to item.Update()</param>
     /// <param name="rollbackItemRelease">Undo of data change in item during transaction due to item.Release()</param>
-    ///// <param name="disconnect">Called when an item gets removed (deleted). It might be necessary to disconnect also child
-    ///// items linked to this item and/or to remove item from parent(s)</param>
     /// <param name="areInstancesUpdatable">Can the property of an item change ?</param>
     /// <param name="areInstancesReleasable">Can an item be removed from DataStore</param>
     /// <param name="capacity">How many items should DataStore by able to hold initially ?</param>
@@ -457,20 +429,6 @@ namespace StorageLib {
     public bool ContainsKey(int key) {
       return binarySearch(key)>=0;
     }
-
-
-    ///// <summary>
-    ///// If item with key is found, returns true and item in value, otherwise false and null in value.
-    ///// </summary>
-    //public bool TryGetValue(int key, [MaybeNullWhen(false)] out TItem value) {
-    //  var index = binarySearch(key);
-    //  if (index<0) {
-    //    value = default!;
-    //    return false;
-    //  }
-    //  value = items?[index]!;
-    //  return true;
-    //}
 
 
     /// <summary>
@@ -579,20 +537,6 @@ namespace StorageLib {
     public bool Remove(TItem item) {
       return item.Key<0 ? throw new Exception($"DataStore can not remove item '{item}' with no key (-1).") : Remove(item.Key);
     }
-
-
-    ///// <summary>
-    ///// If item with key is found, returns true, otherwise false and null in item.
-    ///// </summary>
-    //public bool TryGetItem(int key, [MaybeNullWhen(false)] out TItem item) {
-    //  var index = binarySearch(key);
-    //  if (index<0) {
-    //    item = default!;
-    //    return false;
-    //  }
-    //  item = items?[index]!;
-    //  return true;
-    //}
 
 
     /// <summary>

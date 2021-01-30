@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class SortedList_1_MC_Parent: IStorageItemGeneric<SortedList_1_MC_Parent> {
+  public partial class SortedList_1_MC_Parent: IStorageItem<SortedList_1_MC_Parent> {
 
     #region Properties
     //      ----------
@@ -34,7 +34,7 @@ namespace DataModelSamples  {
 
 
     public IStorageReadOnlyDictionary<string, SortedList_1_MC_Child> Children => children;
-    readonly StorageSortedList<SortedList_1_MC_Parent, string, SortedList_1_MC_Child> children;
+    readonly StorageSortedList<string, SortedList_1_MC_Child> children;
 
 
     /// <summary>
@@ -73,7 +73,7 @@ namespace DataModelSamples  {
     public SortedList_1_MC_Parent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new StorageSortedList<SortedList_1_MC_Parent, string, SortedList_1_MC_Child>(this);
+      children = new StorageSortedList<string, SortedList_1_MC_Child>();
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(31,TransactionActivityEnum.New, Key, this));
@@ -105,7 +105,7 @@ namespace DataModelSamples  {
     private SortedList_1_MC_Parent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new StorageSortedList<SortedList_1_MC_Parent, string, SortedList_1_MC_Child>(this);
+      children = new StorageSortedList<string, SortedList_1_MC_Child>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -325,7 +325,7 @@ namespace DataModelSamples  {
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class DictionaryWithPropertyNameParent: IStorageItemGeneric<DictionaryWithPropertyNameParent> {
+  public partial class DictionaryWithPropertyNameParent: IStorageItem<DictionaryWithPropertyNameParent> {
 
     #region Properties
     //      ----------
@@ -34,7 +34,7 @@ namespace DataModelSamples  {
 
 
     public IStorageReadOnlyDictionary<DateTime, DictionaryWithPropertyNameChild> Children => children;
-    readonly StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild> children;
+    readonly StorageDictionary<DateTime, DictionaryWithPropertyNameChild> children;
 
 
     /// <summary>
@@ -73,7 +73,7 @@ namespace DataModelSamples  {
     public DictionaryWithPropertyNameParent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild>(this);
+      children = new StorageDictionary<DateTime, DictionaryWithPropertyNameChild>();
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(29,TransactionActivityEnum.New, Key, this));
@@ -105,7 +105,7 @@ namespace DataModelSamples  {
     private DictionaryWithPropertyNameParent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new StorageDictionary<DictionaryWithPropertyNameParent, DateTime, DictionaryWithPropertyNameChild>(this);
+      children = new StorageDictionary<DateTime, DictionaryWithPropertyNameChild>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -325,7 +325,7 @@ namespace DataModelSamples  {
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

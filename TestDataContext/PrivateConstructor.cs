@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Example with private constructor.
     /// </summary>
-  public partial class PrivateConstructor: IStorageItemGeneric<PrivateConstructor> {
+  public partial class PrivateConstructor: IStorageItem<PrivateConstructor> {
 
 
     #region Properties

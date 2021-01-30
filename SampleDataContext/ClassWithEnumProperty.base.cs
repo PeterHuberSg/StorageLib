@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class ClassWithEnumProperty: IStorageItemGeneric<ClassWithEnumProperty> {
+  public partial class ClassWithEnumProperty: IStorageItem<ClassWithEnumProperty> {
 
     #region Properties
     //      ----------

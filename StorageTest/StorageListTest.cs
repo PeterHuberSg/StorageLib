@@ -19,20 +19,19 @@ namespace StorageTest {
       _ = new DC(null);
 
       var parent = new TestParent("Parent", isStoring: false);
-      var storageList = new StorageList<TestParent, TestChild>(parent);
+      var storageList = new StorageList<TestChild>();
       assert(storageList, "", "");
 
       var child0 = new TestChild("Child0", parent, isStoring: false);
       storageList.Add(child0);
       assert(storageList,
-        @"Key: noKey, Text: Child0, Parent: noKey, Parent;",
+        @"",
         @"Key: noKey, Text: Child0, Parent: noKey, Parent;");
 
       var child1 = new TestChild("Child1", parent, isStoring: false);
       storageList.Add(child1);
       assert(storageList,
-        @"Key: noKey, Text: Child0, Parent: noKey, Parent;
-          Key: noKey, Text: Child1, Parent: noKey, Parent;",
+        @"",
         @"Key: noKey, Text: Child0, Parent: noKey, Parent;
           Key: noKey, Text: Child1, Parent: noKey, Parent;");
 
@@ -66,50 +65,50 @@ namespace StorageTest {
     readonly StringBuilder sb = new StringBuilder();
 
 
-    private void assert(StorageList<TestParent, TestChild> storageList, string expectedForEach, string expectedGetAll) {
+    private void assert(StorageList<TestChild> storageList, string expectedStored, string expectedAll) {
+      sb.Clear();
+      foreach (var item in storageList.GetStoredItems()) {
+        sb.AppendLine(item.ToString());
+      }
+      if (expectedStored.Length==0) {
+        Assert.AreEqual(0, sb.Length);
+      } else {
+        expectedStored = expectedStored.Replace(Environment.NewLine + "          ", Environment.NewLine);
+        Assert.AreEqual(expectedStored + Environment.NewLine, sb.ToString());
+      }
+
       sb.Clear();
       foreach (var item in storageList) {
         sb.AppendLine(item.ToString());
       }
-      if (expectedForEach.Length==0) {
+      if (expectedAll.Length==0) {
         Assert.AreEqual(0, sb.Length);
       } else {
-        expectedForEach = expectedForEach.Replace(Environment.NewLine + "          ", Environment.NewLine);
-        Assert.AreEqual(expectedForEach + Environment.NewLine, sb.ToString());
+        expectedAll = expectedAll.Replace(Environment.NewLine + "          ", Environment.NewLine);
+        Assert.AreEqual(expectedAll + Environment.NewLine, sb.ToString());
       }
 
-      sb.Clear();
-      foreach (var item in storageList.GetAll()) {
-        sb.AppendLine(item.ToString());
-      }
-      if (expectedGetAll.Length==0) {
-        Assert.AreEqual(0, sb.Length);
-      } else {
-        expectedGetAll = expectedGetAll.Replace(Environment.NewLine + "          ", Environment.NewLine);
-        Assert.AreEqual(expectedGetAll + Environment.NewLine, sb.ToString());
-      }
-
-      var parent = storageList.Parent;
-      sb.Clear();
-      foreach (var item in parent.Children) {
-        sb.AppendLine(item.ToString());
-      }
-      if (expectedForEach.Length==0) {
-        Assert.AreEqual(0, sb.Length);
-      } else {
-        expectedForEach = expectedForEach.Replace(Environment.NewLine + "          ", Environment.NewLine);
-        Assert.AreEqual(expectedForEach + Environment.NewLine, sb.ToString());
-      }
-      sb.Clear();
-      foreach (var item in parent.Children.GetAll()) {
-        sb.AppendLine(item.ToString());
-      }
-      if (expectedGetAll.Length==0) {
-        Assert.AreEqual(0, sb.Length);
-      } else {
-        expectedGetAll = expectedGetAll.Replace(Environment.NewLine + "          ", Environment.NewLine);
-        Assert.AreEqual(expectedGetAll + Environment.NewLine, sb.ToString());
-      }
+      //var parent = storageList.Parent;
+      //sb.Clear();
+      //foreach (var item in parent.Children) {
+      //  sb.AppendLine(item.ToString());
+      //}
+      //if (expectedForEach.Length==0) {
+      //  Assert.AreEqual(0, sb.Length);
+      //} else {
+      //  expectedForEach = expectedForEach.Replace(Environment.NewLine + "          ", Environment.NewLine);
+      //  Assert.AreEqual(expectedForEach + Environment.NewLine, sb.ToString());
+      //}
+      //sb.Clear();
+      //foreach (var item in parent.Children.GetAll()) {
+      //  sb.AppendLine(item.ToString());
+      //}
+      //if (expectedGetAll.Length==0) {
+      //  Assert.AreEqual(0, sb.Length);
+      //} else {
+      //  expectedGetAll = expectedGetAll.Replace(Environment.NewLine + "          ", Environment.NewLine);
+      //  Assert.AreEqual(expectedGetAll + Environment.NewLine, sb.ToString());
+      //}
     }
   }
 }

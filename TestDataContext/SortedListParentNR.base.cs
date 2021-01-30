@@ -16,7 +16,7 @@ using StorageLib;
 namespace TestContext  {
 
 
-  public partial class SortedListParentNR: IStorageItemGeneric<SortedListParentNR> {
+  public partial class SortedListParentNR: IStorageItem<SortedListParentNR> {
 
     #region Properties
     //      ----------
@@ -43,7 +43,7 @@ namespace TestContext  {
 
 
     public IStorageReadOnlyDictionary<string, SortedListChild> SortedListChildren => sortedListChildren;
-    readonly StorageSortedList<SortedListParentNR, string, SortedListChild> sortedListChildren;
+    readonly StorageSortedList<string, SortedListChild> sortedListChildren;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public SortedListParentNR(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      sortedListChildren = new StorageSortedList<SortedListParentNR, string, SortedListChild>(this);
+      sortedListChildren = new StorageSortedList<string, SortedListChild>();
 #if DEBUG
       DC.Trace?.Invoke($"new SortedListParentNR: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private SortedListParentNR(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      sortedListChildren = new StorageSortedList<SortedListParentNR, string, SortedListChild>(this);
+      sortedListChildren = new StorageSortedList<string, SortedListChild>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -372,7 +372,7 @@ namespace TestContext  {
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
         $" SortedListChildren: {SortedListChildren.Count}," +
-        $" SortedListChildrenAll: {SortedListChildren.CountAll};";
+        $" SortedListChildrenStored: {SortedListChildren.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

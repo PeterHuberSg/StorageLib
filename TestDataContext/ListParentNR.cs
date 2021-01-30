@@ -6,7 +6,7 @@ using StorageLib;
 namespace TestContext  {
 
 
-  public partial class ListParentNR: IStorageItemGeneric<ListParentNR> {
+  public partial class ListParentNR: IStorageItem<ListParentNR> {
 
 
     #region Properties

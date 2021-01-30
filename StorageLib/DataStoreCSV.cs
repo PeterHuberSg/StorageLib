@@ -37,7 +37,7 @@ namespace StorageLib {
   /// DataStoreCSV is rewritten, which eliminates all the updated and deleted lines.
   /// </summary>
   public class DataStoreCSV<TItemCSV>: DataStore<TItemCSV> 
-    where TItemCSV : class, IStorageItemGeneric<TItemCSV>
+    where TItemCSV : class, IStorageItem<TItemCSV>
   {
 
     #region Properties
@@ -107,7 +107,6 @@ namespace StorageLib {
     /// <param name="rollbackItemStore">Undo of data change in item during transaction due to item.Store()</param>
     /// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to item.Update()</param>
     /// <param name="rollbackItemRemove">Undo of data change in item during transaction due to item.Remove()</param>
-    ///// <param name="disconnect">Called when an item gets removed (deleted). It might be necessary to disconnect also child
     /// items linked to this item and/or to remove item from parent(s)</param>
     /// <param name="areInstancesUpdatable">Can the property of an item change ?</param>
     /// <param name="areInstancesReleasable">Can an item be removed from DataStoreCSV</param>

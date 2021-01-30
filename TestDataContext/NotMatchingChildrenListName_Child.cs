@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Child for NotMatchingChildrenListName_Parent
     /// </summary>
-  public partial class NotMatchingChildrenListName_Child: IStorageItemGeneric<NotMatchingChildrenListName_Child> {
+  public partial class NotMatchingChildrenListName_Child: IStorageItem<NotMatchingChildrenListName_Child> {
 
 
     #region Properties

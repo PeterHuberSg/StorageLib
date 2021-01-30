@@ -19,7 +19,7 @@ namespace TestContext  {
     /// <summary>
     /// Example where the parent's List for it's children is not the plural of the child type type. 
     /// </summary>
-  public partial class NotMatchingChildrenListName_Parent: IStorageItemGeneric<NotMatchingChildrenListName_Parent> {
+  public partial class NotMatchingChildrenListName_Parent: IStorageItem<NotMatchingChildrenListName_Parent> {
 
     #region Properties
     //      ----------
@@ -52,7 +52,7 @@ namespace TestContext  {
     /// Deletable children which must have a parent
     /// </summary>
     public IStorageReadOnlyList<NotMatchingChildrenListName_Child> Children => children;
-    readonly StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child> children;
+    readonly StorageList<NotMatchingChildrenListName_Child> children;
 
 
     /// <summary>
@@ -91,7 +91,7 @@ namespace TestContext  {
     public NotMatchingChildrenListName_Parent(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      children = new StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child>(this);
+      children = new StorageList<NotMatchingChildrenListName_Child>();
 #if DEBUG
       DC.Trace?.Invoke($"new NotMatchingChildrenListName_Parent: {ToTraceString()}");
 #endif
@@ -126,7 +126,7 @@ namespace TestContext  {
     private NotMatchingChildrenListName_Parent(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      children = new StorageList<NotMatchingChildrenListName_Parent, NotMatchingChildrenListName_Child>(this);
+      children = new StorageList<NotMatchingChildrenListName_Child>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -381,7 +381,7 @@ namespace TestContext  {
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

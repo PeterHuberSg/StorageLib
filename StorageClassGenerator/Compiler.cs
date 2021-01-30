@@ -250,19 +250,6 @@ namespace StorageLib {
     }
 
 
-    //private string removeRegionAndLeadingSimpleComments(string declaration) {
-    //  var pos1 = declaration.IndexOf("///");
-    //  if (pos1>=0) {
-    //    return addLeadingSpaces(declaration, pos1);
-    //  }
-    //  var pos2 = declaration.IndexOf("public enum ");
-    //  if (pos2>=0) {
-    //    return addLeadingSpaces(declaration, pos1);
-    //  }
-    //  return declaration;
-    //}
-
-
     private string addLeadingSpaces(string declaration, int pos) {
       pos--;
       while (pos>0) {
@@ -501,20 +488,10 @@ namespace StorageLib {
                 } else {
                   isFound = true;
                   mi.ChildMemberInfo = childMI;
-                  //////if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-                  //////  //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
-                  //////  mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                  //////  mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                  //////} else {
-                  //////  //Dictionary
-                  //////  //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
-                  //////  mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                  //////  mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                  //////}
                   if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
                     //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
                     if (childMI.ClassInfo.AreInstancesReleasable) {
-                      mi.TypeString = $"StorageSortedList<{mi.ClassInfo.ClassName}, {childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.TypeString = $"StorageSortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
                       mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
                     } else {
                       mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
@@ -524,7 +501,7 @@ namespace StorageLib {
                     //Dictionary
                     //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
                     if (childMI.ClassInfo.AreInstancesReleasable) {
-                      mi.TypeString = $"StorageDictionary<{mi.ClassInfo.ClassName}, {childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+                      mi.TypeString = $"StorageDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
                       mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
                     } else {
                       mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
@@ -581,8 +558,6 @@ namespace StorageLib {
     private bool allParentsAreAddedToParentChildTree(ClassInfo childClass) {
       foreach (var parentClass in childClass.ParentsAll) {
         if (!parentClass.IsAddedToParentChildTree) return false;
-
-        //if (!allParentsAreAddedToParentChildTree(parentClass)) return false;
       }
       return true;
     }

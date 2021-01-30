@@ -43,6 +43,8 @@ namespace TestContext {
     string Text { get; }
     int CountAllChildren { get; }
     IEnumerable<TChild> GetAllChildren { get; }
+    int CountStoredChildren { get; }
+    IEnumerable<TChild> GetStoredChildren { get; }
     TChild? AllChildrenFirst { get; }
     void Update(string text);
 

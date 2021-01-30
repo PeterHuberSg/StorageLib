@@ -16,7 +16,7 @@ using StorageLib;
 namespace TestContext  {
 
 
-  public partial class DictionaryParentN: IStorageItemGeneric<DictionaryParentN> {
+  public partial class DictionaryParentN: IStorageItem<DictionaryParentN> {
 
     #region Properties
     //      ----------
@@ -43,7 +43,7 @@ namespace TestContext  {
 
 
     public IStorageReadOnlyDictionary<string, DictionaryChild> DictionaryChildren => dictionaryChildren;
-    readonly StorageDictionary<DictionaryParentN, string, DictionaryChild> dictionaryChildren;
+    readonly StorageDictionary<string, DictionaryChild> dictionaryChildren;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public DictionaryParentN(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      dictionaryChildren = new StorageDictionary<DictionaryParentN, string, DictionaryChild>(this);
+      dictionaryChildren = new StorageDictionary<string, DictionaryChild>();
 #if DEBUG
       DC.Trace?.Invoke($"new DictionaryParentN: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private DictionaryParentN(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      dictionaryChildren = new StorageDictionary<DictionaryParentN, string, DictionaryChild>(this);
+      dictionaryChildren = new StorageDictionary<string, DictionaryChild>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -372,7 +372,7 @@ namespace TestContext  {
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
         $" DictionaryChildren: {DictionaryChildren.Count}," +
-        $" DictionaryChildrenAll: {DictionaryChildren.CountAll};";
+        $" DictionaryChildrenStored: {DictionaryChildren.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

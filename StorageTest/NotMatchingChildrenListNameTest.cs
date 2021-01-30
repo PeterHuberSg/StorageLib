@@ -32,39 +32,42 @@ namespace StorageTest {
         _ = new DC(csvConfig);
 
         var p0 = new NotMatchingChildrenListName_Parent("P0", isStoring: false);
-        var c = p0.Children.Count;
         Assert.AreEqual(0, p0.Children.Count);
-        Assert.AreEqual(0, p0.Children.CountAll);
+        Assert.AreEqual(0, p0.Children.CountStoredItems);
 
         var c0 = new NotMatchingChildrenListName_Child("c0.0", p0, isStoring: false);
+        Assert.AreEqual(0, p0.Children.CountStoredItems);
         Assert.AreEqual(1, p0.Children.Count);
-        Assert.AreEqual(1, p0.Children.CountAll);
-        Assert.AreEqual(c0, p0.Children.First());
+        Assert.AreEqual(c0, p0.Children[0]);
 
         var c1 = new NotMatchingChildrenListName_Child("c1.0", p0, isStoring: false);
+        Assert.AreEqual(0, p0.Children.CountStoredItems);
         Assert.AreEqual(2, p0.Children.Count);
-        Assert.AreEqual(2, p0.Children.CountAll);
-        Assert.AreEqual(c0, p0.Children.First());
-        Assert.AreEqual(c1, p0.Children.Skip(1).First());
+        Assert.AreEqual(c0, p0.Children[0]);
+        Assert.AreEqual(c1, p0.Children[1]);
 
         p0.Store();
-        Assert.AreEqual(0, p0.Children.Count);
-        Assert.AreEqual(2, p0.Children.CountAll);
-        Assert.IsNull(p0.Children.FirstOrDefault());
-        Assert.AreEqual(c0, p0.Children.GetAll().First());
-        Assert.AreEqual(c1, p0.Children.GetAll().Skip(1).First());
+        Assert.AreEqual(0, p0.Children.CountStoredItems);
+        Assert.AreEqual(2, p0.Children.Count);
+        Assert.AreEqual(c0, p0.Children[0]);
+        Assert.AreEqual(c1, p0.Children[1]);
 
         c0.Store();
-        Assert.AreEqual(1, p0.Children.Count);
-        Assert.AreEqual(2, p0.Children.CountAll);
-        Assert.AreEqual(c0, p0.Children.First());
-        Assert.AreEqual(c0, p0.Children.GetAll().First());
-        Assert.AreEqual(c1, p0.Children.GetAll().Skip(1).First());
+        Assert.AreEqual(1, p0.Children.CountStoredItems);
+        Assert.AreEqual(2, p0.Children.Count);
+        Assert.AreEqual(c0, p0.Children.GetStoredItems().First());
+        Assert.AreEqual(c0, p0.Children[0]);
+        Assert.AreEqual(c1, p0.Children[1]);
 
         var p1 = new NotMatchingChildrenListName_Parent("P1", isStoring: true);
         c0.Update("c0.1", p1);
+        Assert.AreEqual(0, p0.Children.CountStoredItems);
+        Assert.AreEqual(1, p0.Children.Count);
+        Assert.AreEqual(1, p1.Children.CountStoredItems);
         Assert.AreEqual(1, p1.Children.Count);
-        Assert.AreEqual(c0, p1.Children.First());
+        Assert.AreEqual(c0, p1.Children.GetStoredItems().First());
+        Assert.AreEqual(c0, p1.Children[0]);
+        Assert.AreEqual(c1, p0.Children[0]);
 
         c0.Release();
 

@@ -68,7 +68,7 @@ simplified):
 
 ```csharp
 namespace YourNamespace {
-  public partial class Parent: IStorageItemGeneric<Parent> {
+  public partial class Parent: IStorageItem<Parent> {
     public int Key { get; private set; }
     public string Name { get; private set; }
     public IReadOnlyList<Child> Children => children;
@@ -141,7 +141,7 @@ so that you can add additianl functionality. They are not shown in the code samp
 
 ```csharp
 namespace YourNamespace  {
-  public partial class Child: IStorageItemGeneric<Child> {
+  public partial class Child: IStorageItem<Child> {
     public int Key { get; private set; }
     public string Name { get; private set; }
     public Parent Parent { get; private set; }

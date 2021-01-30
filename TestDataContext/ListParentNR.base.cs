@@ -16,7 +16,7 @@ using StorageLib;
 namespace TestContext  {
 
 
-  public partial class ListParentNR: IStorageItemGeneric<ListParentNR> {
+  public partial class ListParentNR: IStorageItem<ListParentNR> {
 
     #region Properties
     //      ----------
@@ -43,7 +43,7 @@ namespace TestContext  {
 
 
     public IStorageReadOnlyList<ListChild> Children => children;
-    readonly StorageList<ListParentNR, ListChild> children;
+    readonly StorageList<ListChild> children;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace TestContext  {
     public ListParentNR(string text, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Text = text;
-      children = new StorageList<ListParentNR, ListChild>(this);
+      children = new StorageList<ListChild>();
 #if DEBUG
       DC.Trace?.Invoke($"new ListParentNR: {ToTraceString()}");
 #endif
@@ -117,7 +117,7 @@ namespace TestContext  {
     private ListParentNR(int key, CsvReader csvReader){
       Key = key;
       Text = csvReader.ReadString();
-      children = new StorageList<ListParentNR, ListChild>(this);
+      children = new StorageList<ListChild>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -372,7 +372,7 @@ namespace TestContext  {
         $"Key: {Key.ToKeyString()}," +
         $" Text: {Text}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

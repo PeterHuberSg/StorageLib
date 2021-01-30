@@ -27,33 +27,33 @@ namespace StorageLib {
 
 
   /// <summary>
-  /// Like IReadOnlyCollection, but for StorageList, StorageDictionary, etc., which show 'normally' only stored children if 
-  /// the parent is stored. 
+  /// Like IReadOnlyCollection, but for StorageList, StorageDictionary, etc., which provide CountStoredItems and 
+  /// GetStoredItems().
   /// </summary>
-  public interface IStorageReadOnlyCollection<T>: IReadOnlyCollection<T> {
-    /// <summary>
-    /// Itereate over all children. 'IEnumerator<TChild> GetEnumerator()' returns only stored children if parent is stored.
-    /// </summary>
-    public IEnumerable<T> GetAll();
+  public interface IStorageReadOnly<TItem>{
 
     /// <summary>
-    /// Counting all children. 'Count' counts only stored children if parent is stored.
+    /// Enumerate over all stored items.
     /// </summary>
-    public int CountAll { get; }
+    public IEnumerable<TItem> GetStoredItems();
+
+    /// <summary>
+    /// Counting all stored items.
+    /// </summary>
+    public int CountStoredItems { get; }
   }
 
 
   /// <summary>
-  /// Like IReadOnlyList, but for StorageList, which shows 'normally' only stored children if 
-  /// the parent is stored. 
+  /// Like IReadOnlyList, but for StorageList, which provides CountStoredItems and GetStoredItems().
   /// </summary>
-  public interface IStorageReadOnlyList<T>: IStorageReadOnlyCollection<T>, IReadOnlyList<T> { }
+  public interface IStorageReadOnlyList<TItem>: IStorageReadOnly<TItem>, IReadOnlyList<TItem>{ }
 
 
   /// <summary>
-  /// Like IReadOnlyDictionary, but for StorageDictionary or StorageSortedList, which show 'normally' only stored children if 
-  /// the parent is stored. 
+  /// Like IReadOnlyDictionary, but for StorageDictionary or StorageSortedList, which provide CountStoredItems and 
+  /// GetStoredItems(). 
   /// </summary>
   public interface IStorageReadOnlyDictionary<TKey, TValue>:
-    IStorageReadOnlyCollection<KeyValuePair<TKey, TValue>>, IReadOnlyDictionary<TKey, TValue> { }
+    IStorageReadOnly<TValue>, IReadOnlyDictionary<TKey, TValue> { }
 }

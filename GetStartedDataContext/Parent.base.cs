@@ -19,7 +19,7 @@ namespace YourNamespace  {
     /// <summary>
     /// Some comment for Parent.
     /// </summary>
-  public partial class Parent: IStorageItemGeneric<Parent> {
+  public partial class Parent: IStorageItem<Parent> {
 
     #region Properties
     //      ----------
@@ -43,7 +43,7 @@ namespace YourNamespace  {
     /// Any child created will automatically get added here.
     /// </summary>
     public IStorageReadOnlyList<Child> Children => children;
-    readonly StorageList<Parent, Child> children;
+    readonly StorageList<Child> children;
 
 
     /// <summary>
@@ -82,7 +82,7 @@ namespace YourNamespace  {
     public Parent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new StorageList<Parent, Child>(this);
+      children = new StorageList<Child>();
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(0,TransactionActivityEnum.New, Key, this));
@@ -114,7 +114,7 @@ namespace YourNamespace  {
     private Parent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new StorageList<Parent, Child>(this);
+      children = new StorageList<Child>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -334,7 +334,7 @@ namespace YourNamespace  {
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

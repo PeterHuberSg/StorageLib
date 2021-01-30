@@ -6,7 +6,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class ConditionalUnconditionalPropertyClass: IStorageItemGeneric<ConditionalUnconditionalPropertyClass> {
+  public partial class ConditionalUnconditionalPropertyClass: IStorageItem<ConditionalUnconditionalPropertyClass> {
 
 
     #region Properties

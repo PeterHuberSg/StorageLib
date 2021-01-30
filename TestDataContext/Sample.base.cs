@@ -19,7 +19,7 @@ namespace TestContext  {
     /// <summary>
     /// Some comment for Sample
     /// </summary>
-  public partial class Sample: IStorageItemGeneric<Sample> {
+  public partial class Sample: IStorageItem<Sample> {
 
     #region Properties
     //      ----------
@@ -151,7 +151,7 @@ namespace TestContext  {
     /// Some SampleDetails comment
     /// </summary>
     public IStorageReadOnlyList<SampleDetail> SampleDetails => sampleDetails;
-    readonly StorageList<Sample, SampleDetail> sampleDetails;
+    readonly StorageList<SampleDetail> sampleDetails;
 
 
     /// <summary>
@@ -241,7 +241,7 @@ namespace TestContext  {
       OneMaster = oneMaster;
       OtherMaster = otherMaster;
       Optional = optional;
-      sampleDetails = new StorageList<Sample, SampleDetail>(this);
+      sampleDetails = new StorageList<SampleDetail>();
 #if DEBUG
       DC.Trace?.Invoke($"new Sample: {ToTraceString()}");
 #endif
@@ -318,7 +318,7 @@ namespace TestContext  {
         OtherMaster = DC.Data._SampleMasters.GetItem(otherMasterKey.Value)?? SampleMaster.NoSampleMaster;
       }
       Optional = csvReader.ReadStringNull();
-      sampleDetails = new StorageList<Sample, SampleDetail>(this);
+      sampleDetails = new StorageList<SampleDetail>();
       if (oneMasterKey.HasValue && OneMaster!=SampleMaster.NoSampleMaster) {
         OneMaster!.AddToSampleX(this);
       }
@@ -924,7 +924,7 @@ namespace TestContext  {
         $" OtherMaster: {OtherMaster?.ToShortString()}," +
         $" Optional: {Optional}," +
         $" SampleDetails: {SampleDetails.Count}," +
-        $" SampleDetailsAll: {SampleDetails.CountAll};";
+        $" SampleDetailsStored: {SampleDetails.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

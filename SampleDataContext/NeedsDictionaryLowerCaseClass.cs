@@ -9,7 +9,7 @@ namespace DataModelSamples  {
     /// <summary>
     /// Directory of all NeedsDictionaryClasss by Name
     /// </summary>
-  public partial class NeedsDictionaryLowerCaseClass: IStorageItemGeneric<NeedsDictionaryLowerCaseClass> {
+  public partial class NeedsDictionaryLowerCaseClass: IStorageItem<NeedsDictionaryLowerCaseClass> {
 
 
     #region Properties

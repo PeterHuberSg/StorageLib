@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class PluralNameNoneStandardClass: IStorageItemGeneric<PluralNameNoneStandardClass> {
+  public partial class PluralNameNoneStandardClass: IStorageItem<PluralNameNoneStandardClass> {
 
     #region Properties
     //      ----------

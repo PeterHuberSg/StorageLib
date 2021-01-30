@@ -340,7 +340,7 @@ namespace StorageLib {
           }
         }
       }
-      sw.WriteLine($"  public partial class {ClassName}: IStorageItemGeneric<{ClassName}> {{");
+      sw.WriteLine($"  public partial class {ClassName}: IStorageItem<{ClassName}> {{");
       sw.WriteLine();
       sw.WriteLine();
       sw.WriteLine("    #region Properties");
@@ -558,7 +558,7 @@ namespace StorageLib {
           }
         }
       }
-      sw.WriteLine($"  public partial class {ClassName}: IStorageItemGeneric<{ClassName}> {{");
+      sw.WriteLine($"  public partial class {ClassName}: IStorageItem<{ClassName}> {{");
       sw.WriteLine();
 
       var lines = new List<string>();
@@ -738,28 +738,16 @@ namespace StorageLib {
             sw.WriteLine($"      {mi.LowerMemberName} = new HashSet<{mi.ChildTypeName}>();");
           } else {
             if (mi.ChildClassInfo!.AreInstancesReleasable) {
-              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{ClassName}, {mi.ChildTypeName}>(this);");
+              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
             } else {
               sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
             }
           }
-          //////} else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary) {
-          //////  if (mi.ChildClassInfo!.AreInstancesReleasable) {
-          //////    sw.WriteLine($"      {mi.LowerMemberName} = new StorageDictionary<{ClassName}, {mi.ChildKeyTypeString}, {mi.ChildTypeName}>(this);");
-          //////  } else {
-          //////    sw.WriteLine($"      {mi.LowerMemberName} = new Dictionary<{mi.ChildKeyTypeString}, {mi.ChildTypeName}>();");
-          //////  }
-          //////} else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-          //////  if (mi.ChildClassInfo!.AreInstancesReleasable) {
-          //////    sw.WriteLine($"      {mi.LowerMemberName} = new StorageSortedList<{ClassName}, {mi.ChildKeyTypeString}, {mi.ChildTypeName}>(this);");
-          //////  } else {
-          //////    sw.WriteLine($"      {mi.LowerMemberName} = new SortedList<{mi.ChildKeyTypeString}, {mi.ChildTypeName}>();");
-          //////  }
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
           mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
           if (mi.ChildClassInfo!.AreInstancesReleasable) {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}(this);");
+            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
           } else {
             sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
           }
@@ -835,28 +823,16 @@ namespace StorageLib {
             sw.WriteLine($"      {mi.LowerMemberName} = new HashSet<{mi.ChildTypeName}>();");
           } else {
             if (mi.ChildClassInfo!.AreInstancesReleasable) {
-              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{ClassName}, {mi.ChildTypeName}>(this);");
+              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
             } else {
               sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
             }
           }
-        //////} else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary) {
-        //////  if (mi.ChildClassInfo!.AreInstancesReleasable) {
-        //////    sw.WriteLine($"      {mi.LowerMemberName} = new StorageDictionary<{ClassName}, {mi.ChildKeyTypeString}, {mi.ChildTypeName}>(this);");
-        //////  } else {
-        //////    sw.WriteLine($"      {mi.LowerMemberName} = new Dictionary<{mi.ChildKeyTypeString}, {mi.ChildTypeName}>();");
-        //////  }
-        //////} else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-        //////  if (mi.ChildClassInfo!.AreInstancesReleasable) {
-        //////    sw.WriteLine($"      {mi.LowerMemberName} = new StorageSortedList<{ClassName}, {mi.ChildKeyTypeString}, {mi.ChildTypeName}>(this);");
-        //////  } else {
-        //////    sw.WriteLine($"      {mi.LowerMemberName} = new SortedList<{mi.ChildKeyTypeString}, {mi.ChildTypeName}>();");
-        //////  }
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
           mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
           if (mi.ChildClassInfo!.AreInstancesReleasable) {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}(this);");
+            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
           } else {
             sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
           }
@@ -963,10 +939,6 @@ namespace StorageLib {
       writeAddToRemoveFrom(sw, context, isTracing);
       if (AreInstancesReleasable) {
         writeRelease(sw, context, isTracing);
-        ////if (IsPerformReleaseNeeded) {
-        //writePerformRelease(sw, context, isTracing);
-        ////}
-        //writeRemoveParent(sw, context, isTracing);
       } else {
         sw.WriteLine("    /// <summary>");
         sw.WriteLine($"    /// Releasing {ClassName} from {context}.Data.{PluralName} is not supported.");
@@ -1827,7 +1799,7 @@ namespace StorageLib {
           //list, directory or sortedList
           lines.Add($"        $\" {mi.MemberName}: {{{mi.MemberName}.Count}}");
           if (mi.ChildClassInfo!.AreInstancesReleasable && mi.ChildCount==1) {
-            lines.Add($"        $\" {mi.MemberName}All: {{{mi.MemberName}.CountAll}}");
+            lines.Add($"        $\" {mi.MemberName}Stored: {{{mi.MemberName}.CountStoredItems}}");
           }
         } else {
           //simple data type and enum

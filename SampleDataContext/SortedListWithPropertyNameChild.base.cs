@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class SortedListWithPropertyNameChild: IStorageItemGeneric<SortedListWithPropertyNameChild> {
+  public partial class SortedListWithPropertyNameChild: IStorageItem<SortedListWithPropertyNameChild> {
 
     #region Properties
     //      ----------

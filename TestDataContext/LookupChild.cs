@@ -10,7 +10,7 @@ namespace TestContext  {
     /// Example of a child with a none nullable and a nullable lookup parent. The child maintains links
     /// to its parents, but the parents don't have children collections.
     /// </summary>
-  public partial class LookupChild: IStorageItemGeneric<LookupChild> {
+  public partial class LookupChild: IStorageItem<LookupChild> {
 
 
     #region Properties

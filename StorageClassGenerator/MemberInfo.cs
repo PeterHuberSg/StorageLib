@@ -575,7 +575,7 @@ namespace StorageLib {
         } else if (ChildCount==1) {
           if (ChildClassInfo!.AreInstancesReleasable) {
             sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-            sw.WriteLine($"    readonly StorageList<{ClassInfo.ClassName}, {ChildTypeName}> {LowerMemberName};");
+            sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
           } else {
             sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
             sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
@@ -584,22 +584,6 @@ namespace StorageLib {
           sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
           sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
         }
-        //////} else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary) {
-        //////  if (ChildClassInfo!.AreInstancesReleasable) {
-        //////    sw.WriteLine($"    public IStorageReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //////    sw.WriteLine($"    readonly StorageDictionary<{ClassInfo.ClassName}, {ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
-        //////  } else {
-        //////    sw.WriteLine($"    public IReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //////    sw.WriteLine($"    readonly Dictionary<{ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
-        //////  }
-        //////} else if (MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-        //////  if (ChildClassInfo!.AreInstancesReleasable) {
-        //////    sw.WriteLine($"    public IStorageReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //////    sw.WriteLine($"    readonly StorageSortedList<{ClassInfo.ClassName}, {ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
-        //////  } else {
-        //////    sw.WriteLine($"    public IReadOnlyDictionary<{ChildKeyTypeString}, {ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //////    sw.WriteLine($"    readonly SortedList<{ChildKeyTypeString}, {ChildTypeName}> {LowerMemberName};");
-        //////  }
       } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
         MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
       {

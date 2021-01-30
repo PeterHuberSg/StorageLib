@@ -7,7 +7,7 @@ using StorageLib;
 namespace StorageTest {
 
 
-  public class TestItemCsv: IStorageItemGeneric<TestItemCsv> {
+  public class TestItemCsv: IStorageItem<TestItemCsv> {
 
     public int Key { get; private set; }
     public static void SetKey(IStorageItem testItem, int key, bool /*isRollback*/_) { ((TestItemCsv)testItem).Key = key; }

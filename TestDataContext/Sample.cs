@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Some comment for Sample
     /// </summary>
-  public partial class Sample: IStorageItemGeneric<Sample> {
+  public partial class Sample: IStorageItem<Sample> {
 
 
     #region Properties

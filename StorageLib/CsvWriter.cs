@@ -569,8 +569,8 @@ namespace StorageLib {
           throw new Exception($"CsvWriter.Write(decimal) '{FileName}': Cannot format {d}." + Environment.NewLine + GetPresentContent());
       }
 
-      ////deal with zero here, this simplifies the code for removing trailing 0. Any other single digit value
-      ////can also be handled here.
+      //deal with zero here, this simplifies the code for removing trailing 0. Any other single digit value
+      //can also be handled here.
       if (charsWritten==0) {
         //code like csvWriter.Write(0.4m, 0) results in charsWritten==0
         byteArray[writePos++] = (byte)'0';

@@ -6,7 +6,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class ReadonlyPropertyClass: IStorageItemGeneric<ReadonlyPropertyClass> {
+  public partial class ReadonlyPropertyClass: IStorageItem<ReadonlyPropertyClass> {
 
 
     #region Properties

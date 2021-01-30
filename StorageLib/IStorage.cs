@@ -22,11 +22,11 @@ using System;
 Storage uses 2 Interfaces:
 --------------------------
 
-IStorageItemGeneric<TItem>: IStorageItem
+IStorageItem<TItem>: IStorageItem
 Implemented by classes who wants to store their data in DataStore
 
 IStorageItem
-None generic version of IStorageItemGeneric<TItem>, used for transaction processing mostly
+None generic version of IStorageItem<TItem>, used for transaction processing mostly
 */
 
 namespace StorageLib {
@@ -36,7 +36,7 @@ namespace StorageLib {
   //      ----------------------
 
   /// <summary>
-  /// Gives none generic access to IStorageItemGeneric<TItem>, used only for transaction processing
+  /// Gives none generic access to IStorageItem<TItem>, used only for transaction processing
   /// </summary>
   public interface IStorageItem {
 
@@ -53,25 +53,6 @@ namespace StorageLib {
     #region Methods
     //      -------
 
-    /*+
-    /// <summary>
-    /// Copies all data except any collection (children) to a new IStorageItem instance.
-    /// </summary>
-    public IStorageItem Clone();
-    +*/
-
-    ///// <summary>
-    ///// Item.Store() adds the item to the data context. 
-    ///// </summary>
-    //public void Store();
-
-
-    ///// <summary>
-    ///// Removes item from DataStore.
-    ///// </summary>
-    //public void Release();
-
-
     /// <summary>
     /// Returns a string for tracing, parents are shown only with their Key number
     /// </summary>
@@ -84,12 +65,16 @@ namespace StorageLib {
     public string ToShortString();
     #endregion
   }
+  #endregion
 
+
+  #region Generic StorageItem Interfaces
+  //      ------------------------------
 
   /// <summary>
   /// Inheriting classes can be written to and read from a CSV file,
   /// </summary>
-  public interface IStorageItemGeneric<TItem>: IStorageItem where TItem : class {
+  public interface IStorageItem<TItem>: IStorageItem where TItem : class {
 
     #region Events
     //      ------

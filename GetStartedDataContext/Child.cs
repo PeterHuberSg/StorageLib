@@ -6,7 +6,7 @@ using StorageLib;
 namespace YourNamespace  {
 
 
-  public partial class Child: IStorageItemGeneric<Child> {
+  public partial class Child: IStorageItem<Child> {
 
 
     #region Properties

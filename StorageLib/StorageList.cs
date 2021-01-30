@@ -20,168 +20,41 @@ using System.Collections.Generic;
 
 
 namespace StorageLib {
-  //Visual Studio keeps crashing when inheriting from List<T> and creating a 'new' Count property. Because of this, 
-  //StorageList was made, which does not inherit from List<T> but has a List<T> and all the important class members
-  //of List<T>.
-
-
   /// <summary>
   /// StorageList is a replacement for List used by parent classes with releasable children. A stored parent might
-  /// have stored and not stored children. For a stored parent, Enumerating StorageList shows only stored children. 
-  /// GetAll() supports enumerating all children. Count() counts only stored children, while CountAll() counts all.
+  /// have stored and not stored children. Enumerating StorageList shows all children. GetStoredItems() enumerates all 
+  /// stored children. Count() counts all children, while CountStoredItems() counts all stored children. 
   /// </summary>
-  public class StorageList<TParent, TChild>: ICollection<TChild>, IStorageReadOnlyList<TChild>
-    where TParent : class, IStorageItemGeneric<TParent>
-    where TChild : class, IStorageItemGeneric<TChild> 
+  public class StorageList<TItem>: List<TItem>, IStorageReadOnlyList<TItem>
+    where TItem : class, IStorageItem<TItem> 
   {
-    // only ICollection is supported, not IList, because overwriting a child (using and indes) is not meaningful,
-    // only Add() and Remove() is required.
-    #region Properties
-    //      ----------
 
     /// <summary>
-    /// Owner of StorageList
+    /// Count how many items from StorageList are stored in the Data Context
     /// </summary>
-    public TParent Parent { get; }
-
-
-    /// <summary>
-    /// Counting only stored children for a stored parent, but all children for a not stored parent, which are all not stored.
-    /// </summary>
-    public int Count {
+    public int CountStoredItems {
       get {
-        if (Parent.Key>=0) {
-          //parent is stored => count only stored children
-          var count = 0;
-          foreach (var item in list) {
-            if (item.Key>=0) count++;
+        var count = 0;
+        foreach (var item in this) {
+          if (item.Key>=0) {
+            count++;
           }
-          return count;
-        } else {
-          return list.Count;
         }
+        return count;
       }
     }
 
 
     /// <summary>
-    /// Counting alll children.
+    /// Enumerate all items from StorageList being stored in the Data Context
     /// </summary>
-    public int CountAll => list.Count;
-
-
-    /// <summary>
-    /// Gives access to all stored and not stored items
-    /// </summary>
-    public TChild this[int index] => list[index];
-
-
-    /// <summary>
-    /// Required by ICollection
-    /// </summary>
-    public bool IsReadOnly => false;
-    #endregion
-
-
-    #region Constructor
-    //     ------------
-    readonly List<TChild> list;
-
-    /// <summary>
-    /// constructor
-    /// </summary>
-    public StorageList(TParent parent) {
-      Parent = parent;
-      list = new();
-    }
-    #endregion
-
-
-    #region Methods
-    //      -------
-
-    /// <summary>
-    /// Adds an item to the end of StorageList
-    /// </summary>
-    public void Add(TChild item) {
-      list.Add(item);
-    }
-
-
-    /// <summary>
-    /// Removes all items from StorageList
-    /// </summary>
-    public void Clear() {
-      list.Clear();
-    }
-
-
-    /// <summary>
-    /// Determines whether item is in StorageList
-    /// </summary>
-    public bool Contains(TChild item) {
-      return list.Contains(item);
-    }
-
-
-    /// <summary>
-    /// Copies the entire StorageList to a compatible one-dimensional array, starting at the specified index of the target array.
-    /// </summary>
-    public void CopyTo(TChild[] array, int arrayIndex) {
-      list.CopyTo(array, arrayIndex);
-    }
-
-    /// <summary>
-    /// Removes an item at the end of StorageList
-    /// </summary>
-    public bool Remove(TChild item) {
-      return list.Remove(item);
-    }
-    #endregion
-
-
-    #region Iterators
-    //     ----------
-
-    /// <summary>
-    /// None generic iterator, showing only stored children for a stored parent, but all children for a not stored parent
-    /// </summary>
-    IEnumerator IEnumerable.GetEnumerator() {
-      return GetEnumerator();
-    }
-
-
-    /// <summary>
-    /// Generic iterator, showing only stored children for a stored parent, but all children for a not stored parent
-    /// </summary>
-    public IEnumerator<TChild> GetEnumerator() {
-      if (Parent.Key>=0) {
-        //parent is stored => return only stored children
-        foreach (var item in list) {
-          if (item.Key>=0) {
-            yield return item;
-          }
-        }
-      } else {
-        //parent is not stored => none of the children is stored
-        foreach (var item in list) {
+    /// <returns></returns>
+    public IEnumerable<TItem> GetStoredItems() {
+      foreach (var item in this) {
+        if (item.Key>=0) {
           yield return item;
         }
       }
     }
-
-
-    /// <summary>
-    /// Iterator showing all children
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<TChild> GetAll() {
-      foreach (var item in list) {
-        yield return item;
-      }
-    }
-
-    #endregion
   }
-
 }

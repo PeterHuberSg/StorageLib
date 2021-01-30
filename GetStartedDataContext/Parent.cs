@@ -9,7 +9,7 @@ namespace YourNamespace  {
   /// <summary>
   /// Some comment for Parent.
   /// </summary>
-  public partial class Parent: IStorageItemGeneric<Parent> {
+  public partial class Parent: IStorageItem<Parent> {
 
 
     #region Properties

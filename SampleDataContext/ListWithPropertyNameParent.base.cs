@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class ListWithPropertyNameParent: IStorageItemGeneric<ListWithPropertyNameParent> {
+  public partial class ListWithPropertyNameParent: IStorageItem<ListWithPropertyNameParent> {
 
     #region Properties
     //      ----------
@@ -34,7 +34,7 @@ namespace DataModelSamples  {
 
 
     public IStorageReadOnlyList<ListWithPropertyNameChild> Children => children;
-    readonly StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild> children;
+    readonly StorageList<ListWithPropertyNameChild> children;
 
 
     /// <summary>
@@ -73,7 +73,7 @@ namespace DataModelSamples  {
     public ListWithPropertyNameParent(string name, bool isStoring = true) {
       Key = StorageExtensions.NoKey;
       Name = name;
-      children = new StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild>(this);
+      children = new StorageList<ListWithPropertyNameChild>();
       onConstruct();
       if (DC.Data.IsTransaction) {
         DC.Data.AddTransaction(new TransactionItem(23,TransactionActivityEnum.New, Key, this));
@@ -105,7 +105,7 @@ namespace DataModelSamples  {
     private ListWithPropertyNameParent(int key, CsvReader csvReader){
       Key = key;
       Name = csvReader.ReadString();
-      children = new StorageList<ListWithPropertyNameParent, ListWithPropertyNameChild>(this);
+      children = new StorageList<ListWithPropertyNameChild>();
       onCsvConstruct();
     }
     partial void onCsvConstruct();
@@ -325,7 +325,7 @@ namespace DataModelSamples  {
         $"Key: {Key.ToKeyString()}," +
         $" Name: {Name}," +
         $" Children: {Children.Count}," +
-        $" ChildrenAll: {Children.CountAll};";
+        $" ChildrenStored: {Children.CountStoredItems};";
       onToString(ref returnString);
       return returnString;
     }

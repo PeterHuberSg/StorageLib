@@ -6,7 +6,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class Lookup_C_0_Parent: IStorageItemGeneric<Lookup_C_0_Parent> {
+  public partial class Lookup_C_0_Parent: IStorageItem<Lookup_C_0_Parent> {
 
 
     #region Properties

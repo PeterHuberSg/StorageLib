@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Example where the parent's List for it's children is not the plural of the child type type. 
     /// </summary>
-  public partial class NotMatchingChildrenListName_Parent: IStorageItemGeneric<NotMatchingChildrenListName_Parent> {
+  public partial class NotMatchingChildrenListName_Parent: IStorageItem<NotMatchingChildrenListName_Parent> {
 
 
     #region Properties

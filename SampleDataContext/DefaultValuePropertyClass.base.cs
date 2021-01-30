@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class DefaultValuePropertyClass: IStorageItemGeneric<DefaultValuePropertyClass> {
+  public partial class DefaultValuePropertyClass: IStorageItem<DefaultValuePropertyClass> {
 
     #region Properties
     //      ----------

@@ -10,7 +10,7 @@ namespace TestContext  {
     /// Some comment for SampleMaster.
     /// With an additional line.
     /// </summary>
-  public partial class SampleMaster: IStorageItemGeneric<SampleMaster> {
+  public partial class SampleMaster: IStorageItem<SampleMaster> {
 
 
     #region Properties

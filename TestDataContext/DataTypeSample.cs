@@ -9,7 +9,7 @@ namespace TestContext  {
     /// <summary>
     /// Class having every possible data type used for a property
     /// </summary>
-  public partial class DataTypeSample: IStorageItemGeneric<DataTypeSample> {
+  public partial class DataTypeSample: IStorageItem<DataTypeSample> {
 
 
     #region Properties

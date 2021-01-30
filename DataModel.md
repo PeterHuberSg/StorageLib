@@ -440,21 +440,19 @@ Here a new parent `parent1` gets created and `child0.Parent` links now to `paren
 
 Depending wether child is releasable or not, *StorageClassGenerator* creates a `StorageList<>` or 
 just a `List<>` for the children collection. A challeng with released children is that they still 
-link to their parents, especially when the `Parent` property in the child is not nullable. On the 
-other hand, when looping through the children of a stored parent, one would expect to see only stored 
-children, because `Release()` is the best we can do when wanting to delete something. There is nothing 
-in C# that allows to delete an object. `StorageList<>` behaves like a `List<>`, but when enumerating  
-its items, only stored children are shown when the parent is stored. A not stored parent can have 
-only not stored children, which are shown when enumerating the children of a not stored parent. 
-`Getall()` allows to enumerate all children regardless if they are stored and `CountAll` returns 
-the number of all children. `StorageList<>.Count` counts only the stored children for a stored 
-parent. 
+link to their parents, especially when the `Parent` property in the child is not nullable or `readonly`. 
+On the other hand, when looping through the children of a stored parent, one would expect to see only 
+stored children, because `Release()` is the best we can do when wanting to delete something. There 
+is nothing in C# that allows to delete an object. `StorageList<>` behaves like a `List<>`, when 
+enumerating its items, all children are shown. A stored parent can have stored and not stored children. 
+`GetStoredItems()` enumerates all stored children. `CountStoredItems` counts only the stored 
+children for a stored parent. Note that a not stored parent will never have any stored children. 
 
 
 ## Parent with multiple children using Dictionary<> or SortedList<>
 
 Sometimes it is necessary to find a child in the parent's children collection based on a child's 
-property value (=key). Example: Exchange rates (=children) stored in a currency (=parent) should 
+property value (=dictionary key). Example: Exchange rates (=children) stored in a currency (=parent) should 
 be accessible by the date this exchange rate is valid for:
 
 ```csharp
@@ -466,14 +464,37 @@ public class Currency {
 public class ExchangeRate {
   public Currency Currency;
   public Date Date;
-  public Decimal2 Rate;
+  public Decimal4 Rate;
 }
 ```
 
 After reading the Currency class declaration and the property `Rates`, *StorageClassGenerator* 
-searches for a *data class* `ExchangeRate` in the DataModel and within `ExchangeRate` for a 
-property with type `Currency`, which defines the relationship, and property with type 
-`Date` which will be used as key into `Rates`.
+searches for a *data class* `ExchangeRate` in the *DataModel* and within `ExchangeRate` for a 
+property with type `Currency`, which defines the relationship, and a property with type 
+`Date` which will be used as dictionary key into `Rates`.
+
+If the child has several properties with the dictionary key's type, the attribute 
+`[StorageProperty(childKeyPropertyName: "Xxx")]` is used to define the property in the
+child to be used as dictionary key:
+
+```csharp
+  public class Task {
+    public string Name;
+    [StorageProperty(childKeyPropertyName: "Priority")]
+    public Dictionary<int, Activity> ActivitiesByPriority;
+  }
+
+  [StorageClass(pluralName: "Activities")]
+  public class Activity {
+    public Task Task;
+    public string Name;
+    public int Prioritiy;
+    public int Mandays;
+  }
+```
+
+Note that in the example above, the use of a Dictionary guarantees that each activity has a 
+different priority.
 
 `SortedList` is functionally equivalent to `Dictionary`, the main difference is how they store 
 their items. `SortedList` is like a `List`. If a new item needs to be inserted into a `SortedList`, 
@@ -483,9 +504,9 @@ any other items around. Like with exchange rates, there are many cases where new
 appended at the end. For these cases, `SortedList` is more efficient than 'Dictionary'. 
 
 The functionality described in `List` applies also for `SortedList` and `Dictionary`. Maintaining 
-the relationship is a bit more challenging in the second case, because if the key property in the 
+the relationship is a bit more challenging in the second case, because if the  dictionary key property in the 
 child (in the example: `Date`) changes, the child needs to get removed from the parent's children 
-and added again so that the child will be found with the new key value and not the old one.
+and added again so that the child will be found with the new dictionary key value and not the old one.
 
 
 # Generated class with private constructor

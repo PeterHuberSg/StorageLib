@@ -16,7 +16,7 @@ using StorageLib;
 namespace DataModelSamples  {
 
 
-  public partial class SingleChild_C_C_Parent: IStorageItemGeneric<SingleChild_C_C_Parent> {
+  public partial class SingleChild_C_C_Parent: IStorageItem<SingleChild_C_C_Parent> {
 
     #region Properties
     //      ----------
