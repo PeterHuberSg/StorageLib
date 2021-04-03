@@ -375,7 +375,7 @@ namespace StorageLib {
       if (needsDictionary && !IsReadOnly) ClassInfo.HasNotReadOnlyNeedDirectories = true;
       TypeString = "string";
 
-      MaxStorageSize = 150;//reasonable limit, but could be much longer. CsvWriter checks if it writes longer strings and corrects this number for CsvReader
+      MaxStorageSize = 0;//toLower properties are not stored in CSV files, they live only in the RAM
       CsvWriterWrite = null;
       ToStringFunc = null;
       NoValue = null;
