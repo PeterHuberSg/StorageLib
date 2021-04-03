@@ -619,7 +619,9 @@ namespace StorageLib {
         lines.Add("\"Key\"");
       }
       foreach (var mi in Members.Values) {
-        if (mi.MemberType<MemberTypeEnum.ParentOneChild) {//not List, Dictionary nor SortedList
+        if (mi.MemberType<MemberTypeEnum.ParentOneChild && //not List, Dictionary nor SortedList
+          mi.MemberType!=MemberTypeEnum.ToLower) 
+        {
           lines.Add($"\"{mi.MemberName}\"");
         }
       }

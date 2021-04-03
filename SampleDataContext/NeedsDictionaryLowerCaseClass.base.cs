@@ -45,7 +45,7 @@ namespace DataModelSamples  {
     /// <summary>
     /// Headers written to first line in CSV file
     /// </summary>
-    internal static readonly string[] Headers = {"Key", "Name", "NameLower", "Address"};
+    internal static readonly string[] Headers = {"Key", "Name", "Address"};
 
 
     /// <summary>
@@ -157,7 +157,7 @@ namespace DataModelSamples  {
     /// <summary>
     /// Estimated number of UTF8 characters needed to write NeedsDictionaryLowerCaseClass to CSV file
     /// </summary>
-    public const int EstimatedLineLength = 450;
+    public const int EstimatedLineLength = 300;
 
 
     /// <summary>

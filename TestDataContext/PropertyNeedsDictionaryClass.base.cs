@@ -98,11 +98,8 @@ namespace TestContext  {
       "IdInt", 
       "IdString", 
       "Text", 
-      "TextLower", 
       "TextNullable", 
-      "TextNullableLower", 
-      "TextReadonly", 
-      "TextReadonlyLower"
+      "TextReadonly"
     };
 
 
@@ -259,7 +256,7 @@ namespace TestContext  {
     /// <summary>
     /// Estimated number of UTF8 characters needed to write PropertyNeedsDictionaryClass to CSV file
     /// </summary>
-    public const int EstimatedLineLength = 1061;
+    public const int EstimatedLineLength = 611;
 
 
     /// <summary>
