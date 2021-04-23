@@ -404,6 +404,7 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"PropertyNeedsDictionaryClass.Release(): PropertyNeedsDictionaryClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._PropertyNeedsDictionaryClassesByIdInt.Remove(IdInt);
       if (IdString!=null) {
         DC.Data._PropertyNeedsDictionaryClassesByIdString.Remove(IdString);
@@ -419,6 +420,7 @@ namespace TestContext  {
       DC.Trace?.Invoke($"Released PropertyNeedsDictionaryClass @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

@@ -212,9 +212,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"DefaultValuePropertyClass.Release(): DefaultValuePropertyClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._DefaultValuePropertyClasss.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

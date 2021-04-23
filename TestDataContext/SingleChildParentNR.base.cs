@@ -269,12 +269,14 @@ namespace TestContext  {
         throw new Exception($"Cannot release SingleChildParentNR '{this}' " + Environment.NewLine + 
           $"because '{Child}' in SingleChildParentNR.Child is still stored.");
       }
+      onReleasing();
       DC.Data._SingleChildParentNRs.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SingleChildParentNR @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

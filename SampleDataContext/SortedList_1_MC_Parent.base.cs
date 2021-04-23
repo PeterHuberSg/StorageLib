@@ -241,9 +241,11 @@ namespace DataModelSamples  {
             $"because '{sortedList_1_MC_Child}' in SortedList_1_MC_Parent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._SortedList_1_MC_Parents.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

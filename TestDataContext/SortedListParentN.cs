@@ -94,6 +94,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before SortedListParentN.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after SortedListParentN.Release() got executed
     /// </summary>
     partial void onReleased() {

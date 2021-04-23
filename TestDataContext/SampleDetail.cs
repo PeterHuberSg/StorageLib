@@ -97,6 +97,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before SampleDetail.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after SampleDetail.Release() got executed
     /// </summary>
     partial void onReleased() {

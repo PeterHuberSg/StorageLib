@@ -270,12 +270,14 @@ namespace TestContext  {
             $"because '{dictionaryChild}' in DictionaryParentN.DictionaryChildren is still stored.");
         }
       }
+      onReleasing();
       DC.Data._DictionaryParentNs.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released DictionaryParentN @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

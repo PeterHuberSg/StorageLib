@@ -270,12 +270,14 @@ namespace TestContext  {
             $"because '{sortedListChild}' in SortedListParent.SortedListChildren is still stored.");
         }
       }
+      onReleasing();
       DC.Data._SortedListParents.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SortedListParent @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

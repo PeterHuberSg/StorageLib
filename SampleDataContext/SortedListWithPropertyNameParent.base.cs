@@ -241,9 +241,11 @@ namespace DataModelSamples  {
             $"because '{sortedListWithPropertyNameChild}' in SortedListWithPropertyNameParent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._SortedListWithPropertyNameParents.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

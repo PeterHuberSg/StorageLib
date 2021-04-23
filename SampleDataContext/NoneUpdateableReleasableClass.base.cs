@@ -162,9 +162,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"NoneUpdateableReleasableClass.Release(): NoneUpdateableReleasableClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._NoneUpdateableReleasableClasss.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

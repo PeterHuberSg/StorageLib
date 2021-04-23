@@ -259,9 +259,11 @@ namespace YourNamespace  {
       if (Key<0) {
         throw new Exception($"Child.Release(): Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._Children.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

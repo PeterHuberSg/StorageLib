@@ -385,12 +385,14 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"LookupChild.Release(): LookupChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._LookupChildren.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released LookupChild @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

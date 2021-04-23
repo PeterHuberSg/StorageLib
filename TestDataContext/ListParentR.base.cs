@@ -270,12 +270,14 @@ namespace TestContext  {
             $"because '{listChild}' in ListParentR.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._ListParentRs.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released ListParentR @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

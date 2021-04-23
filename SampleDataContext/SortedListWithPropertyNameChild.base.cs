@@ -268,9 +268,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"SortedListWithPropertyNameChild.Release(): SortedListWithPropertyNameChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._SortedListWithPropertyNameChilds.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

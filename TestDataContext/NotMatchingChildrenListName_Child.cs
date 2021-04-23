@@ -97,6 +97,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before NotMatchingChildrenListName_Child.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after NotMatchingChildrenListName_Child.Release() got executed
     /// </summary>
     partial void onReleased() {

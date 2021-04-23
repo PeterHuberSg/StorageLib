@@ -222,10 +222,12 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"NeedsDictionaryClass.Release(): NeedsDictionaryClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._NeedsDictionaryClasssByName.Remove(Name);
       DC.Data._NeedsDictionaryClasss.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

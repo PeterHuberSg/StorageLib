@@ -227,12 +227,14 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"PrivateConstructor.Release(): PrivateConstructor '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._PrivateConstructors.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released PrivateConstructor @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

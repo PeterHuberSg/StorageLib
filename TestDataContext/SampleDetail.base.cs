@@ -286,12 +286,14 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"SampleDetail.Release(): SampleDetail '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._SampleDetails.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released SampleDetail @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

@@ -98,6 +98,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before LookupChild.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after LookupChild.Release() got executed
     /// </summary>
     partial void onReleased() {

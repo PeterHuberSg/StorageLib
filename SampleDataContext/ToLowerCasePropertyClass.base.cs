@@ -208,9 +208,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"ToLowerCasePropertyClass.Release(): ToLowerCasePropertyClass '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._ToLowerCasePropertyClasss.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

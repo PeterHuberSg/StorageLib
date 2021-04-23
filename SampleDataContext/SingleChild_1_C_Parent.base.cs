@@ -240,9 +240,11 @@ namespace DataModelSamples  {
         throw new Exception($"Cannot release SingleChild_1_C_Parent '{this}' " + Environment.NewLine + 
           $"because '{Child}' in SingleChild_1_C_Parent.Child is still stored.");
       }
+      onReleasing();
       DC.Data._SingleChild_1_C_Parents.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

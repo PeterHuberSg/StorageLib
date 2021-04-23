@@ -270,12 +270,14 @@ namespace TestContext  {
             $"because '{testChild}' in TestParent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._TestParents.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released TestParent @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

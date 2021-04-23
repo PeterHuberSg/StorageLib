@@ -428,12 +428,14 @@ namespace TestContext  {
       if (Key<0) {
         throw new Exception($"DictionaryChild.Release(): DictionaryChild '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._DictionaryChildren.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released DictionaryChild @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

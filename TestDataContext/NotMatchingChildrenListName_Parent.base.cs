@@ -279,12 +279,14 @@ namespace TestContext  {
             $"because '{notMatchingChildrenListName_Child}' in NotMatchingChildrenListName_Parent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._NotMatchingChildrenListName_Parents.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released NotMatchingChildrenListName_Parent @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

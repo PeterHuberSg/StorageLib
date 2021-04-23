@@ -260,9 +260,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"List_1_MC_Child.Release(): List_1_MC_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._List_1_MC_Childs.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

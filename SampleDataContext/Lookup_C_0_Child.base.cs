@@ -259,9 +259,11 @@ namespace DataModelSamples  {
       if (Key<0) {
         throw new Exception($"Lookup_C_0_Child.Release(): Lookup_C_0_Child '{this}' is not stored in DC.Data, key is {Key}.");
       }
+      onReleasing();
       DC.Data._Lookup_C_0_Childs.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

@@ -250,9 +250,11 @@ namespace YourNamespace  {
             $"because '{child}' in Parent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._Parents.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

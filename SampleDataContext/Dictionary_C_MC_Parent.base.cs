@@ -241,9 +241,11 @@ namespace DataModelSamples  {
             $"because '{dictionary_C_MC_Child}' in Dictionary_C_MC_Parent.Children is still stored.");
         }
       }
+      onReleasing();
       DC.Data._Dictionary_C_MC_Parents.Remove(Key);
       onReleased();
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

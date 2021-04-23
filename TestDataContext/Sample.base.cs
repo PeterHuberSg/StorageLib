@@ -738,12 +738,14 @@ namespace TestContext  {
             $"because '{sampleDetail}' in Sample.SampleDetails is still stored.");
         }
       }
+      onReleasing();
       DC.Data._SampleX.Remove(Key);
       onReleased();
 #if DEBUG
       DC.Trace?.Invoke($"Released Sample @{Key} #{GetHashCode()}");
 #endif
     }
+    partial void onReleasing();
     partial void onReleased();
 
 

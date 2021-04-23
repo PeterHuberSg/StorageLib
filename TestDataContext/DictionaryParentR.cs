@@ -94,6 +94,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before DictionaryParentR.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after DictionaryParentR.Release() got executed
     /// </summary>
     partial void onReleased() {

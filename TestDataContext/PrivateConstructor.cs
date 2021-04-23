@@ -97,6 +97,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before PrivateConstructor.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after PrivateConstructor.Release() got executed
     /// </summary>
     partial void onReleased() {

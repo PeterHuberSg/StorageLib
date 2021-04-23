@@ -131,6 +131,13 @@ namespace TestContext  {
 
 
     /// <summary>
+    /// Called before DataTypeSample.Release() gets executed
+    /// </summary>
+    partial void onReleasing() {
+    }
+
+
+    /// <summary>
     /// Called after DataTypeSample.Release() got executed
     /// </summary>
     partial void onReleased() {

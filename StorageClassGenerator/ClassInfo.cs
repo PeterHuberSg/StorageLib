@@ -434,6 +434,13 @@ namespace StorageLib {
       }
       if (AreInstancesReleasable) {
         sw.WriteLine("    /// <summary>");
+        sw.WriteLine($"    /// Called before {ClassName}.Release() gets executed");
+        sw.WriteLine("    /// </summary>");
+        sw.WriteLine($"    {cs}partial void onReleasing() {{");
+        sw.WriteLine($"    {cs}}}");
+        sw.WriteLine();
+        sw.WriteLine();
+        sw.WriteLine("    /// <summary>");
         sw.WriteLine($"    /// Called after {ClassName}.Release() got executed");
         sw.WriteLine("    /// </summary>");
         sw.WriteLine($"    {cs}partial void onReleased() {{");
@@ -1525,6 +1532,7 @@ namespace StorageLib {
           sw.WriteLine("      }");
         }
       }
+      sw.WriteLine("      onReleasing();");
       foreach (var mi in Members.Values) {
         if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
           writeNeedsDictionaryRemoveStatement(sw, mi, context);
@@ -1537,6 +1545,7 @@ namespace StorageLib {
       Compiler.WriteLinesTracing(sw, isTracing,
                    $"      {context}.Trace?.Invoke($\"Released {ClassName} @{{Key}} #{{GetHashCode()}}\");");
       sw.WriteLine("    }");
+      sw.WriteLine("    partial void onReleasing();");
       sw.WriteLine("    partial void onReleased();");
       sw.WriteLine();
       sw.WriteLine();
