@@ -1508,6 +1508,7 @@ namespace StorageLib {
       sw.WriteLine("      if (Key<0) {");
       sw.WriteLine($"        throw new Exception($\"{ClassName}.Release(): {ClassName} '{{this}}' is not stored in {context}.Data, key is {{Key}}.\");");
       sw.WriteLine("      }");
+      sw.WriteLine("      onReleasing();");
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.ParentOneChild) {
           sw.WriteLine($"      if ({mi.MemberName}{mi.QMark}.Key>=0) {{");
@@ -1532,7 +1533,6 @@ namespace StorageLib {
           sw.WriteLine("      }");
         }
       }
-      sw.WriteLine("      onReleasing();");
       foreach (var mi in Members.Values) {
         if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
           writeNeedsDictionaryRemoveStatement(sw, mi, context);
