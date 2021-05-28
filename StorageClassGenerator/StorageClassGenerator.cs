@@ -7,7 +7,7 @@ Reads classes and enumerations in a Data Model and compiles it into Storage clas
 in a Data Context.
 
 Written in 2020 by Jürgpeter Huber 
-Contact: PeterCode at Peterbox dot com
+Contact: https://github.com/PeterHuberSg/StorageLib
 
 To the extent possible under law, the author(s) have dedicated all copyright and 
 related and neighboring rights to this software to the public domain worldwide under

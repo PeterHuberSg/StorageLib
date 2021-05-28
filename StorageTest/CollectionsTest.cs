@@ -67,6 +67,7 @@ namespace StorageTest {
     where TChild : ITestChild<TP, TPN, TPR, TPNR> {
     readonly CollectionTypeEnum collectionType;
     readonly CsvConfig csvConfig;
+    readonly BakCsvFileSwapper bakCsvFileSwapper;
     DC dc;
 
     //these variables get updated by assertDataDisposeDCRecreateDCassertData() each time a new data context gets created
@@ -107,6 +108,7 @@ namespace StorageTest {
 
       try {
         csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
+        bakCsvFileSwapper = new BakCsvFileSwapper(csvConfig);
         DC.Trace = dcTrace;
         dc = new DC(csvConfig);
         initialiseDcParents();
@@ -378,6 +380,7 @@ namespace StorageTest {
         child0.Update("c0.3", (TP)parent1, null);
         dc.CommitTransaction();
         assertDataDisposeDCRecreateDCassertData("p0|p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
+        bakCsvFileSwapper.DeleteBakFiles();
 
 
         // Release
@@ -425,6 +428,10 @@ namespace StorageTest {
         parent0 = null;
         assertDataDisposeDCRecreateDCassertData("p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
+
+        //test .bak file
+        // =============
+        directoryInfo.Refresh();
 
       } finally {
         DC.DisposeData();
@@ -616,6 +623,15 @@ namespace StorageTest {
     private void assertDataDisposeDCRecreateDCassertData(string expectedDcString1, string? expectedDcString2 = null) {
       assertData(expectedDcString1);
       DC.DisposeData();
+
+      if (bakCsvFileSwapper.UseBackupFiles()) {
+        dc = new DC(csvConfig);
+        initialiseDcParents();
+        assertData(expectedDcString2??expectedDcString1);
+        DC.DisposeData();
+        bakCsvFileSwapper.SwapBack();
+      }
+
       dc = new DC(csvConfig);
       initialiseDcParents();
       assertData(expectedDcString2??expectedDcString1);
