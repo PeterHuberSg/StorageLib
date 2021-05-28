@@ -1,0 +1,10 @@
+#StroageLib development settings
+#-------------------------------
+# exclude all cs files, i.e. x.cs and x.base.cs
+*.cs
+#in your own projects using StorageLib, delete the 2 lines above and uncomment the following one
+#*.base.cs
+
+#TestDataContext is special, because it contains some code which is not created by StorageClassGenerator. These
+#classes were manually written, start with an _ and need to be included by git.
+!_*.cs

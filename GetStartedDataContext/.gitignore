@@ -1,0 +1,6 @@
+#StroageLib development settings
+#-------------------------------
+# exclude all cs files, i.e. x.cs and x.base.cs
+*.cs
+#in your own projects using StorageLib, delete the 2 lines above and uncomment the following one
+#*.base.cs
