@@ -176,6 +176,15 @@ constructor call.
 * A DC.cs file. It contains a partial *Data Context* class, where you can add your code if you 
 want to extend the behavior of the *Data Context*.
 
+If your program gets bigger, you might want to add a '.gitignore' file to your DataContext 
+project, telling git to ignore all '*.base.cs' files. Git doesn't need to store that code, 
+because it can be autocreated again by running your *DataModel* console project. The file
+sould look like this
+
+    #some comment explaining that autocreated files can be ignored by git
+    *.base.cs
+
+
 
 # Further Documentation
 * [Readme.md](Readme.md) describes main features of *StorageLib* and gives a high level overview how *StorageLib* works.

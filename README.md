@@ -55,21 +55,18 @@ The *StorageLib* solution has 4 parts:
 **StorageClassGenerator:** is used to translate the *Data Model* into data classes and a *Data Context*.  
 **StorageLib:** contains the run time code which provides the data storage functionality. 
 
-### Storage Libraries Tests
-The *StorageLib* testing consist of 3 projects:
-
-**TestDataModel:** defines the data used for testing  
-**TestDataContext:** contains the test data classes produced by *StorageClassGenerator*  
-**StorageTest:**  contains the actual tests
-
 ### Get Started Example Projects for first time user
-The projects with 'Simple' in its name show a new user how to create his own *Data Model* 
+The projects with 'GetStarted' in its name show a new user how to create his own *Data Model* 
 and application cosuming the data.
 
-**GetStartedDataModel:** A very simple *Data Model* explaining how to get started
-**GetStartedContext:** Contains the data classes created based on *SimpleDataModel*
-**GetStartedConsole:** Console application using SimpleDataContext, showing how to create, 
+**GetStartedDataModel:** A very simple *Data Model* explaining how to get started  
+**GetStartedContext:** Contains the data classes created based on *GetStartedDataModel*  
+**GetStartedConsole:** Console application using *GetStartedContext*, showing how to create, 
 update and delete data. 
+
+To save storage space, git ignores all autocreated files. Once you run 
+'GetStartedDataModel\Program.cs' to create these classes, you can then build and run 
+*GetStartedConsole*.
 
 ### Samples for all Data Model functionality
 The projects with 'Sample' in its name provides an sample code for every *Data Model* 
@@ -78,6 +75,29 @@ functionality supported by *StorageLib*.
 **SampleDataModel:** Contains one class for each *Data Model* feature  
 **SampleDataContext:** Contains the data classes created based on *SampleDataModel*  
 **SampleDataConsole:** Console application using SampleDataContext, not really used 
+
+To save storage space, git ignores all autocreated files. Once you run 
+'SampleDataModel\Program.cs' to create these classes, you can see how the generated 
+code looks like.
+
+### Storage Libraries Tests
+The *StorageLib* testing consist of 3 projects:
+
+**TestDataModel:** defines the data used for testing  
+**TestDataContext:** contains the test data classes produced by *StorageClassGenerator*  
+**StorageTest:**  contains the actual tests
+
+To save storage space, git ignores all autocreated files. Once you run 
+'TestDataModel\Program.cs' to create these classes, build and run the tests in
+*StorageTest*.
+
+
+# Getting started
+For your own project, you just need to include the *StorageClassGenerator* and 
+*StorageLib* projects. For more details, see [Setup.md](Setup.md).
+
+If you are new to StorageLib, it might be helpful to have a look at the *GetStarted* 
+and *Sample* projects described above.
 
 
 # Further Documentation
