@@ -16,6 +16,7 @@ namespace StorageTest {
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
     CsvConfig csvConfig;
+    BakCsvFileSwapper bakCsvFileSwapper;
     DC dc;
 #pragma warning restore CS8618
 
@@ -61,8 +62,9 @@ namespace StorageTest {
       be changed, then the same activity is executed in a commited transactions and the data should change accordingly.
 
       After a transaction has been committed, the datacontext gets disposed, opened again and verified, that the data
-      is still the same. There is one exception: stored parents might have some not stored children. In the new data 
-      context, those parents have no longer those children.
+      is still the same. This is done twice, first using the .bak files, then the .csv files. There is one exception: 
+      stored parents might have some not stored children. In the new data context, those parents have no longer those 
+      children.
 
       For convenience, the variables parent0, parentN1, child1, etc. contain always the data from the latest data context. They
       get updated, each time assertDataDisposeDCRecreateDCassertData() gets called.
@@ -82,6 +84,7 @@ namespace StorageTest {
 
       try {
         csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
+        bakCsvFileSwapper = new BakCsvFileSwapper(csvConfig);
         DC.Trace = dcTrace;
         dc = new DC(csvConfig);
         assertData("");
@@ -358,6 +361,7 @@ namespace StorageTest {
         } catch {
         }
         assertData("p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.3:p1,pR0,pNR0|");
+        bakCsvFileSwapper.DeleteBakFiles();
 
         //Release child
         //-------------
@@ -420,6 +424,14 @@ namespace StorageTest {
     private void assertDataDisposeDCRecreateDCassertData(string expectedDcString1, string? expectedDcString2 = null) {
       assertData(expectedDcString1);
       DC.DisposeData();
+
+      if (bakCsvFileSwapper.UseBackupFiles()) {
+        dc = new DC(csvConfig);
+        assertData(expectedDcString2??expectedDcString1);
+        DC.DisposeData();
+        bakCsvFileSwapper.SwapBack();
+      }
+
       dc = new DC(csvConfig);
       assertData(expectedDcString2??expectedDcString1);
       if (parent0__ is not null) parent0__ = dc.LookupParents[1];

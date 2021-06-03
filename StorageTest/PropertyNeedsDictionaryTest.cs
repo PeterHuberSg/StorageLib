@@ -14,6 +14,7 @@ namespace StorageTest {
 
     static readonly DirectoryInfo directoryInfo =  new DirectoryInfo("TestCsv");
     static readonly CsvConfig csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
+    static readonly BakCsvFileSwapper bakCsvFileSwapper = new BakCsvFileSwapper(csvConfig);
     static readonly Dictionary<int, string> expectedSamples = new Dictionary<int, string>();
     static readonly Dictionary<int, string> expectedIdInts = new Dictionary<int, string>();
     static readonly Dictionary<string, string> expectedIdStrings = new Dictionary<string, string>();
@@ -161,7 +162,15 @@ namespace StorageTest {
     private void assertData() {
       assertDictionaries();
       DC.Data.Dispose();
-      new DC(csvConfig);
+
+      if (bakCsvFileSwapper.UseBackupFiles()) {
+        _ = new DC(csvConfig);
+        assertDictionaries();
+        DC.DisposeData();
+        bakCsvFileSwapper.SwapBack();
+      }
+
+      _ = new DC(csvConfig);
       assertDictionaries();
     }
 

@@ -61,7 +61,7 @@ to cater for orphans, but the goal here is to use a very simple *Data Model*.
 
 
 ## Generated Code
-Based on the *Data Model*, the *StorageClassGenerator* creates some code like this (extremly 
+Based on the *Data Model*, the *StorageClassGenerator* creates some code like this (extremely 
 simplified):
 
 ### Data Class
@@ -121,7 +121,7 @@ property values from and writing to a CSV file, transactions and more.
 `StorageClassGenerator.cs` creates for each *data class* (= a  class defined in a *Data 
 Model*) a `Key` property (gets later updated by the *Data Store*), a constructor and the following methods:
 * `Store()`: Adds the instance to its *Data Store* in the *Data Context*
-* `Update()`: Alows to change the property values of an instance
+* `Update()`: Allows to change the property values of an instance
 * `Release()`: Removes the instance from its *Data Store* in the *Data Context*
 * `ToString()`: Shows the property values of the instance
 
@@ -130,12 +130,12 @@ If the class is a parent of another class, the following gets added:
 * `AddToChildren()`: Adds a `Child` to `Children`
 * `RemoveFromToChildren()`: Removes a `Child` from `Children`
 
-Note: `AddToChildren()` and `RemoveFromToChildren()` are `internal`. They get only called 
+**Note:** `AddToChildren()` and `RemoveFromToChildren()` are `internal`. They get only called 
 from the `Child` class.
 
-Note: `Parent.base.cs` is a `partial class`. You can add your own code to `Parent.cs`, which
+**Note:** `Parent.base.cs` is a `partial class`. You can add your own code to `Parent.cs`, which
 will not be overwritten by `StorageClassGenerator`. `Parent.base.cs` calls many `partial` methods 
-so that you can add additianl functionality. They are not shown in the code samples here.
+so that you can add additional functionality. They are not shown in the code samples here.
 
 `Child.base.cs` code:
 
@@ -258,7 +258,7 @@ The *Data Context* has for every *Data Class* a `DataStore` (data only in RAM) o
 file), depending on the `CsvConfig` settings given in the constructor of `DC`. A `DataStore` is 
 like a dictionary, it gives access to a stored instance through the instance's `Key` property.
 
-Note: In C#, a child uses a reference to point to its parent. When stored in a CSV file, the 
+**Note:** In C#, a child uses a reference to point to its parent. When stored in a CSV file, the 
 child uses the parent's `Key` to link to it. During application startup, `DC` reads all CSV files. 
 When it finds a `Child` with a key value in the CSV file for a parent, it searches `DC.Parents` 
 for the parent with that key and sets `Child.Parent` to that `Parent`. `DC` then adds the `Child` 
@@ -305,7 +305,7 @@ Some steps in this very simple example:
 1) creates a new *Data Context*. `CsvConfig` provides configuration information like if CSV files should be used and where they are stored.
 2) A parent gets created and stored in the *Data Context*, i.e. in `DC.Data.Parents` and in the CSV file.
 3) A child gets created, stored and added to its parent's `Children` collection.
-4) It is not mandantory to use transactions, but often helpful.
+4) It is not mandatory to use transactions, but often helpful.
 5) The child's `Name` gets changed and `parent1` becomes the new parent. This automatically removes `child0` from `parent0.Children` and adds it to `parent1.Children`. In the child's CSV file, a new line gets added with that update information.
 6) `parent0` gets removed from the *Data Context* (=deleted). In the parent's CSV file, a new line gets added indicating that `parent0` is removed.
 7) During `CommitTransaction()` not much needs to be done, since the data is already written to the CSV files.
@@ -360,7 +360,7 @@ a collection, which can be empty (=mc).
 ## Children define the relationship
 The child defines to which parent(s) it belongs. For each relationship to a parent it has one 
 property. When a child property linking to a parent gets stored, the child gets added to the 
-`Child` or `Children` propert of its parent. When a child changes (`Update()`) the value of 
+`Child` or `Children` property of its parent. When a child changes (`Update()`) the value of 
 its `Parent` property from `Parent1` to `Parent2`, *StorageLib* 
 removes child from `Parent1.Children` and adds child to `Parent2.Children`. 
 
@@ -446,7 +446,7 @@ public class Child {
   public Parent? Parent;
 }
 ```
-A child can have an unlimitted number of child parent relationships
+A child can have an unlimited number of child parent relationships
 ```c#
 public class Parent1 {
   public Child Child;
@@ -496,7 +496,7 @@ added to the DC. A particular instance can get retrieved from the class' `DataSt
 the object's  Key value. `DataStore` implements *IReadOnlyCollection* for accessing 
 any data object. A class can indicate in the Data Model that it should be searchable through one
 of its property values, like maybe Name. In that case, the *StorageLib* adds a 
-`Dictionary<string, searchableClass>` to the Data Context. This Dicionary can be used like an 
+`Dictionary<string, searchableClass>` to the Data Context. This Dictionary can be used like an 
 index in a database. *StorageLib* updates the Dictionary when objects get stored, updated or
 released.
 
@@ -505,7 +505,7 @@ program runs, data changes get automatically written to the files, although with
 small time delay to write many changes at the same time, which improves performance. At
 application shutdown, the DC guarantees that all data is written (flushed) to the files.
 
-DC has a static property *Data*, which holds all the collections. The application can acces
+DC has a static property *Data*, which holds all the collections. The application can access 
 any data through *DC.Data.CollectionName*.
 
 ## Transactions

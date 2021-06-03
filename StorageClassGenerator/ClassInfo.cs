@@ -738,7 +738,6 @@ namespace StorageLib {
       writeParameters(sw, lines, isConstructor: true);
       sw.WriteLine("      Key = StorageExtensions.NoKey;");
 
-
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.ParentOneChild) continue;
 
@@ -755,16 +754,18 @@ namespace StorageLib {
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
           mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
-          if (mi.ChildClassInfo!.AreInstancesReleasable) {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          } else {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          }
+          //if (mi.ChildClassInfo!.AreInstancesReleasable) {
+          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
+          //} else {
+          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
+          //}
+          sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
         } else {
           //LinkToParent, simple type or enum
           sw.WriteLine($"      {mi.MemberName} = {mi.LowerMemberName}{mi.Rounding};");
-          writeToLowerCopyStatement(sw, mi); //toLower must be executed here once the source property has its value and not
-                                             //when mi.MemberType==MemberTypeEnum.ToLower
+          writeToLowerCopyStatement(sw, mi, needsDictEnum.Contructor); //toLower must be executed here once the source
+                                                                       //property has its value and not when
+                                                                       //mi.MemberType==MemberTypeEnum.ToLower
         }
       }
       Compiler.WriteLinesTracing(sw, isTracing,
@@ -840,11 +841,12 @@ namespace StorageLib {
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
           mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
-          if (mi.ChildClassInfo!.AreInstancesReleasable) {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          } else {
-            sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          }
+          //if (mi.ChildClassInfo!.AreInstancesReleasable) {
+          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
+          //} else {
+          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
+          //}
+          sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
 
         } else if (mi.MemberType==MemberTypeEnum.LinkToParent) {
           if (mi.IsNullable) {
@@ -854,10 +856,6 @@ namespace StorageLib {
             sw.WriteLine("      }");
           } else {
             sw.WriteLine($"      var {mi.ParentClassInfo!.LowerClassName}Key = csvReader.ReadInt();");
-            //sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)??");
-            //sw.WriteLine($"        throw new Exception($\"Read {mi.ClassInfo.ClassName} from CSV file: Cannot find " +
-            //  $"{mi.MemberName} with key {{{mi.ParentClassInfo!.LowerClassName}Key}}.\" + Environment.NewLine + ");
-            //sw.WriteLine($"          csvReader.PresentContent);");
             sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)?? {mi.ParentTypeString}.No{mi.ParentTypeString};");
           }
         } else {
@@ -867,9 +865,9 @@ namespace StorageLib {
             sw.WriteLine($"      {mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
           } else {
             sw.WriteLine($"      {mi.MemberName} = csvReader.{mi.CsvReaderRead};");
-            writeToLowerCopyStatement(sw, mi);
+            writeToLowerCopyStatement(sw, mi, needsDictEnum.Contructor);
           }
-          writeNeedsDictionaryAddStatement(sw, mi, context);
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Contructor);
         }
       }
       //if the parent is a Dictionary or SortedList, the key property must be assigned first (i.e. in the for loop 
@@ -948,12 +946,21 @@ namespace StorageLib {
       writeAddToRemoveFrom(sw, context, isTracing);
       if (AreInstancesReleasable) {
         writeRelease(sw, context, isTracing);
+        writeDisconnect(sw, context, isTracing);
       } else {
         sw.WriteLine("    /// <summary>");
         sw.WriteLine($"    /// Releasing {ClassName} from {context}.Data.{PluralName} is not supported.");
         sw.WriteLine("    /// </summary>");
         sw.WriteLine("    public void Release() {");
         sw.WriteLine("      throw new NotSupportedException(\"Release() is not supported, StorageClass attribute AreInstancesReleasable is false.\");");
+        sw.WriteLine("    }");
+        sw.WriteLine();
+        sw.WriteLine();
+        sw.WriteLine("    /// <summary>");
+        sw.WriteLine($"    /// Disconnecting {ClassName} from parents and data contaxt dictionaries is not supported.");
+        sw.WriteLine("    /// </summary>");
+        sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
+        sw.WriteLine("      throw new NotSupportedException(\"Disconnect() is not supported, StorageClass attribute AreInstancesReleasable is false.\");");
         sw.WriteLine("    }");
         sw.WriteLine();
         sw.WriteLine();
@@ -1015,7 +1022,7 @@ namespace StorageLib {
         if (mi.MemberType<=MemberTypeEnum.String || mi.MemberType==MemberTypeEnum.Enum) {
           //enum or simple data type
           //toLower should already be copied here from source property by constructor or update
-          writeNeedsDictionaryAddStatement(sw, mi, context, addIndent: "");
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Store);
         }
       }
       sw.WriteLine($"      {context}.Data._{PluralName}.Add(this);");
@@ -1125,7 +1132,7 @@ namespace StorageLib {
 
       if (HasNotReadOnlyAndNotLookupParents) {
         sw.WriteLine();
-        sw.WriteLine($"      //remove not yet updated item from parents which will be removed by update");
+        sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
         foreach (var mi in Members.Values) {
           if (mi.IsReadOnly || mi.MemberType!=MemberTypeEnum.LinkToParent || mi.IsLookupOnly) continue;
 
@@ -1160,15 +1167,15 @@ namespace StorageLib {
         if (mi.Rounding!=null) {
           sw.WriteLine($"      var {mi.LowerMemberName}Rounded = {mi.LowerMemberName}{mi.Rounding};");
           sw.WriteLine($"      if ({mi.MemberName}!={mi.LowerMemberName}Rounded) {{");
-          writeNeedsDictionaryRemoveStatement(sw, mi, context, isUpdate: true);
+          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Update);
           sw.WriteLine($"        {mi.MemberName} = {mi.LowerMemberName}Rounded;");
-          writeNeedsDictionaryAddStatement(sw, mi, context, isUpdate: true);
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Update);
         } else {
           sw.WriteLine($"      if ({mi.MemberName}!={mi.LowerMemberName}) {{");
-          writeNeedsDictionaryRemoveStatement(sw, mi, context, isUpdate: true);
+          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Update);
           sw.WriteLine($"        {mi.MemberName} = {mi.LowerMemberName};");
-          writeToLowerCopyStatement(sw, mi, "  ");
-          writeNeedsDictionaryAddStatement(sw, mi, context, isUpdate: true);
+          writeToLowerCopyStatement(sw, mi, needsDictEnum.Update);
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Update);
         }
         sw.WriteLine("        isChangeDetected = true;");
         sw.WriteLine("      }");
@@ -1216,21 +1223,28 @@ namespace StorageLib {
 
 
     private void writeUpdateCsv(StreamWriter sw, string context) {
-      //Todo: writeUpdateCsv(): Changes needed for Dictionary and SortedList: RemoveFrom (OLD_Item), test if key value has changed if same parent
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// Updates this {ClassName} with values from CSV file");
       sw.WriteLine("    /// </summary>");
       sw.WriteLine($"    internal static void Update({ClassName} {LowerClassName}, CsvReader csvReader){{");
+
+      sw.WriteLine("      //read first all property values into local variables");
+      var isFirst = true;
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.ToLower) continue;
 
+        if (isFirst) {
+          isFirst = false;
+        } else { 
+          sw.WriteLine();
+        }
         if (mi.IsReadOnly) {
           //LinkToParent, enum or simple type
           //the parents collections or a parent linking to one child cannot be readonly
           //ensure that the values stored in the CSV file are the same as the instance itself
           if (mi.MemberType==MemberTypeEnum.Enum) {
             sw.WriteLine($"      var {mi.LowerMemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
-          
+
           } else if (mi.MemberType==MemberTypeEnum.LinkToParent) {
             if (mi.IsNullable) {
               sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
@@ -1238,25 +1252,11 @@ namespace StorageLib {
               sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
               sw.WriteLine($"        {mi.LowerMemberName} = null;");
               sw.WriteLine("      } else {");
-
-              //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
-              //sw.WriteLine($"          {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
-              //sw.WriteLine("        }");
-
-              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
-              sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
-
-
+              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.ParentTypeString}.No{mi.ParentTypeString};");
               sw.WriteLine("      }");
+ 
             } else {
-              //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
-              //sw.WriteLine($"        {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
-              //sw.WriteLine("      }");
-
-              sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
-              sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
-
-
+              sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.ParentTypeString}.No{mi.ParentTypeString};");
             }
 
           } else {
@@ -1278,79 +1278,270 @@ namespace StorageLib {
               sw.WriteLine($"      {mi.ParentTypeString}? {mi.LowerMemberName};");
               sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
               sw.WriteLine($"        {mi.LowerMemberName} = null;");
-              sw.WriteLine("      } else {");
-              //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
-              //sw.WriteLine($"          {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
+              sw.WriteLine( "      } else {");
+              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.ParentTypeString}.No{mi.ParentTypeString};");
+              sw.WriteLine( "      }");
+              //sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is null) {{");
+              //sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
+              //sw.WriteLine( "          //nothing to do");
+              //sw.WriteLine( "        } else {");
+              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //}
               //sw.WriteLine("        }");
-
-              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
-              sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
-
-
-              sw.WriteLine("      }");
-              sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is null) {{");
-              sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-              sw.WriteLine("          //nothing to do");
-              sw.WriteLine("        } else {");
-              sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              }
-              sw.WriteLine("        }");
-              sw.WriteLine("      } else {");
-              sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
-                sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-                sw.WriteLine("          }");
-              }
-              sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = null;");
-              sw.WriteLine("        } else {");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
-                sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-                sw.WriteLine("          }");
-              }
-              sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              }
-              sw.WriteLine("        }");
-              sw.WriteLine("      }");
+              //sw.WriteLine("      } else {");
+              //sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+              //  sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //  sw.WriteLine("          }");
+              //}
+              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = null;");
+              //sw.WriteLine("        } else {");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+              //  sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //  sw.WriteLine("          }");
+              //}
+              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //}
+              //sw.WriteLine("        }");
+              //sw.WriteLine("      }");
             } else {
               //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
               //sw.WriteLine($"        {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
               //sw.WriteLine("      }");
 
-              sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
-              sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
-
-
-              sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
-                sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-                sw.WriteLine("        }");
-              }
-              sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              if (!mi.IsLookupOnly) {
-                sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              }
-              sw.WriteLine("      }");
+              sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.ParentTypeString}.No{mi.ParentTypeString};");
+              //sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //  sw.WriteLine("        }");
+              //}
+              //sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+              //if (!mi.IsLookupOnly) {
+              //  sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+              //}
+              //sw.WriteLine("      }");
             }
 
           } else if (mi.MemberType<MemberTypeEnum.LinkToParent) {
             //enum, simple type
-            writeNeedsDictionaryRemoveStatement(sw, mi, context, isCSV: true);
+            //writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
             if (mi.MemberType==MemberTypeEnum.Enum) {
-              sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
+              sw.WriteLine($"      var {mi.LowerMemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
             } else {
-              sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = csvReader.{mi.CsvReaderRead};");
+              sw.WriteLine($"      var {mi.LowerMemberName} = csvReader.{mi.CsvReaderRead};");
             }
-            writeToLowerCopyStatement(sw, mi, isCSV: true); //toLower must be executed here once the source property has 
-                                                            //its value and not when mi.MemberType==MemberTypeEnum.ToLower
-            writeNeedsDictionaryAddStatement(sw, mi, context, isCSV: true);
+            //writeToLowerCopyStatement(sw, mi, isCSV: true); //toLower must be executed here once the source property has 
+            //                                                //its value and not when mi.MemberType==MemberTypeEnum.ToLower
+            //writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
           }
+        }
+      }
+
+      //remove class from parent if link to parent or the child's key into the parent's children collection has changed
+      if (HasNotReadOnlyAndNotLookupParents) {
+        sw.WriteLine();
+        sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+        foreach (var mi in Members.Values) {
+          if (mi.IsReadOnly || mi.MemberType!=MemberTypeEnum.LinkToParent || mi.IsLookupOnly) continue;
+
+          if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
+            mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
+          {
+            string keyName = mi.ParentMemberInfo.ChildKeyPropertyName!;
+            var lowerKeyName = keyName[0..1].ToLower() + keyName[1..];
+            sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || {LowerClassName}.{keyName}!={lowerKeyName};");
+          } else {
+            //parent has single child or list of children
+            sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName};");
+          }
+          if (mi.IsNullable) {
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is not null && has{mi.MemberName}Changed && {LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          } else {
+            sw.WriteLine($"      if (has{mi.MemberName}Changed && {LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          }
+          sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          sw.WriteLine($"      }}");
+        }
+      }
+
+
+      //update the item properties before updating the collections in the item's parents
+      sw.WriteLine();
+      sw.WriteLine("      //update not readonly properties");
+      foreach (var mi in Members.Values) {
+        //if (mi.MemberType==MemberTypeEnum.ToLower) continue;
+
+        //if (mi.IsReadOnly) {
+        //  //LinkToParent, enum or simple type
+        //  //the parents collections or a parent linking to one child cannot be readonly
+        //  //ensure that the values stored in the CSV file are the same as the instance itself
+        //  if (mi.MemberType==MemberTypeEnum.Enum) {
+        //    sw.WriteLine($"      var {mi.LowerMemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
+          
+        //  } else if (mi.MemberType==MemberTypeEnum.LinkToParent) {
+        //    if (mi.IsNullable) {
+        //      sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
+        //      sw.WriteLine($"      {mi.ParentTypeString}? {mi.LowerMemberName};");
+        //      sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
+        //      sw.WriteLine($"        {mi.LowerMemberName} = null;");
+        //      sw.WriteLine("      } else {");
+
+        //      //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
+        //      //sw.WriteLine($"          {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
+        //      //sw.WriteLine("        }");
+
+        //      sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
+        //      sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
+
+
+        //      sw.WriteLine("      }");
+        //    } else {
+        //      //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
+        //      //sw.WriteLine($"        {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
+        //      //sw.WriteLine("      }");
+
+        //      sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
+        //      sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
+
+
+        //    }
+
+        //  } else {
+        //    sw.WriteLine($"      var {mi.LowerMemberName} = csvReader.{mi.CsvReaderRead};");
+        //  }
+        //  sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
+        //  sw.WriteLine($"        throw new Exception($\"{ClassName}.Update(): Property {mi.MemberName}" +
+        //    $" '{{{LowerClassName}.{mi.MemberName}}}' is \" +");
+        //  sw.WriteLine($"          $\"readonly, {mi.LowerMemberName} '{{{mi.LowerMemberName}}}' read from the CSV file should be the" +
+        //    " same.\" + Environment.NewLine + ");
+        //  sw.WriteLine($"          {LowerClassName}.ToString());");
+        //  sw.WriteLine("      }");
+
+        //} else {
+          ////not readonly
+          //if (mi.MemberType==MemberTypeEnum.LinkToParent) {
+          //  if (mi.IsNullable) {
+          //    sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
+          //    sw.WriteLine($"      {mi.ParentTypeString}? {mi.LowerMemberName};");
+          //    sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
+          //    sw.WriteLine($"        {mi.LowerMemberName} = null;");
+          //    sw.WriteLine("      } else {");
+          //    //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
+          //    //sw.WriteLine($"          {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
+          //    //sw.WriteLine("        }");
+
+          //    sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
+          //    sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
+
+
+          //    sw.WriteLine("      }");
+          //    sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is null) {{");
+          //    sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
+          //    sw.WriteLine("          //nothing to do");
+          //    sw.WriteLine("        } else {");
+          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //    }
+          //    sw.WriteLine("        }");
+          //    sw.WriteLine("      } else {");
+          //    sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          //      sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //      sw.WriteLine("          }");
+          //    }
+          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = null;");
+          //    sw.WriteLine("        } else {");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          //      sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //      sw.WriteLine("          }");
+          //    }
+          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //    }
+          //    sw.WriteLine("        }");
+          //    sw.WriteLine("      }");
+          //  } else {
+          //    //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
+          //    //sw.WriteLine($"        {mi.LowerMemberName} = {mi.ParentTypeString}.No{mi.ParentTypeString};");
+          //    //sw.WriteLine("      }");
+
+          //    sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
+          //    sw.WriteLine($"          {mi.ParentTypeString}.No{mi.ParentTypeString};");
+
+
+          //    sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //      sw.WriteLine("        }");
+          //    }
+          //    sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+          //    if (!mi.IsLookupOnly) {
+          //      sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          //    }
+          //    sw.WriteLine("      }");
+          //  }
+
+          //} else if (mi.MemberType<MemberTypeEnum.LinkToParent) {
+          //  //enum, simple type
+          //  writeNeedsDictionaryRemoveStatement(sw, mi, context, isCSV: true);
+          //  if (mi.MemberType==MemberTypeEnum.Enum) {
+          //    sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
+          //  } else {
+          //    sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = csvReader.{mi.CsvReaderRead};");
+          //  }
+          //  writeToLowerCopyStatement(sw, mi, isCSV: true); //toLower must be executed here once the source property has 
+          //                                                  //its value and not when mi.MemberType==MemberTypeEnum.ToLower
+          //  writeNeedsDictionaryAddStatement(sw, mi, context, isCSV: true);
+          //  }
+
+        //}
+        if (mi.IsReadOnly || mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType>MemberTypeEnum.LinkToParent) continue;
+
+        if (mi.NeedsDictionary || (mi.ToLowerTarget!=null && mi.ToLowerTarget.NeedsDictionary)) {
+          if (mi.Rounding!=null) {
+            sw.WriteLine($"      var {mi.LowerMemberName}Rounded = {mi.LowerMemberName}{mi.Rounding};");
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}Rounded) {{");
+            writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+            sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName}Rounded;");
+            writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+          } else {
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
+            writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+            sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+            writeToLowerCopyStatement(sw, mi, needsDictEnum.UpdateCsv);
+            writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+          }
+          sw.WriteLine("      }");
+        } else {
+          sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+        }
+      }
+
+      if (HasNotReadOnlyAndNotLookupParents) {
+        sw.WriteLine();
+        sw.WriteLine($"      //add updated item to parents which have been newly added during update");
+        foreach (var mi in Members.Values) {
+          if (mi.IsReadOnly || mi.MemberType!=MemberTypeEnum.LinkToParent || mi.IsLookupOnly) continue;
+
+          if (mi.IsNullable) {
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is not null && has{mi.MemberName}Changed && {LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          } else {
+            sw.WriteLine($"      if (has{mi.MemberName}Changed && {LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+          }
+          sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          sw.WriteLine($"      }}");
         }
       }
       sw.WriteLine($"      {LowerClassName}.onCsvUpdate();");
@@ -1535,7 +1726,7 @@ namespace StorageLib {
       }
       foreach (var mi in Members.Values) {
         if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
-          writeNeedsDictionaryRemoveStatement(sw, mi, context);
+          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Release);
         }
       }
       //sw.WriteLine("      //the testing if this instance can be released gets executed in PerformRelease(), which gets");
@@ -1547,6 +1738,68 @@ namespace StorageLib {
       sw.WriteLine("    }");
       sw.WriteLine("    partial void onReleasing();");
       sw.WriteLine("    partial void onReleased();");
+      sw.WriteLine();
+      sw.WriteLine();
+    }
+
+
+    private void writeDisconnect(StreamWriter sw, string context, TracingEnum isTracing) {
+      sw.WriteLine("    /// <summary>");
+      sw.WriteLine($"    /// Disconnects {ClassName} from parents and possibly from dictionaries in {context}.Data.");
+      //IsPerformReleaseNeeded = writeRemoveComment(sw, context, isCapitaliseFirstLetter: false);
+      //sw.WriteLine(".");
+      sw.WriteLine("    /// </summary>");
+      sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
+      //foreach (var mi in Members.Values) {
+      //  if (mi.MemberType==MemberTypeEnum.ParentOneChild) {
+      //    sw.WriteLine($"      if ({mi.MemberName}{mi.QMark}.Key>=0) {{");
+      //    sw.WriteLine($"        throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
+      //    sw.WriteLine($"          $\"because '{{{mi.MemberName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
+      //    sw.WriteLine("      }");
+
+      //  } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //ParentMultipleChildren
+      //    if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
+      //      sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}) {{");
+      //    } else {
+      //      sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}.Values) {{");
+      //    }
+      //    foreach (var childMI in mi.ChildClassInfo!.Members.Values) {
+      //      if (childMI.MemberType==MemberTypeEnum.LinkToParent && (childMI.ParentTypeString!)==ClassName) {
+      //        sw.WriteLine($"        if ({mi.LowerChildTypeName}?.Key>=0) {{");
+      //        sw.WriteLine($"          throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
+      //        sw.WriteLine($"            $\"because '{{{mi.LowerChildTypeName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
+      //        sw.WriteLine("        }");
+      //      }
+      //    }
+      //    sw.WriteLine("      }");
+      //  }
+      //}
+      //foreach (var mi in Members.Values) {
+      //  if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
+      //    writeNeedsDictionaryRemoveStatement(sw, mi, context);
+      //  }
+      //}
+
+      foreach (var mi in Members.Values) {
+        if (mi.MemberType==MemberTypeEnum.LinkToParent && !mi.IsLookupOnly) {
+          if (mi.IsNullable) {
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!=null && {LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+            sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          } else {
+            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.ParentTypeString}.No{mi.ParentTypeString}) {{");
+            sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          }
+          sw.WriteLine("      }");
+        }
+        if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
+          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Disconnect);
+        }
+      }
+      sw.WriteLine($"      {LowerClassName}.onDisconnected();");
+      Compiler.WriteLinesTracing(sw, isTracing,
+                   $"      {context}.Trace?.Invoke($\"Disconnected {ClassName} @{{{LowerClassName}.Key}} #{{{LowerClassName}.GetHashCode()}} from parents.\");");
+      sw.WriteLine("    }");
+      sw.WriteLine("    partial void onDisconnected();");
       sw.WriteLine();
       sw.WriteLine();
     }
@@ -1597,8 +1850,8 @@ namespace StorageLib {
       Compiler.WriteLinesTracing(sw, isTracing,
                    $"      {context}.Trace?.Invoke($\"Rollback {ClassName}.Store(): {{{LowerClassName}.ToTraceString()}}\");");
       foreach (var mi in Members.Values) {
-        if (mi.MemberType<=MemberTypeEnum.Enum) {
-          writeNeedsDictionaryRemoveStatement(sw, mi, context, isCSV: true);
+        if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
+          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.RollbackStore);
         }
       }
       sw.WriteLine($"      {LowerClassName}.onRollbackItemStored();");
@@ -1666,7 +1919,7 @@ namespace StorageLib {
             sw.WriteLine($"        item.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(item);");
             sw.WriteLine($"      }}");
           } else {
-            writeNeedsDictionaryRemoveStatement(sw, mi, context, isCSV: true, isRollbackUpdate: true);
+            writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.RollbackUpdate);
           }
         }
       }
@@ -1677,7 +1930,7 @@ namespace StorageLib {
         if (mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType>=MemberTypeEnum.ParentOneChild || mi.IsReadOnly) continue;
 
         sw.WriteLine($"      item.{mi.MemberName} = oldItem.{mi.MemberName};");
-        writeToLowerCopyStatement(sw, mi, isCSV: true, isRollbackUpdate: true);
+        writeToLowerCopyStatement(sw, mi, needsDictEnum.RollbackUpdate);
       }
 
       if (HasNotReadOnlyAndNotLookupParents || HasNotReadOnlyNeedDirectories) {
@@ -1701,7 +1954,7 @@ namespace StorageLib {
             sw.WriteLine($"        item.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}(item);");
             sw.WriteLine($"      }}");
           } else {
-            writeNeedsDictionaryAddStatement(sw, mi, context, isCSV: true, isRollbackUpdate: true);
+            writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.RollbackUpdate);
           }
         }
       }
@@ -1726,7 +1979,7 @@ namespace StorageLib {
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.Enum || mi.MemberType<=MemberTypeEnum.String) {
           //enum, simple data type
-          writeNeedsDictionaryAddStatement(sw, mi, context, isCSV: true);
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.RollbackRelease);
         }
       }
       sw.WriteLine($"      {LowerClassName}.onRollbackItemRelease();");
@@ -2205,14 +2458,29 @@ namespace StorageLib {
     #endregion
 
 
+    enum needsDictEnum {
+      //add only
+      Contructor,
+      Store, //addIndent: ""
+      RollbackRelease, //isCSV: true
+
+      //both
+      Update, //isUpdate: true
+      UpdateCsv, //isCSV: true
+      RollbackUpdate, //isCSV: true, isRollbackUpdate: true
+
+      //remove only
+      Release, //
+      Disconnect, //
+      RollbackStore, //isCSV: true
+    }
+
+
     private void writeNeedsDictionaryAddStatement(
       StreamWriter sw, 
       MemberInfo memberInfo, 
-      string context, 
-      bool isCSV = false,
-      bool isRollbackUpdate = false,
-      bool isUpdate = false,
-      string addIndent = "") 
+      string context,
+      needsDictEnum needsDict) 
     {
       //The code here covers 2 situation of NeedsDictionary:
       //1) A member needs directory and is not involved with ToLower
@@ -2228,51 +2496,94 @@ namespace StorageLib {
       if (mi!=null) {
         var className = "";
         var classNameDot = "";
-        if (isCSV) {
-          if (isRollbackUpdate) {
-            className = "item";
-            classNameDot = className + ".";
-          } else {
-            className = memberInfo.ClassInfo.LowerClassName;
-            classNameDot = className + ".";
-          }
+        //if (isCSV) {
+        //  if (isRollbackUpdate) {
+        //    className = "item";
+        //    classNameDot = className + ".";
+        //  } else {
+        //    className = memberInfo.ClassInfo.LowerClassName;
+        //    classNameDot = className + ".";
+        //  }
+        //}
+        if (needsDict==needsDictEnum.RollbackUpdate) {
+          className = "item";
+          classNameDot = className + ".";
+        } else if (needsDict==needsDictEnum.RollbackRelease || needsDict==needsDictEnum.UpdateCsv) {
+          className = memberInfo.ClassInfo.LowerClassName;
+          classNameDot = className + ".";
         }
-        var indent = "      " + addIndent;
-        if (isUpdate) {
+        //var indent = "      " + addIndent;
+        var indent = needsDict==needsDictEnum.UpdateCsv ? "        " : "      ";
+        //if (isUpdate) {
+        //  sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
+        //  indent = "            " + addIndent;
+        //}
+        if (needsDict==needsDictEnum.Update) {
           sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
-          indent = "            " + addIndent;
+          indent += "   ";
         }
         if (mi.IsNullable) {
           sw.WriteLine($"{indent}if ({classNameDot}{mi.MemberName}!=null) {{");
-          if (isCSV) {
-            sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}"+ 
+          //if (isCSV) {
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}"+ 
+          //    $"{mi.MemberName}, {className});");
+          //} else {
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
+          //}
+          if (
+            needsDict==needsDictEnum.RollbackRelease ||
+            needsDict==needsDictEnum.UpdateCsv ||
+            needsDict==needsDictEnum.RollbackUpdate) 
+          {
+            sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}"+
               $"{mi.MemberName}, {className});");
           } else {
             sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
           }
           sw.WriteLine($"{indent}}}");
         } else {
-          if (isCSV) {
+          //if (isCSV) {
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}" +
+          //    $"{mi.MemberName}, {className});");
+          //} else {
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
+          //}
+          if (
+            needsDict==needsDictEnum.RollbackRelease ||
+            needsDict==needsDictEnum.UpdateCsv ||
+            needsDict==needsDictEnum.RollbackUpdate) 
+          {
             sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}" +
               $"{mi.MemberName}, {className});");
           } else {
             sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
           }
         }
-        if (isUpdate) {
+        //if (isUpdate) {
+        //  sw.WriteLine("        }");
+        //}
+        if (needsDict==needsDictEnum.Update) {
           sw.WriteLine("        }");
         }
       }
     }
 
 
+    //enum needsDictEnum {
+    //  Update, //isUpdate: true
+    //  UpdateCsv, //isCSV: true
+    //  Release, //
+    //  Diconnect, //
+    //  RollbackStore, //isCSV: true
+    //  RollbackUpdate, //isCSV: true, isRollbackUpdate: true
+    //}
+
+
     private void writeNeedsDictionaryRemoveStatement(
       StreamWriter sw, 
       MemberInfo memberInfo, 
       string context,
-      bool isCSV = false,
-      bool isRollbackUpdate = false,
-      bool isUpdate = false) 
+      needsDictEnum needsDict) 
     {
       //The code here covers 2 situation of NeedsDictionary:
       //1) A member needs directory and is not involved with ToLower
@@ -2287,60 +2598,119 @@ namespace StorageLib {
 
       if (mi!=null) {
         var classNameDot = "";
-        if (isCSV) {
-          if (isRollbackUpdate) {
-            classNameDot = "item.";
-          } else {
-            classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
-          }
+        //if (isCSV) {
+        //  if (isRollbackUpdate) {
+        //    classNameDot = "item.";
+        //  } else {
+        //    classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
+        //  }
+        //}
+        if (needsDict==needsDictEnum.RollbackUpdate) {
+          classNameDot = "item.";
+        } else if(
+          needsDict==needsDictEnum.UpdateCsv || 
+          needsDict==needsDictEnum.RollbackStore || 
+          needsDict==needsDictEnum.Disconnect) 
+        {
+          classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
         }
-        var indent = "      ";
-        if (isUpdate) {
+        var indent = needsDict==needsDictEnum.UpdateCsv ? "        " : "      ";
+        //if (isUpdate) {
+        //  sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
+        //  indent = "            ";
+        //}
+        if (needsDict==needsDictEnum.Update) {
           sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
           indent = "            ";
         }
         if (mi.IsNullable) {
           sw.WriteLine($"{indent}if ({classNameDot}{mi.MemberName}!=null) {{");
-          if (isCSV) {
-            sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
-              $"{mi.MemberName});");
-          } else {
-            sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          }
+          //if (isCSV) {
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
+          //    $"{mi.MemberName});");
+          //} else {
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
+          //}
+          //if (
+          //  needsDict==needsDictEnum.UpdateCsv || 
+          //  needsDict==needsDictEnum.RollbackStore || 
+          //  needsDict==needsDictEnum.RollbackUpdate) 
+          //{
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
+          //    $"{mi.MemberName});");
+          //} else {
+          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
+          //}
+          sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
+            $"{mi.MemberName});");
           sw.WriteLine($"{indent}}}");
         } else {
-          if (isCSV) {
-            sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
-              $"{mi.MemberName});");
-          } else {
-            sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          }
+          //if (isCSV) {
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
+          //    $"{mi.MemberName});");
+          //} else {
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
+          //}
+          //if (
+          //  needsDict==needsDictEnum.UpdateCsv ||
+          //  needsDict==needsDictEnum.RollbackStore ||
+          //  needsDict==needsDictEnum.RollbackUpdate) 
+          //{
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
+          //    $"{mi.MemberName});");
+          //} else {
+          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
+          //}
+          sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
+            $"{mi.MemberName});");
         }
-        if (isUpdate) {
+        if (needsDict==needsDictEnum.Update) {
           sw.WriteLine("        }");
         }
       }
     }
 
 
+    //enum needsDictEnum {
+    //  Contructor,
+    //  Update, //"  "
+    //  UpdateCsv, //"  "
+    //  RollbackUpdate, //isCSV: true, isRollbackUpdate: true
+
+    //  Store, //addIndent: ""
+    //  RollbackRelease, //isCSV: true
+
+    //  //both
+
+    //  //remove only
+    //  Release, //
+    //  Diconnect, //
+    //  RollbackStore, //isCSV: true
+    //}
+
+
     private void writeToLowerCopyStatement(
       StreamWriter sw, 
-      MemberInfo memberInfo, 
-      string indent = "", 
-      bool isCSV = false,
-      bool isRollbackUpdate = false) 
+      MemberInfo memberInfo,
+      needsDictEnum needsDict) 
     {
       if (memberInfo.ToLowerTarget is null) return;
       
       var mi = memberInfo.ToLowerTarget;
       var classNameDot = "";
-      if (isCSV) {
-        if (isRollbackUpdate) {
-          classNameDot = "item.";
-        } else {
-          classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
-        }
+      //if (isCSV) {
+      //  if (isRollbackUpdate) {
+      //    classNameDot = "item.";
+      //  } else {
+      //    classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
+      //  }
+      //}
+      if (needsDict==needsDictEnum.RollbackUpdate) {
+        classNameDot = "item.";
+      } else if (needsDict==needsDictEnum.UpdateCsv) {
+        classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
       }
+      var indent = needsDict==needsDictEnum.Update || needsDict==needsDictEnum.UpdateCsv ? "  " : "";
       sw.WriteLine($"      {indent}{classNameDot}{mi.MemberName} = {classNameDot}{mi.PropertyForToLower}{mi.QMark}.ToLowerInvariant();");
     }
 

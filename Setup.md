@@ -50,7 +50,7 @@ For this and all other projects you add, ensure that the project file contains a
 ## Project StorageClassGenerator 2
 Add the external project *StorageClassGenerator* from the *StorageLib* solution you cloned. 
 *StorageClassGenerator* translates the *data model* into the data classes you will use in
-your proagram.
+your program.
 
 ## Project StorageLib 3
 Add the external project *StorageLib* from the *StorageLib* solution you cloned. *StorageLib* 

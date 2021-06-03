@@ -15,8 +15,9 @@ each activity like create, update or delete is done first in a rooled back trans
 be changed, then the same activity is executed in a commited transactions and the data should change accordingly.
 
 After a transaction has been committed, the datacontext gets disposed, opened again and verified, that the data
-is still the same. There is one exception: stored parents might have some not stored children. In the new data 
-context, those parents have no longer those children.
+is still the same. This is done twice, first using the .bak files, then the .csv files. There is one exception: 
+stored parents might have some not stored children. In the new data context, those parents have no longer those 
+children.
 
 For convenience, the variables parent0, parentN1, child1, etc. contain always the data from the latest data context. They
 get updated, each time assertDataDisposeDCRecreateDCassertData() gets called.
@@ -429,9 +430,29 @@ namespace StorageTest {
         assertDataDisposeDCRecreateDCassertData("p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
 
-        //test .bak file
-        // =============
-        directoryInfo.Refresh();
+        //test .bak file with complicated data structure
+        // =============================================
+        traceHeader("create, update and release complicated data structure");
+        var parent2 = createParent("p2", isStoring: true);
+        var parent3 = createParent("p3", isStoring: true);
+        var parentN2 = createParentN("pN2", isStoring: true);
+        var parentR2 = createParentR("pR2", isStoring: true);
+        var parentNR2 = createParentNR("pRN2", isStoring: true);
+        var child2 = createChild("c2", parent2, null, parentR2, parentNR2, isStoring: true);
+        child2.Update("c2.0", (TP)parent2, null);
+        parent2.Update("p2.0");
+        parent3.Update("p3.0");
+        parentN2.Update("pN2.0");
+        parentR2.Update("pR2.0");
+        parentNR2.Update("pRN2.0");
+        child2.Update("c2.0", (TP)parent3, (TPN)parentN2);
+        child2.Release();
+        parent2.Release();
+        parent3.Release();
+        parentN2.Release();
+        parentR2.Release();
+        parentNR2.Release();
+        assertDataDisposeDCRecreateDCassertData("p1:;c0.3|pN0|pN1|pR0:;c0.3|pNR0:;c0.3|c0.3:p1,pR0,pNR0|");
 
       } finally {
         DC.DisposeData();

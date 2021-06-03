@@ -81,6 +81,7 @@ namespace StorageLib {
     Func<TItemCSV, bool>? verify;
     Action<TItemCSV, CsvReader>? update;
     Action<TItemCSV, CsvWriter>? write;
+    Action<TItemCSV>? disconnect;
 
     readonly bool isInitialReading;
     FileStream? fileStream;
@@ -103,6 +104,7 @@ namespace StorageLib {
     /// <param name="verify">Verifies item, for example it parent(s) exist</param>
     /// <param name="update">Updates an item if an line with updates is read</param>
     /// <param name="write">Writes item to CSV file</param>
+    /// <param name="disconnect">Disconnects item from parents, data context dictionaries, etc.</param>
     /// <param name="rollbackItemNew">Undo of data change in item during transaction due to item constructor()</param>
     /// <param name="rollbackItemStore">Undo of data change in item during transaction due to item.Store()</param>
     /// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to item.Update()</param>
@@ -124,6 +126,7 @@ namespace StorageLib {
       Func<TItemCSV, bool>? verify,
       Action<TItemCSV, CsvReader>? update,
       Action<TItemCSV, CsvWriter> write,
+      Action<TItemCSV> disconnect,
       Action<IStorageItem> rollbackItemNew,
       Action<IStorageItem> rollbackItemStore,
       Action</*old*/IStorageItem, /*new*/IStorageItem>? rollbackItemUpdate,
@@ -142,6 +145,7 @@ namespace StorageLib {
       this.verify = verify;
       this.update= update;
       this.write = write;
+      this.disconnect = disconnect;
 
       PathFileName = Csv.ToPathFileName(csvConfig, typeof(TItemCSV).Name);
       fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, csvConfig.BufferSize, FileOptions.SequentialScan);
@@ -209,6 +213,7 @@ namespace StorageLib {
         verify = null;
         update = null;
         write = null;
+        disconnect = null;
       }
 
       base.Dispose(disposing);
@@ -254,10 +259,12 @@ namespace StorageLib {
           } else if (firstLineChar==CsvConfig.LineCharDelete) {
             //delete
             int key = csvReader.ReadInt();
+            var item = this[key];
             csvReader.SkipToEndOfLine();
             if (!Remove(key)) {
               errorStringBuilder.AppendLine($"Deletion Line with key '{key}' did not exist in StorageDictonary.");
             }
+            disconnect!(item);
           } else if (firstLineChar==CsvConfig.LineCharUpdate) {
             //update
             var key = csvReader.ReadInt();

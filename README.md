@@ -1,6 +1,6 @@
 # Introduction
 *StorageLib* is a single user C# only library for lightening fast object oriented data storage in RAM and 
-long term storage on a local harddisk. No database required.
+long term storage on a local hard disk. No database required.
 
 **Main features**
 * object oriented data storage in RAM using collections like List, Dictionary and SortedList 
@@ -22,7 +22,7 @@ for parent child relationships
 Using a database for single user applications just to store data permanently is overkill, adds 
 a lot of unnecessary complexity and slows down the program execution.
 
-Nowadays PC have lots of RAM. For many single user applications is it possible to keep all the 
+Nowadays PC have lots of RAM. For many single user applications it is possible to keep all the 
 data in RAM and to do queries using Linq, which leads to much faster programs than interfacing 
 with a "slow" database. Also the mismatch between data types in DotNet and databases
 can be avoided.
@@ -57,7 +57,7 @@ The *StorageLib* solution has 4 parts:
 
 ### Get Started Example Projects for first time user
 The projects with 'GetStarted' in its name show a new user how to create his own *Data Model* 
-and application cosuming the data.
+and application consuming the data.
 
 **GetStartedDataModel:** A very simple *Data Model* explaining how to get started  
 **GetStartedContext:** Contains the data classes created based on *GetStartedDataModel*  
@@ -69,7 +69,7 @@ To save storage space, git ignores all autocreated files. Once you run
 *GetStartedConsole*.
 
 ### Samples for all Data Model functionality
-The projects with 'Sample' in its name provides an sample code for every *Data Model* 
+The projects with 'Sample' in its name provides a sample code for every *Data Model* 
 functionality supported by *StorageLib*.
 
 **SampleDataModel:** Contains one class for each *Data Model* feature  

@@ -22,6 +22,7 @@ namespace StorageTest {
 
 
     CsvConfig? csvConfig;
+    BakCsvFileSwapper? bakCsvFileSwapper;
 
 
     [TestMethod]
@@ -30,8 +31,14 @@ namespace StorageTest {
 
       for (int configurationIndex = 0; configurationIndex < 2; configurationIndex++) {
         switch (configurationIndex) {
-        case 0: csvConfig = null; break;
-        case 1: csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException); break;
+        case 0: 
+          csvConfig = null;
+          bakCsvFileSwapper = null;
+          break;
+        case 1: 
+          csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
+          bakCsvFileSwapper = new BakCsvFileSwapper(csvConfig);
+          break;
         }
         try {
           directoryInfo.Refresh();
@@ -233,6 +240,13 @@ namespace StorageTest {
       if (csvConfig is null) return;
 
       DC.DisposeData();
+      if (bakCsvFileSwapper!.UseBackupFiles()) {
+        initDL();
+        assertDL();
+        DC.DisposeData();
+        bakCsvFileSwapper.SwapBack();
+      }
+
       initDL();
       assertDL();
     }
