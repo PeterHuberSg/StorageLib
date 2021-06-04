@@ -324,6 +324,10 @@ namespace StorageLib {
 
     internal void WriteClassFile(StreamWriter sw, string nameSpace, bool isFullyCommented) {
       var cs /*CommentString*/= isFullyCommented ? "//" : "";
+      if (!isFullyCommented) {
+        sw.WriteLine("#pragma warning disable CA1822 // Mark members as static");
+        sw.WriteLine("#pragma warning disable IDE0060 // Remove unused parameter");
+      }
       sw.WriteLine("using System;");
       sw.WriteLine("using System.Collections.Generic;");
       sw.WriteLine("using StorageLib;");
@@ -377,8 +381,6 @@ namespace StorageLib {
       sw.WriteLine("    /// </summary>");
       sw.WriteLine($"    {cs}partial void onCsvConstruct() {{");
       sw.WriteLine($"    {cs}}}");
-      sw.WriteLine();
-      sw.WriteLine();
       sw.WriteLine("    #endregion");
       sw.WriteLine();
       sw.WriteLine();
@@ -444,6 +446,13 @@ namespace StorageLib {
         sw.WriteLine($"    /// Called after {ClassName}.Release() got executed");
         sw.WriteLine("    /// </summary>");
         sw.WriteLine($"    {cs}partial void onReleased() {{");
+        sw.WriteLine($"    {cs}}}");
+        sw.WriteLine();
+        sw.WriteLine();
+        sw.WriteLine("    /// <summary>");
+        sw.WriteLine($"    /// Called after {ClassName}.Disconnect() got executed");
+        sw.WriteLine("    /// </summary>");
+        sw.WriteLine($"    {cs}partial void onDisconnected() {{");
         sw.WriteLine($"    {cs}}}");
         sw.WriteLine();
         sw.WriteLine();
@@ -956,14 +965,14 @@ namespace StorageLib {
         sw.WriteLine("    }");
         sw.WriteLine();
         sw.WriteLine();
-        sw.WriteLine("    /// <summary>");
-        sw.WriteLine($"    /// Disconnecting {ClassName} from parents and data contaxt dictionaries is not supported.");
-        sw.WriteLine("    /// </summary>");
-        sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
-        sw.WriteLine("      throw new NotSupportedException(\"Disconnect() is not supported, StorageClass attribute AreInstancesReleasable is false.\");");
-        sw.WriteLine("    }");
-        sw.WriteLine();
-        sw.WriteLine();
+        //sw.WriteLine("    /// <summary>");
+        //sw.WriteLine($"    /// Disconnecting {ClassName} from parents and data contaxt dictionaries is not supported.");
+        //sw.WriteLine("    /// </summary>");
+        //sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
+        //sw.WriteLine("      throw new NotSupportedException(\"Disconnect() is not supported, StorageClass attribute AreInstancesReleasable is false.\");");
+        //sw.WriteLine("    }");
+        //sw.WriteLine();
+        //sw.WriteLine();
       }
 
       writeTransactionSupport(sw, context, isTracing);
@@ -986,10 +995,11 @@ namespace StorageLib {
       //sw.WriteLine();
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// Adds {ClassName} to {context}.Data.{PluralName}.<br/>");
-      sw.WriteLine($"    /// Throws an Exception when {ClassName} is already stored.");
+      sw.WriteLine($"    /// Throws an Exception when {ClassName} is already stored.<br/>");
+      sw.WriteLine($"    /// Returns true unless onStoring() cancels storing.");
       sw.WriteLine("    /// </summary>");
-      sw.WriteLine("    public void Store() {");
-      //sw.WriteLine("      if (isStoreExecuting) return; // Store() called parent.Store() which calls Store() again");
+      sw.WriteLine("    public bool Store() {");
+      //sw.WriteLine("      if (isStoreExecuting) return true; // Store() called parent.Store() which calls Store() again");
       //sw.WriteLine();
       sw.WriteLine("      if (Key>=0) {");
       sw.WriteLine($"        throw new Exception($\"{ClassName} cannot be stored again in {context}.Data, " +
@@ -1000,7 +1010,7 @@ namespace StorageLib {
       //sw.WriteLine("        isStoreExecuting = true;");
       sw.WriteLine("      var isCancelled = false;");
       sw.WriteLine("      onStoring(ref isCancelled);");
-      sw.WriteLine("      if (isCancelled) return;");
+      sw.WriteLine("      if (isCancelled) return false;");
       sw.WriteLine();
       //Compiler.WriteLinesTracing(sw, isTracing,
       //             $"      {context}.Trace?.Invoke($\"storing {ClassName} #{{GetHashCode()}}\");");
@@ -1033,6 +1043,7 @@ namespace StorageLib {
       //sw.WriteLine("      } finally {");
       //sw.WriteLine("        isStoreExecuting = false;");
       //sw.WriteLine("      }");
+      sw.WriteLine("      return true;");
       sw.WriteLine("    }");
       sw.WriteLine("    partial void onStoring(ref bool isCancelled);");
       sw.WriteLine("    partial void onStored();");
@@ -1079,7 +1090,6 @@ namespace StorageLib {
           sw.WriteLine($"      csvWriter.{mi.CsvWriterWrite}({LowerClassName}.{mi.MemberName});");
         }
       }
-      //Todo: ClassInfo: change methods like onCsvWrite to onCsvWriting and onCsvWriten, add them also to methods like internal void RemoveParentNullable
       sw.WriteLine("    }");
       sw.WriteLine("    partial void onCsvWrite();");
       sw.WriteLine();
@@ -1089,9 +1099,10 @@ namespace StorageLib {
 
     private void writeUpdate(StreamWriter sw, string context, List<string> lines, TracingEnum isTracing) {
       sw.WriteLine("    /// <summary>");
-      sw.WriteLine($"    /// Updates {ClassName} with the provided values");
+      sw.WriteLine($"    /// Updates {ClassName} with the provided values.<br/>");
+      sw.WriteLine($"    /// Returns true unless onUpdating() cancels updating.");
       sw.WriteLine("    /// </summary>");
-      sw.Write("    public void Update(");
+      sw.Write("    public bool Update(");
       if (!writeParameters(sw, lines, isConstructor: false)) {
         throw new GeneratorException($"Method '{ClassName}.Update()': has no parameters. Are all properties readonly ?" +
           " Then add attribute [StorageClass(areInstancesUpdatable: false] and remove readonly from the properties.");
@@ -1124,7 +1135,7 @@ namespace StorageLib {
         throw new GeneratorException($"Method '{ClassName}.onUpdating()': has no parameters. Are all properties readonly ?" +
           " Then add attribute [StorageClass(areInstancesUpdatable: false] and remove readonly from the properties.");
       }
-      sw.WriteLine("      if (isCancelled) return;");
+      sw.WriteLine("      if (isCancelled) return false;");
       sw.WriteLine();
 
       Compiler.WriteLinesTracing(sw, isTracing,
@@ -1210,6 +1221,7 @@ namespace StorageLib {
       sw.WriteLine("      }");
       Compiler.WriteLinesTracing(sw, isTracing,
                    $"      {context}.Trace?.Invoke($\"Updated {ClassName}: {{ToTraceString()}}\");");
+      sw.WriteLine("    return true;");
       sw.WriteLine("    }");
       sw.Write("    partial void onUpdating(");
       if (!writeOnUpdateParameters(sw, updateTypeEnum.Definition)) {

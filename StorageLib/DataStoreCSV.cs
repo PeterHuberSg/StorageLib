@@ -72,6 +72,15 @@ namespace StorageLib {
     /// Delay in millisecond before flush gets executed after the last write
     /// </summary>
     public readonly int FlushDelay;
+
+
+    /// <summary>
+    /// While DataStoreCSV gets disposed, the present .csv file, which might contain update and deletion instructions
+    /// gets renamed as .bak file and a new, compacter .csv file gets written which contains only create instructions.
+    /// If dispose is not executed properly, DataStoreCSV reads the .csv file with update and deletion instructions and
+    /// sets IsReadFromBakFile.
+    /// </summary>
+    public bool IsReadFromBakFile { get; private set; }
     #endregion
 
     #region Constructor
@@ -126,7 +135,7 @@ namespace StorageLib {
       Func<TItemCSV, bool>? verify,
       Action<TItemCSV, CsvReader>? update,
       Action<TItemCSV, CsvWriter> write,
-      Action<TItemCSV> disconnect,
+      Action<TItemCSV>? disconnect,
       Action<IStorageItem> rollbackItemNew,
       Action<IStorageItem> rollbackItemStore,
       Action</*old*/IStorageItem, /*new*/IStorageItem>? rollbackItemUpdate,
@@ -246,18 +255,14 @@ namespace StorageLib {
         if (IsReadOnly) {
           addItem(csvReader, errorStringBuilder);
         } else {
+
           var firstLineChar = csvReader.ReadFirstLineChar();
           if (firstLineChar==CsvConfig.LineCharAdd) {
             addItem(csvReader, errorStringBuilder);
 
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //Todo: improve DataStoreCSV.readFromCsvFile()
-            //actually, there should never be the case where deletion or updates get read, since all
-            //CSV files get now compacted on Dispose. Need to detect the case here when the Dispose()
-            //did not work properly
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           } else if (firstLineChar==CsvConfig.LineCharDelete) {
             //delete
+            IsReadFromBakFile = true;
             int key = csvReader.ReadInt();
             var item = this[key];
             csvReader.SkipToEndOfLine();
@@ -265,12 +270,15 @@ namespace StorageLib {
               errorStringBuilder.AppendLine($"Deletion Line with key '{key}' did not exist in StorageDictonary.");
             }
             disconnect!(item);
+
           } else if (firstLineChar==CsvConfig.LineCharUpdate) {
             //update
+            IsReadFromBakFile = true;
             var key = csvReader.ReadInt();
             var item = this[key];
             update!(item, csvReader);
             csvReader.ReadEndOfLine();
+
           } else {
             throw new Exception($"Error reading file {csvReader.FileName}{Environment.NewLine}" +
               $"First character should be '{CsvConfig.LineCharAdd}', '{CsvConfig.LineCharDelete}'or " +

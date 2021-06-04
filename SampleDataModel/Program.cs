@@ -39,11 +39,25 @@ namespace StorageModel {
       //path of the VS project where the created code should be generated
       var targetDirectoryPath = solutionDirectory.FullName + @"\SampleDataContext"; //<== Enter here the name of your data contect project
 
+      #region normally not needed code ---------------------------------------------------------------
+      //normally, do not delete all files in targetDirectory, because manual changes in Xxx.CS files would get lost.
+      //We can do it here, because there are no changes in Xxx.CS files, but the model might have changed and some
+      //Xxx classes are no longer needed. To get rid of those, we just delete here all files.
+      var targetDirectory = new DirectoryInfo(targetDirectoryPath);
+      foreach (FileInfo file in targetDirectory.GetFiles()) {
+        if (file.Extension.ToLowerInvariant()==".cs" && !file.Name.StartsWith('_')) {
+          file.Delete();
+        }
+      }
+      #endregion -------------------------------------------------------------------------------------
+
 #pragma warning disable CA1806 // Do not ignore method results
       new StorageClassGenerator(
         sourceDirectoryString: sourceDirectory.FullName,
         targetDirectoryString: targetDirectoryPath,
-        context: "DC"); //<== class name of data context, which gives static access to all data stored.
+        context: "DC", //<== class name of data context, which gives static access to all data stored.
+        isTracing: TracingEnum.noTracing,
+        isFullyCommented: false);
 #pragma warning restore CA1806
     }
   }

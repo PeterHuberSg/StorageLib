@@ -793,7 +793,11 @@ namespace StorageLib {
           sw.WriteLine($"          null,");
         }
         sw.WriteLine($"          {classInfo.ClassName}.Write,");
-        sw.WriteLine($"          {classInfo.ClassName}.Disconnect,");
+        if (classInfo.AreInstancesReleasable) {
+          sw.WriteLine($"          {classInfo.ClassName}.Disconnect,");
+        } else {
+          sw.WriteLine($"          null,");
+        }
         sw.WriteLine($"          {classInfo.ClassName}.RollbackItemNew,");
         sw.WriteLine($"          {classInfo.ClassName}.RollbackItemStore,");
         if (classInfo.AreInstancesUpdatable) {

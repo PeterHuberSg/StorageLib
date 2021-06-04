@@ -16,7 +16,7 @@ namespace TestContext {
    public interface ILookupParent: IStorageItem{
     string Text { get; }
 
-    void Update(string text);
+    bool Update(string text);
   }
 
 
@@ -29,7 +29,7 @@ namespace TestContext {
     string Text { get; }
     TChild Child { get; }
 
-    void Update(string text);
+    bool Update(string text);
   }
 
 
@@ -46,7 +46,7 @@ namespace TestContext {
     int CountStoredChildren { get; }
     IEnumerable<TChild> GetStoredChildren { get; }
     TChild? AllChildrenFirst { get; }
-    void Update(string text);
+    bool Update(string text);
 
     void Release();
   }
@@ -64,7 +64,7 @@ namespace TestContext {
     TParentR ParentR { get; }
     TParentNR? ParentNR { get; }
 
-    void Update(string text, TParent parent, TParentN? parentN);
+    bool Update(string text, TParent parent, TParentN? parentN);
 
     void Release();
   }

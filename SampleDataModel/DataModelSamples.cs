@@ -80,6 +80,7 @@ namespace DataModelSamples {
   }
   #endregion
 
+
   #region Readonly property
   //      -----------------
 

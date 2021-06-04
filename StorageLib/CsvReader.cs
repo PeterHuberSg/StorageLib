@@ -95,10 +95,11 @@ namespace StorageLib {
       if (string.IsNullOrEmpty(fileName) && existingFileStream==null)
         throw new Exception("CsvReader constructor: There was neither an existingFileStream nor a fileName provided.");
 
-      if (existingFileStream!=null) {
-        FileName = existingFileStream.Name;
-      } else {
+      if (existingFileStream is null) {
+        if (string.IsNullOrEmpty(fileName)) throw new Exception("CsvReader constructor: File name is missing.");
         FileName = fileName!;
+      } else {
+        FileName = existingFileStream.Name;
       }
       CsvConfig = csvConfig;
       if (csvConfig.Encoding!=Encoding.UTF8)
@@ -115,15 +116,11 @@ namespace StorageLib {
       EstimatedLineLenght = estimatedLineLenght;
       if (existingFileStream is null) {
         isFileStreamOwner = true;
-        if (string.IsNullOrEmpty(fileName)) throw new Exception("CsvReader constructor: File name is missing.");
-        //Todo: CsvReader constructor: FileName = fileName; is executed twice => simplify code
-        FileName = fileName;
         fileStream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.None, CsvConfig.BufferSize, 
           FileOptions.SequentialScan);
       } else {
         isFileStreamOwner = false;
         fileStream = existingFileStream;
-        FileName = fileStream.Name;
       }
       byteArray = new byte[CsvConfig.BufferSize + MaxLineByteLenght];
       readIndex = 0;
