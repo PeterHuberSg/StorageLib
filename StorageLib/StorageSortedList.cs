@@ -15,19 +15,10 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+
 
 namespace StorageLib {
-  /// <summary>
-  /// StorageDictionary is a replacement for Dictionary used by parent classes with releasable children. A stored parent might
-  /// have stored and not stored children. Enumerating StorageDictionary shows all children as KeyValuePair<TKey, TValue>. 
-  /// GetAllItems() enumerates all children and GetStoredItems() enumerates all stored children. Count() counts all children, 
-  /// while CountStoredItems() counts all stored children. 
-  /// </summary>
-
-
   /// <summary>
   /// StorageSortedList is a replacement for StoredList used by parent classes with releasable children. A stored parent might
   /// have stored and not stored children. Enumerating StorageStoredList shows all children as KeyValuePair<TKey, TValue>. 

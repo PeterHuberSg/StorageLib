@@ -95,31 +95,31 @@ namespace StorageLib {
     #endregion
 
 
-    #region Date
-    //      ----
+    //#region Date
+    ////      ----
 
-    /// <summary>
-    /// Converts a DateTime to a string with only the date and no leading zeros for day and month
-    /// </summary>
-    public static string ToCompactDateString(this DateTime date) {
-      string returnString = date.Date.ToString(CsvConfig.DateFormat);
-      if (returnString[3]=='0') returnString = returnString.Substring(0, 3) + returnString[4..];
+    ///// <summary>
+    ///// Converts a DateTime to a string with only the date and no leading zeros for day and month
+    ///// </summary>
+    //public static string ToCompactDateString(this DateTime date) {
+    //  string returnString = date.Date.ToString(CsvConfig.DateFormat);
+    //  if (returnString[3]=='0') returnString = returnString.Substring(0, 3) + returnString[4..];
 
-      if (returnString[0]=='0') returnString = returnString[1..];
+    //  if (returnString[0]=='0') returnString = returnString[1..];
 
-      return returnString;
-    }
+    //  return returnString;
+    //}
 
 
-    /// <summary>
-    /// Converts a DateTime to a string with only the date and no leading zeros for day and month. A null value becomes an
-    /// empty string.
-    /// </summary>
-    public static string ToCompactDateString(this DateTime? date) {
-      if (!date.HasValue) return "";
+    ///// <summary>
+    ///// Converts a DateTime to a string with only the date and no leading zeros for day and month. A null value becomes an
+    ///// empty string.
+    ///// </summary>
+    //public static string ToCompactDateString(this DateTime? date) {
+    //  if (!date.HasValue) return "";
 
-      return date.Value.ToCompactDateString();
-    }
-    #endregion
+    //  return date.Value.ToCompactDateString();
+    //}
+    //#endregion
   }
 }

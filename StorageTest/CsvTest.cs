@@ -51,19 +51,19 @@ namespace StorageTest {
       assertDecimalNullFailed(Decimal.MinValue.ToString()+"1");
       assertDecimalNullFailed(Decimal.MaxValue.ToString()+"1");
 
-      assertDate(DateTime.MinValue);
-      assertDate(DateTime.Now.Date);
-      assertDate(DateTime.MaxValue.Date.AddHours(23));
-      assertDateFailed("");
-      assertDateFailed(DateTime.MinValue.ToString()+"1");
-      assertDateFailed(DateTime.MaxValue.ToString()+"1");
+      //assertDate(DateTime.MinValue);
+      //assertDate(DateTime.Now.Date);
+      //assertDate(DateTime.MaxValue.Date.AddHours(23));
+      //assertDateFailed("");
+      //assertDateFailed(DateTime.MinValue.ToString()+"1");
+      //assertDateFailed(DateTime.MaxValue.ToString()+"1");
 
-      assertDateNull(null);
-      assertDateNull(DateTime.MinValue);
-      assertDateNull(DateTime.Now.Date);
-      assertDateNull(DateTime.MaxValue.Date.AddHours(23));
-      assertDateNullFailed(DateTime.MinValue.ToString()+"1");
-      assertDateNullFailed(DateTime.MaxValue.ToString()+"1");
+      //assertDateNull(null);
+      //assertDateNull(DateTime.MinValue);
+      //assertDateNull(DateTime.Now.Date);
+      //assertDateNull(DateTime.MaxValue.Date.AddHours(23));
+      //assertDateNullFailed(DateTime.MinValue.ToString()+"1");
+      //assertDateNullFailed(DateTime.MaxValue.ToString()+"1");
     }
 
 
@@ -131,39 +131,39 @@ namespace StorageTest {
     }
 
 
-    private void assertDate(DateTime i) {
-      var field = i.ToCompactDateString();
-      var errorStringBuilder = new StringBuilder();
-      var i2 = Csv.ParseDateTime("Test", field, field, errorStringBuilder);
-      Assert.AreEqual(i.Date, i2);
-      Assert.AreEqual(0, errorStringBuilder.Length);
-    }
+    //private void assertDate(DateTime i) {
+    //  var field = i.ToCompactDateString();
+    //  var errorStringBuilder = new StringBuilder();
+    //  var i2 = Csv.ParseDateTime("Test", field, field, errorStringBuilder);
+    //  Assert.AreEqual(i.Date, i2);
+    //  Assert.AreEqual(0, errorStringBuilder.Length);
+    //}
 
 
-    private void assertDateFailed(string field) {
-      var errorStringBuilder = new StringBuilder();
-      Csv.ParseDateTime("Test", field, field, errorStringBuilder);
-      Assert.AreNotEqual(0, errorStringBuilder.Length);
-    }
+    //private void assertDateFailed(string field) {
+    //  var errorStringBuilder = new StringBuilder();
+    //  Csv.ParseDateTime("Test", field, field, errorStringBuilder);
+    //  Assert.AreNotEqual(0, errorStringBuilder.Length);
+    //}
 
 
-    private void assertDateNull(DateTime? i) {
-      var field = i.ToCompactDateString();
-      var errorStringBuilder = new StringBuilder();
-      var i2 = Csv.ParseDateTimeNull("Test", field, field, errorStringBuilder);
-      Assert.AreEqual(0, errorStringBuilder.Length);
-      Assert.AreEqual(i.HasValue, i2.HasValue);
-      if (!i.HasValue) return;
+    //private void assertDateNull(DateTime? i) {
+    //  var field = i.ToCompactDateString();
+    //  var errorStringBuilder = new StringBuilder();
+    //  var i2 = Csv.ParseDateTimeNull("Test", field, field, errorStringBuilder);
+    //  Assert.AreEqual(0, errorStringBuilder.Length);
+    //  Assert.AreEqual(i.HasValue, i2.HasValue);
+    //  if (!i.HasValue) return;
 
-      Assert.AreEqual(i.Value.Date, i2);
-    }
+    //  Assert.AreEqual(i.Value.Date, i2);
+    //}
 
 
-    private void assertDateNullFailed(string field) {
-      var errorStringBuilder = new StringBuilder();
-      Csv.ParseDateTimeNull("Test", field, field, errorStringBuilder);
-      Assert.AreNotEqual(0, errorStringBuilder.Length);
-    }
+    //private void assertDateNullFailed(string field) {
+    //  var errorStringBuilder = new StringBuilder();
+    //  Csv.ParseDateTimeNull("Test", field, field, errorStringBuilder);
+    //  Assert.AreNotEqual(0, errorStringBuilder.Length);
+    //}
 
     #region Test Equality
     //      -------------
