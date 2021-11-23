@@ -38,7 +38,9 @@ namespace StorageTest {
       var now_7 = DateTime.Now.Date.AddDays(-7);
 
       Assert.IsNull(sortedListClass.GetEqualGreater(now));
+      Assert.IsNull(sortedListClass.GetEqualGreaterKVP(now));
       Assert.ThrowsException<Exception>(() => sortedListStruct.GetEqualGreater(now));
+      Assert.ThrowsException<Exception>(() => sortedListStruct.GetEqualGreaterKVP(now));
 
       add(now, 0);
       assertGetEqualGreater(now, 0);
@@ -101,6 +103,8 @@ namespace StorageTest {
     private void assertGetEqualGreater(DateTime key, int value) {
       Assert.AreEqual(value, sortedListClass.GetEqualGreater(key)!.Value);
       Assert.AreEqual(value, sortedListStruct.GetEqualGreater(key));
+      Assert.AreEqual(value, sortedListClass.GetEqualGreaterKVP(key)!.Value.Value.Value);
+      Assert.AreEqual(value, sortedListStruct.GetEqualGreaterKVP(key)!.Value.Value);
     }
 
 
