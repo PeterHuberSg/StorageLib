@@ -92,6 +92,22 @@ To save storage space, git ignores all autocreated files. Once you run
 *StorageTest*.
 
 
+# Performance
+I was curious if StorageLib is faster than a solution using a database, so I 
+wrote a performance test, comparing StorageLib to SQLite. It seems that 
+StorageLib is 30 to 40 times faster querying data than SQLite. This is not 
+surprising, because StorageLib stores all data in RAM as C# collections, while 
+SQLite might need to access the disk if some data is missing in RAM.
+
+Compared to SQLite, StorageLib is 2 to 5 times faster inserting, updating and 
+deleting data.
+
+I put the performance test in its own github repository, because I didn't want 
+any SQLite dependencies in StorageLib:
+
+[github.com/PeterHuberSg/StorageLibBenchmark](https://github.com/PeterHuberSg/StorageLibBenchmark)
+
+
 # Getting started
 For your own project, you just need to include the *StorageClassGenerator* and 
 *StorageLib* projects. For more details, see [Setup.md](Setup.md).
