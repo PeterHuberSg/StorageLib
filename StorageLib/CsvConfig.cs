@@ -100,6 +100,12 @@ namespace StorageLib {
     /// Character used at the start of a line in a CSV file to mark a deleted item.
     /// </summary>
     public readonly char LineCharDelete;
+
+
+    /// <summary>
+    /// An application using StorageLib can store here its own configuration parameters
+    /// </summary>
+    public readonly object? ApplicationParameters;
     #endregion
 
 
@@ -121,6 +127,7 @@ namespace StorageLib {
     /// <param name="lineCharAdd">Character used at the start of a line in a CSV file to mark adding a new item.</param>
     /// <param name="lineCharUpdate">Character used at the start of a line in a CSV file to mark an updated item.</param>
     /// <param name="lineCharDelete">Character used at the start of a line in a CSV file to mark a deleted item.</param>
+    /// <param name="applicationParameters">Application specific configuration parameters</param>
     public CsvConfig(
       string directoryPath,
       string? backupPath = null,
@@ -132,7 +139,8 @@ namespace StorageLib {
       Action<Exception>? reportException = null,
       char lineCharAdd = '+',
       char lineCharUpdate = '*',
-      char lineCharDelete = '-') 
+      char lineCharDelete = '-',
+      object? applicationParameters = null) 
     {
       DirectoryPath = directoryPath;
       BackupPath = backupPath;
@@ -152,6 +160,7 @@ namespace StorageLib {
       LineCharAdd = lineCharAdd;
       LineCharUpdate = lineCharUpdate;
       LineCharDelete = lineCharDelete;
+      ApplicationParameters = applicationParameters;
     }
     #endregion
 
