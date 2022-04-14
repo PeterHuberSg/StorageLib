@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StorageClassGenerator\StorageClassGenerator.csproj" />
+    <ProjectReference Include="..\StorageLib\StorageLib.csproj" />
   </ItemGroup>
 
 </Project>

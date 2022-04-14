@@ -103,6 +103,7 @@ namespace StorageLib {
       string? toLower,
       bool needsDictionary,
       string? childKeyPropertyName,
+      string? childKey2PropertyName,
       bool isReadOnly) 
     {
       var isLookUp = false;
@@ -154,7 +155,11 @@ namespace StorageLib {
         }
         if (childKeyPropertyName is not null) {
           throw new GeneratorException($"{ClassName}.{name} is a lower case copy of property {toLower}. It cannot have a " +
-            "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories and SortedLists:" + Environment.NewLine + memberText);
+            "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+        }
+        if (childKey2PropertyName is not null) {
+          throw new GeneratorException($"{ClassName}.{name} is a lower case copy of property {toLower}. It cannot have a " +
+            "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
         }
         member = new MemberInfo(memberText, name, this, toLower, isNullable, propertyComment, needsDictionary);
 
@@ -169,7 +174,11 @@ namespace StorageLib {
         //illegal toLower combinations are handled already
         if (childKeyPropertyName is not null) {
           throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
-            "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories and SortedLists:" + Environment.NewLine + memberText);
+            "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+        }
+        if (childKey2PropertyName is not null) {
+          throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
+            "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
         }
         member = new MemberInfo(memberText, name, csvTypeString, memberType, this, isNullable, isReadOnly, propertyComment,
           defaultValue, needsDictionary);
@@ -205,7 +214,12 @@ namespace StorageLib {
 
             if (childKeyPropertyName is not null) {
               throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
-                "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories and SortedLists:" + Environment.NewLine + memberText);
+                "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+            }
+
+            if (childKey2PropertyName is not null) {
+              throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
+                "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
             }
 
             member = new MemberInfo(999, memberText, name, this, csvTypeString, csvTypeString[5..^1], propertyComment);
@@ -258,9 +272,52 @@ namespace StorageLib {
               keyTypeString,
               propertyComment);
 
+          } else if (csvTypeString.StartsWith("SortedBucketCollection<") && csvTypeString.EndsWith(">")) {
+            //SortedBucketCollection
+            //----------------------
+            // csvTypeString: SortedBucketCollection<DateTime, int, Sample>
+            if (isNullable) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} cannot be nullable:" +
+              Environment.NewLine + memberText);
+
+            var openBracketPos = csvTypeString.IndexOf('<');
+            if (openBracketPos<0) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} " +
+              "Opening '<' is missing:" +
+              Environment.NewLine + memberText);
+            var closingBracketPos = csvTypeString.IndexOf('>');
+            if (closingBracketPos<0) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} " +
+              "Closing '>' is missing:" +
+              Environment.NewLine + memberText);
+            var coma1Pos = csvTypeString.IndexOf(',', openBracketPos+1);
+            if (coma1Pos<0) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} " +
+              "',' is missing:" +
+              Environment.NewLine + memberText);
+            var coma2Pos = csvTypeString.IndexOf(',',  coma1Pos+1);
+            if (coma2Pos<0) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} " +
+              "second',' is missing:" +
+              Environment.NewLine + memberText);
+            if (closingBracketPos<coma2Pos) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} " +
+              "2 comas ',' should come before '>':" +
+              Environment.NewLine + memberText);
+            var key1TypeString = csvTypeString[(openBracketPos+1)..coma1Pos].Trim();
+            var key2TypeString = csvTypeString[(coma1Pos+1)..coma2Pos].Trim();
+            var itemTypeName = csvTypeString[(coma2Pos+1)..(closingBracketPos)].Trim();
+
+            memberType = MemberTypeEnum.ParentMultipleChildrenSortedBucket;
+            member = new MemberInfo(
+              memberText,
+              name,
+              this,
+              csvTypeString,
+              memberType,
+              itemTypeName,
+              childKeyPropertyName,
+              childKey2PropertyName,
+              key1TypeString,
+              key2TypeString,
+              propertyComment);
           } else {
             throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} not support. Should " +
-              "it be a List<>, SortedList<,> or Dictionary<,> ?" +
+              "it be a List<>, SortedList<,>, Dictionary<,> or SortedBucketCollection<,,> ?" +
               Environment.NewLine + memberText);
           }
         } else if (isParentOneChild) {
@@ -284,7 +341,11 @@ namespace StorageLib {
           //illegal toLower, needsDictionary combinations are handled already
           if (childKeyPropertyName is not null) {
             throw new GeneratorException($"{ClassName}.{name} is a parent linking to a {csvTypeString} child. It cannot have a " +
-              "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories and SortedLists:" + Environment.NewLine + memberText);
+              "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+          }
+          if (childKey2PropertyName is not null) {
+            throw new GeneratorException($"{ClassName}.{name} is a parent linking to a {csvTypeString} child. It cannot have a " +
+              "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
           }
           member = new MemberInfo(memberText, name, this, csvTypeString, propertyComment);
         } else {
@@ -299,7 +360,11 @@ namespace StorageLib {
           //illegal toLower, needsDictionary, isParentOneChild combinations are handled already
           if (childKeyPropertyName is not null) {
             throw new GeneratorException($"{ClassName}.{name} is a child linking to a {csvTypeString} parent. It cannot have a " +
-              "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories and SortedLists:" + Environment.NewLine + memberText);
+              "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+          }
+          if (childKey2PropertyName is not null) {
+            throw new GeneratorException($"{ClassName}.{name} is a child linking to a {csvTypeString} parent. It cannot have a " +
+              "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
           }
           member = new MemberInfo(memberText, name, this, csvTypeString, isNullable, isReadOnly, propertyComment, isLookupOnly??false);
           isLookUp = true;
@@ -507,7 +572,7 @@ namespace StorageLib {
             sw.WriteLine();
             sw.WriteLine();
           }
-        } else  if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //List, Dictionary or SortedList
+        } else  if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //List, Dictionary, SortedList or SortedBucketCollection
           sw.WriteLine("    /// <summary>");
           sw.WriteLine($"    /// Called after a {mi.LowerChildTypeName} gets added to {mi.MemberName}.");
           sw.WriteLine("    /// </summary>");
@@ -635,7 +700,7 @@ namespace StorageLib {
         lines.Add("\"Key\"");
       }
       foreach (var mi in Members.Values) {
-        if (mi.MemberType<MemberTypeEnum.ParentOneChild && //not List, Dictionary nor SortedList
+        if (mi.MemberType<MemberTypeEnum.ParentOneChild && //not List, Dictionary, SortedList nor SortedBucketCollection
           mi.MemberType!=MemberTypeEnum.ToLower) 
         {
           lines.Add($"\"{mi.MemberName}\"");
@@ -725,7 +790,7 @@ namespace StorageLib {
       sw.WriteLine("    //      ------------");
       sw.WriteLine();
       writePublicConstructor(sw, context, lines, isTracing);
-      writeCloningConsructor(sw);
+      writeCloningConstructor(sw);
       writeCsvConstructor(sw, context);
       writeVerify(sw, lines);
       sw.WriteLine("    #endregion");
@@ -763,12 +828,10 @@ namespace StorageLib {
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
           mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
-          //if (mi.ChildClassInfo!.AreInstancesReleasable) {
-          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          //} else {
-          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          //}
           sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
+        } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+          sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}(item => item.{mi.ChildKeyPropertyName}, item => " +
+            $"item.{mi.ChildKey2PropertyName});");
         } else {
           //LinkToParent, simple type or enum
           sw.WriteLine($"      {mi.MemberName} = {mi.LowerMemberName}{mi.Rounding};");
@@ -806,7 +869,7 @@ namespace StorageLib {
     }
 
 
-    private void writeCloningConsructor(StreamWriter sw) {
+    private void writeCloningConstructor(StreamWriter sw) {
       sw.WriteLine("    /// <summary>");
       sw.WriteLine("    /// Cloning constructor. It will copy all data from original except any collection (children).");
       sw.WriteLine("    /// </summary>");
@@ -848,15 +911,12 @@ namespace StorageLib {
             }
           }
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
-          mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
+          mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
         {
-          //if (mi.ChildClassInfo!.AreInstancesReleasable) {
-          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          //} else {
-          //  sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-          //}
           sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
-
+        } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+          sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}(item => item.{mi.ChildKeyPropertyName}, item => " +
+            $"item.{mi.ChildKey2PropertyName});");
         } else if (mi.MemberType==MemberTypeEnum.LinkToParent) {
           if (mi.IsNullable) {
             sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
@@ -1150,9 +1210,18 @@ namespace StorageLib {
           if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
             mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
           {
-            string keyName = mi.ParentMemberInfo.ChildKeyPropertyName!;
-            var lowerKeyName = keyName[0..1].ToLower() + keyName[1..];
-            sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName} || {keyName}!={lowerKeyName};");
+            sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName} || " +
+              $"{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
+          } else if(mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+            if (mi.ParentMemberInfo.ChildKey2PropertyName=="Key") {
+              //Key property will never be changed in Update(), only 2 compparisions needed
+              sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName} || " +
+                $"{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
+            } else {
+              sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName} || " +
+                $"{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName} || " +
+                $"{mi.ParentMemberInfo.ChildKey2PropertyName}!={mi.ParentMemberInfo.LowerChildKey2PropertyName};");
+            }
           } else {
             //parent has single child or list of children
             sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName};");
@@ -1366,9 +1435,18 @@ namespace StorageLib {
           if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
             mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
           {
-            string keyName = mi.ParentMemberInfo.ChildKeyPropertyName!;
-            var lowerKeyName = keyName[0..1].ToLower() + keyName[1..];
-            sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || {LowerClassName}.{keyName}!={lowerKeyName};");
+            sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || " +
+              $"{LowerClassName}.{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
+          } else if(mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+            if (mi.ParentMemberInfo.ChildKey2PropertyName=="Key") {
+              //Key property will never be changed in Update(), only 2 compparisions needed
+              sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || " +
+                $"{LowerClassName}.{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
+            } else {
+              sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || " +
+                $"{LowerClassName}.{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName} || " +
+                $"{LowerClassName}.{mi.ParentMemberInfo.ChildKey2PropertyName}!={mi.ParentMemberInfo.LowerChildKey2PropertyName};");
+            }
           } else {
             //parent has single child or list of children
             sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName};");
@@ -1594,7 +1672,7 @@ namespace StorageLib {
             sw.WriteLine();
 
           } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) {
-            //List, Dictionary or SortedList
+            //List, Dictionary, SortedList or SortedBucketCollection
             sw.WriteLine("    /// <summary>");
             sw.WriteLine($"    /// Add {mi.LowerChildTypeName} to {mi.MemberName}.");
             sw.WriteLine("    /// </summary>");
@@ -1604,14 +1682,20 @@ namespace StorageLib {
             sw.WriteLine($"      if (({mi.LowerChildTypeName}.Key>=0)&&(Key<0)) throw new Exception();");
             if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
               sw.WriteLine($"      if ({mi.LowerMemberName}.Contains({mi.LowerChildTypeName})) throw new Exception();");
-            } else {
+            } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+              sw.WriteLine($"      if ({mi.LowerMemberName}.Contains({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName}, " +
+                $"{mi.LowerChildTypeName}.{mi.ChildKey2PropertyName})) throw new Exception();");
+            } else {//Dictionary or SortedList
               sw.WriteLine($"      if ({mi.LowerMemberName}.ContainsKey({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName})) throw new Exception();");
             }
             sw.WriteLine($"#endif");
             if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
               sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName});");
+            } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+              sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName});");
             } else { //Dictionary or SortedList
-              sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName}, {mi.LowerChildTypeName});");
+              sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName}, " +
+                $"{mi.LowerChildTypeName});");
             }
             sw.WriteLine($"      onAddedTo{mi.MemberName}({mi.LowerChildTypeName});");
             Compiler.WriteLinesTracing(sw, isTracing,
@@ -1678,6 +1762,12 @@ namespace StorageLib {
                 sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
                 sw.WriteLine("#endif");
               }
+            } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+              sw.WriteLine("#if DEBUG");
+              sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
+              sw.WriteLine("#else");
+              sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
+              sw.WriteLine("#endif");
             } else { //Dictionary or SortedList
               sw.WriteLine("#if DEBUG");
               sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName})) throw new Exception();");
@@ -1720,7 +1810,9 @@ namespace StorageLib {
           sw.WriteLine("      }");
 
         } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //ParentMultipleChildren
-          if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
+          if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList || 
+            mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
+          {
             sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}) {{");
           } else {
             sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}.Values) {{");
@@ -1919,6 +2011,10 @@ namespace StorageLib {
             {
               sw.WriteLine($"      var has{mi.MemberName}Changed = oldItem.{mi.MemberName}!=item.{mi.MemberName} ||" +
                 $" oldItem.{parentMI.ChildKeyPropertyName}!=item.{parentMI.ChildKeyPropertyName};");
+            } else if(parentMI.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
+              sw.WriteLine($"      var has{mi.MemberName}Changed = oldItem.{mi.MemberName}!=item.{mi.MemberName} ||" +
+                $" oldItem.{parentMI.ChildKeyPropertyName}!=item.{parentMI.ChildKeyPropertyName} ||" +
+                $" oldItem.{parentMI.ChildKey2PropertyName}!=item.{parentMI.ChildKey2PropertyName};");
             } else {
               //List or parent with 1 child only
               sw.WriteLine($"      var has{mi.MemberName}Changed = oldItem.{mi.MemberName}!=item.{mi.MemberName};");
@@ -2072,7 +2168,7 @@ namespace StorageLib {
         if (mi.MemberType==MemberTypeEnum.ParentOneChild) {
           lines.Add($"        $\" {mi.MemberName}: {{{mi.MemberName}?.ToShortString()}}");
         } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) {
-          //list, directory or sortedList
+          //List, Directory, SortedList or SortedBucketCollection
           lines.Add($"        $\" {mi.MemberName}: {{{mi.MemberName}.Count}}");
           if (mi.ChildClassInfo!.AreInstancesReleasable && mi.ChildCount==1) {
             lines.Add($"        $\" {mi.MemberName}Stored: {{{mi.MemberName}.CountStoredItems}}");

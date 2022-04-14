@@ -93,7 +93,7 @@ namespace StorageLib {
           continue;
         }
 
-        if (!(namespaceMember is ClassDeclarationSyntax classDeclaration)) {
+        if (namespaceMember is not ClassDeclarationSyntax classDeclaration) {
           throw new GeneratorException($"{fileName} contains not only class and enum declarations in namespace '{nameSpaceString}'.");
         }
         var className = classDeclaration.Identifier.Text;
@@ -113,7 +113,7 @@ namespace StorageLib {
           if (attributes.Count!=1) throw new GeneratorException($"Class {className} should contain at most 1 attribute, i.e. StorageClass attribute, but has '{classDeclaration.AttributeLists.Count}' attributes: '{attributes}'");
 
           var attribute = attributes[0];
-          if (!(attribute.Name is IdentifierNameSyntax attributeName) || attributeName.Identifier.Text!="StorageClass") {
+          if (attribute.Name is not IdentifierNameSyntax attributeName || attributeName.Identifier.Text!="StorageClass") {
             throw new GeneratorException($"Class {className} should contain only a StorageClass attribute, but has: '{classDeclaration.AttributeLists}'");
           }
           if (attribute.ArgumentList is not null) {
@@ -150,7 +150,7 @@ namespace StorageLib {
         var isPropertyWithDefaultValueFound = false;
         foreach (var classMember in classDeclaration.Members) {
           //each field has only 1 property
-          if (!(classMember is FieldDeclarationSyntax field)) {
+          if (classMember is not FieldDeclarationSyntax field) {
             throw new GeneratorException($"Class {className} should contain only properties and these properties should " + 
               $"not contain get and set, but has '{classMember}'.");
           }
@@ -169,7 +169,7 @@ namespace StorageLib {
             isReadOnly = true; //if a class cannot be updated, all its properties are readonly
           }
 
-          if (!(field.Declaration is VariableDeclarationSyntax variableDeclaration)) {
+          if (field.Declaration is not VariableDeclarationSyntax variableDeclaration) {
             throw new GeneratorException($"Class {className} {onlyAcceptableConsts} '{field.Declaration}'.");
           }
           var propertyType = variableDeclaration.Type.ToString();
@@ -180,6 +180,7 @@ namespace StorageLib {
             bool needsDictionary = false;
             string? toLower = null;
             string? childKeyPropertyName = null;
+            string? childKey2PropertyName = null;
             if (field.AttributeLists.Count==0) {
               if (isPropertyWithDefaultValueFound && !propertyType.StartsWith("List<")) {
                 throw new GeneratorException($"Property {className}.{property.Identifier.Text} should have a " +
@@ -195,7 +196,7 @@ namespace StorageLib {
               if (attributes.Count!=1) throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain at most 1 attribute, i.e. StorageProperty attribute, but has '{field.AttributeLists.Count}' attributes: '{attributes}'");
 
               var attribute = attributes[0];
-              if (!(attribute.Name is IdentifierNameSyntax attributeName) || attributeName.Identifier.Text!="StorageProperty") {
+              if (attribute.Name is not IdentifierNameSyntax attributeName || attributeName.Identifier.Text!="StorageProperty") {
                 throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain only a StorageProperty attribute, but has: '{classDeclaration.AttributeLists}'");
               }
               foreach (var argument in attribute.ArgumentList!.Arguments) {
@@ -215,6 +216,7 @@ namespace StorageLib {
                     if (needsDictionary) isUsingDictionary = true;
                     break;
                   case "childKeyPropertyName": childKeyPropertyName = value[1..^1]; break;
+                  case "childKey2PropertyName": childKey2PropertyName = value[1..^1]; break;
                   default: isUnknown = true; break;
                   }
                 } catch (Exception ex) {
@@ -232,8 +234,7 @@ namespace StorageLib {
                 "isLookupOnly: true and isParentOneChild: true in its StorageProperty attribute.");
             }
             classInfo.AddMember(classMember.ToString(), property.Identifier.Text, propertyType, propertyComment, defaultValue, 
-              isLookupOnly, isParentOneChild, toLower, needsDictionary, childKeyPropertyName, isReadOnly);
-            //}
+              isLookupOnly, isParentOneChild, toLower, needsDictionary, childKeyPropertyName, childKey2PropertyName, isReadOnly);
           }
         }
       }
@@ -250,7 +251,7 @@ namespace StorageLib {
     }
 
 
-    private string addLeadingSpaces(string declaration, int pos) {
+    private static string addLeadingSpaces(string declaration, int pos) {
       pos--;
       while (pos>0) {
         var c = declaration[pos];
@@ -264,7 +265,7 @@ namespace StorageLib {
     }
 
 
-    private string? getXmlComment(SyntaxTriviaList syntaxTriviaList) {
+    private static string? getXmlComment(SyntaxTriviaList syntaxTriviaList) {
       string? comment = null;
       var leadingTrivia = syntaxTriviaList.ToString();
       var lines = leadingTrivia.Split(Environment.NewLine);
@@ -277,7 +278,7 @@ namespace StorageLib {
     }
 
 
-    private string? getComment(SyntaxTriviaList syntaxTriviaList) {
+    private static string? getComment(SyntaxTriviaList syntaxTriviaList) {
       string? comment = null;
       var leadingTrivia = syntaxTriviaList.ToString();
       if (leadingTrivia.Contains("///")) {
@@ -428,6 +429,7 @@ namespace StorageLib {
 
           case MemberTypeEnum.ParentMultipleChildrenDictionary:
           case MemberTypeEnum.ParentMultipleChildrenSortedList:
+            //                --------------------------------
             //Dictionary, SortedList
             if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
               throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
@@ -510,6 +512,7 @@ namespace StorageLib {
                   }
                   if (mi.ChildKeyPropertyName is null) {
                     mi.ChildKeyPropertyName = childKeyMIFound.MemberName;
+                    mi.LowerChildKeyPropertyName = childKeyMIFound.MemberName[0..1].ToLower() + childKeyMIFound.MemberName[1..];
                   }
                   break;
                 }
@@ -529,6 +532,61 @@ namespace StorageLib {
               }
             }
             break;
+
+          case MemberTypeEnum.ParentMultipleChildrenSortedBucket:
+            //                ----------------------------------
+            if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
+              throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine +
+                mi.MemberText);
+
+            //search for member in child class which has a parent property linking to mi
+            foreach (var childMI in mi.ChildClassInfo.Members.Values) {
+              if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
+                //child property found pointing to parent.
+                if (mi.ChildMemberInfo is null) {
+                  mi.ChildMemberInfo = childMI;
+                  mi.IsChildReadOnly = childMI.IsReadOnly;
+                } else {
+                  throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: The 2 properties " + 
+                    $"{mi.ChildMemberInfo.MemberName} and {childMI.MemberName} in class {mi.ChildClassInfo.ClassName} link " +
+                    $"to parent {ci}, but StorageLib supports only 1 child property doing so." + Environment.NewLine + mi.MemberText);
+                }
+              }
+            }
+            if (mi.ChildMemberInfo is null) {
+              throw new GeneratorException($"{ci} '{mi}': has a SortedBucketCollection<{mi.ChildTypeName}>. The corresponding " +
+                $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine +
+                mi.MemberText);
+            }
+
+            //if parent class defines the names of the key properties in the child class, use them
+            findParentRelatedPropertiesinChild(
+              ci, 
+              mi, 
+              mi.ChildKeyTypeString!, 
+              "childKeyPropertyName",
+              ref mi.ChildKeyPropertyName,
+              ref mi.LowerChildKeyPropertyName,
+              out var childKey1TypeString);
+            findParentRelatedPropertiesinChild(
+              ci, 
+              mi, 
+              mi.ChildKey2TypeString!, 
+              "childKey2PropertyName",
+              ref mi.ChildKey2PropertyName,
+              ref mi.LowerChildKey2PropertyName,
+              out var childKey2TypeString);
+
+            //memberTypeString = $"SortedBucketCollection<{key1TypeName}, {key2TypeName}, {itemTypeName}>";
+            var genericParameters = $"{childKey1TypeString}, {childKey2TypeString}, {mi.ChildClassInfo.ClassName}";
+            if (mi.ChildClassInfo.AreInstancesReleasable) {
+              mi.TypeString = $"StorageSortedBucketCollection<{genericParameters}>";
+              mi.ReadOnlyTypeString = $"IStorageReadOnlySortedBucketCollection<{genericParameters}>";
+            } else {
+              mi.TypeString = $"SortedBucketCollection<{genericParameters}>";
+              mi.ReadOnlyTypeString = $"IReadOnlySortedBucketCollection<{genericParameters}>";
+            }
+            break;
           }
         }
       }
@@ -539,6 +597,78 @@ namespace StorageLib {
       }
       foreach (var classInfo in classes.Values) {
         if (!classInfo.IsAddedToParentChildTree) throw new Exception();
+      }
+    }
+
+
+    private static void findParentRelatedPropertiesinChild(
+      ClassInfo ci, 
+      MemberInfo mi, 
+      string childKeyExpectedTypeString,
+      string StoragePropertyKey,
+      ref string? childKeyPropertyName, 
+      ref string? lowerChildKeyPropertyName,
+      out string childKeyFoundTypeString) 
+    {
+      childKeyFoundTypeString = null!;
+      var childMI = mi.ChildMemberInfo!;
+      if (childKeyPropertyName is null) {
+        //parent does not define name of key property
+        foreach (var childKeyMI in mi.ChildClassInfo!.Members.Values) {
+          if (childKeyExpectedTypeString==childKeyMI.CsvTypeString || childKeyExpectedTypeString==childKeyMI.TypeString) {
+            if (childKeyFoundTypeString is null) {
+              //first property found with the expected key type
+              childKeyFoundTypeString = childKeyMI.TypeString;
+              childKeyPropertyName = childKeyMI.MemberName;
+              lowerChildKeyPropertyName = childKeyMI.MemberName[0..1].ToLower() + childKeyMI.MemberName[1..];
+            } else {
+              //second property found with the expected key type, throw exception
+              throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+                $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but found two properties in {childMI.ClassInfo.ClassName} " +
+                $"with the type {childKeyExpectedTypeString}: {childKeyPropertyName}, {childKeyMI.MemberName}. Use " +
+                $"[StorageProperty({StoragePropertyKey}: \"Xyz\")] in the parent to indicate which property should be used." +
+                Environment.NewLine + mi.MemberText);
+            }
+          }
+        }
+
+        if (childKeyFoundTypeString is null) {
+          if (childKeyExpectedTypeString=="int") {
+            //use the Key property as second key for SortedBucketCollection 
+            childKeyFoundTypeString = "int";
+            childKeyPropertyName = "Key";
+            lowerChildKeyPropertyName = "key";
+
+          } else {
+            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+              $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property in {childMI.ClassInfo.ClassName} " +
+              $"with the type {childKeyExpectedTypeString} needed as key." + Environment.NewLine + mi.MemberText);
+          }
+        }
+
+
+      } else {
+        //parent defines name of key property
+        if (mi.ChildClassInfo!.Members.TryGetValue(childKeyPropertyName, out var childKeyMIFound)) {
+          if (childKeyExpectedTypeString==childKeyMIFound.CsvTypeString || childKeyExpectedTypeString==childKeyMIFound.TypeString) {
+            childKeyFoundTypeString = childKeyMIFound.TypeString;
+            childKeyPropertyName = childKeyMIFound.MemberName;
+            lowerChildKeyPropertyName = childKeyMIFound.MemberName[0..1].ToLower() + childKeyMIFound.MemberName[1..];
+          } else {
+            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+              $"{childKeyMIFound.ClassInfo.ClassName}.{childKeyMIFound.MemberName}, but it has wrong type: " +
+              $"{childKeyMIFound.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
+          }
+        } else {
+          if (childKeyPropertyName=="Key") {
+            childKeyFoundTypeString = "int";
+            childKeyPropertyName = "Key";
+            lowerChildKeyPropertyName = "key";
+          } else {
+            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found class {mi.ChildClassInfo.ClassName} " +
+              $"but could not find property {childKeyPropertyName} in that class." + Environment.NewLine + mi.MemberText);
+          }
+        }
       }
     }
 
@@ -555,7 +685,7 @@ namespace StorageLib {
     }
 
 
-    private bool allParentsAreAddedToParentChildTree(ClassInfo childClass) {
+    private static bool allParentsAreAddedToParentChildTree(ClassInfo childClass) {
       foreach (var parentClass in childClass.ParentsAll) {
         if (!parentClass.IsAddedToParentChildTree) return false;
       }

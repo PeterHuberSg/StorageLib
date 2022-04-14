@@ -14,7 +14,7 @@ ParentN: the parent property in the child is nullable
 each activity like create, update or delete is done first in a rooled back transaction and none of the data should
 be changed, then the same activity is executed in a commited transactions and the data should change accordingly.
 
-After a transaction has been committed, the datacontext gets disposed, opened again and verified, that the data
+After a transaction has been committed, the datacontext gets disposed, opened again and verified that the data
 is still the same. This is done twice, first using the .bak files, then the .csv files. There is one exception: 
 stored parents might have some not stored children. In the new data context, those parents have no longer those 
 children.
@@ -49,6 +49,7 @@ namespace StorageTest {
       _ = new CollectionTestBase<ListParent, ListParentN, ListParentR, ListParentNR, ListChild>();
       _ = new CollectionTestBase<DictionaryParent, DictionaryParentN, DictionaryParentR, DictionaryParentNR, DictionaryChild>();
       _ = new CollectionTestBase<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR, SortedListChild>();
+      _ = new CollectionTestBase<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR, SortedBucketCollectionChild>();
     }
   }
 
@@ -56,7 +57,8 @@ namespace StorageTest {
   enum CollectionTypeEnum {
     list,
     dictionary,
-    sortedList
+    sortedList,
+    sortedBuckets,
   }
 
 
@@ -92,6 +94,8 @@ namespace StorageTest {
         collectionType = CollectionTypeEnum.dictionary;
       } else if (typeof(TChild)==typeof(SortedListChild)) {
         collectionType = CollectionTypeEnum.sortedList;
+      } else if (typeof(TChild)==typeof(SortedBucketCollectionChild)) {
+        collectionType = CollectionTypeEnum.sortedBuckets;
       } else {
         throw new NotSupportedException();
       }
@@ -465,6 +469,7 @@ namespace StorageTest {
         CollectionTypeEnum.list => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new ListParent(text, isStoring),
         CollectionTypeEnum.dictionary => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new DictionaryParent(text, isStoring),
         CollectionTypeEnum.sortedList => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedListParent(text, isStoring),
+        CollectionTypeEnum.sortedBuckets => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedBucketCollectionParent(text, isStoring),
         _ => throw new NotSupportedException(),
       };
     }
@@ -475,6 +480,7 @@ namespace StorageTest {
         CollectionTypeEnum.list => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new ListParentN(text, isStoring),
         CollectionTypeEnum.dictionary => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new DictionaryParentN(text, isStoring),
         CollectionTypeEnum.sortedList => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedListParentN(text, isStoring),
+        CollectionTypeEnum.sortedBuckets => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedBucketCollectionParentN(text, isStoring),
         _ => throw new NotSupportedException(),
       };
     }
@@ -485,6 +491,7 @@ namespace StorageTest {
         CollectionTypeEnum.list => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new ListParentR(text, isStoring),
         CollectionTypeEnum.dictionary => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new DictionaryParentR(text, isStoring),
         CollectionTypeEnum.sortedList => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedListParentR(text, isStoring),
+        CollectionTypeEnum.sortedBuckets => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedBucketCollectionParentR(text, isStoring),
         _ => throw new NotSupportedException(),
       };
     }
@@ -495,9 +502,13 @@ namespace StorageTest {
         CollectionTypeEnum.list => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new ListParentNR(text, isStoring),
         CollectionTypeEnum.dictionary => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new DictionaryParentNR(text, isStoring),
         CollectionTypeEnum.sortedList => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedListParentNR(text, isStoring),
+        CollectionTypeEnum.sortedBuckets => (ICollectionParent<TP, TPN, TPR, TPNR, TChild>)new SortedBucketCollectionParentNR(text, isStoring),
         _ => throw new NotSupportedException(),
       };
     }
+
+
+    static readonly DateTime testDate = DateTime.Now.Date;
 
 
     private ITestChild<TP, TPN, TPR, TPNR> createChild
@@ -514,32 +525,11 @@ namespace StorageTest {
           DictionaryChild(text, (DictionaryParent)parent, (DictionaryParentN?)parentN, (DictionaryParentR)parentR, (DictionaryParentNR?)parentNR, isStoring),
         CollectionTypeEnum.sortedList => (ITestChild<TP, TPN, TPR, TPNR>)new
           SortedListChild(text, (SortedListParent)parent, (SortedListParentN?)parentN, (SortedListParentR)parentR, (SortedListParentNR?)parentNR, isStoring),
+        CollectionTypeEnum.sortedBuckets => (ITestChild<TP, TPN, TPR, TPNR>)new
+          SortedBucketCollectionChild(text, testDate, (SortedBucketCollectionParent)parent, (SortedBucketCollectionParentN?)parentN, (SortedBucketCollectionParentR)parentR, (SortedBucketCollectionParentNR?)parentNR, isStoring),
         _ => throw new NotSupportedException(),
       };
     }
-
-
-    //private string dcAsString() {
-    //  if (dc is null) return "";
-
-    //  var s = "";
-    //  append(ref s, dc.ListParentsTest);
-    //  append(ref s, dc.ListParentNsTest);
-    //  append(ref s, dc.ListParentRsTest);
-    //  append(ref s, dc.ListParentNRsTest);
-    //  foreach (var child in dc.ListChildrenTest) {
-    //    s += child.Text + ':' + child.Parent.Text;
-    //    if (child.ParentN is not null) {
-    //      s += ',' + child.ParentN.Text;
-    //    }
-    //    s += ',' + child.ParentR.Text;
-    //    if (child.ParentNR is not null) {
-    //      s += ',' + child.ParentNR.Text;
-    //    }
-    //    s += '|';
-    //  }
-    //  return s;
-    //}
 
 
     private enum parentTypeEnum {
@@ -600,6 +590,13 @@ namespace StorageTest {
         dcParents[(int)parentTypeEnum.parentR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParentRs;
         dcParents[(int)parentTypeEnum.parentNR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedListParentNRs;
         dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.SortedListChildren;
+        break;
+      case CollectionTypeEnum.sortedBuckets:
+        dcParents[(int)parentTypeEnum.parent] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedBucketCollectionParents;
+        dcParents[(int)parentTypeEnum.parentN] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedBucketCollectionParentNs;
+        dcParents[(int)parentTypeEnum.parentR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedBucketCollectionParentRs;
+        dcParents[(int)parentTypeEnum.parentNR] = (IReadonlyDataStore<ICollectionParent<TP, TPN, TPR, TPNR, TChild>>)dc.SortedBucketCollectionParentNRs;
+        dcChildren = (IReadonlyDataStore<ITestChild<TP, TPN, TPR, TPNR>>)dc.SortedBucketCollectionChildren;
         break;
       default:
         throw new NotSupportedException();

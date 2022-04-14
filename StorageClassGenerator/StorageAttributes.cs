@@ -65,14 +65,18 @@ namespace StorageLib {
     /// <param name="toLower">Copies the content of a string property into a second property of the same class using 
     /// lower casing only. Can be helpful when creating case insensitive dictionaries in the data context (together with 
     /// needsDictionary argument)</param>
-    /// <param name="childKeyPropertyName">Tells a dictionary or SortedList in a parent which property in the child should be used as key.</param>
+    /// <param name="childKeyPropertyName">Tells a dictionary or SortedList in a parent which property in the child should 
+    /// be used as key. For a SortedBucketCollection, it indicates which which property in the child should be used as key</param>
+    /// <param name="childKey2PropertyName">Tells a SortedBucketCollection in a parent which property in the child should 
+    /// be used as second key.</param>
     public StoragePropertyAttribute(
       string? defaultValue = null,
       bool isLookupOnly = false,
       bool isParentOneChild = false,
       bool needsDictionary = false,
       string? toLower = null,
-      string? childKeyPropertyName = null) { }
+      string? childKeyPropertyName = null,
+      string? childKey2PropertyName = null) { }
   }
 #pragma warning restore IDE0060 // Remove unused parameter
 }

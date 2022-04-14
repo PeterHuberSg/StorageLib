@@ -38,7 +38,7 @@ It should have at least 5 projects:
 Visual Studio will create the solution together with your first project, which usually creates 
 an .exe file. This project can have any name, in the example it is *YourAppConsole*.
 
-For this and all other projects you add, ensure that the project file contains at least the following settings:
+For this and any other projects you might add, ensure that the project file contains at least the following settings:
 
 ```xml
 <PropertyGroup>
@@ -48,12 +48,12 @@ For this and all other projects you add, ensure that the project file contains a
 ```
 
 ## Project StorageClassGenerator 2
-Add the external project *StorageClassGenerator* from the *StorageLib* solution you cloned. 
+Add the external project *StorageClassGenerator* from the *StorageLib* solution you cloned to your own solution. 
 *StorageClassGenerator* translates the *data model* into the data classes you will use in
 your program.
 
 ## Project StorageLib 3
-Add the external project *StorageLib* from the *StorageLib* solution you cloned. *StorageLib* 
+Add the external project *StorageLib* from the *StorageLib* solution you cloned to your own solution. *StorageLib* 
 contains the code needed during runtime to store the data.
 
 ## Project Data Model 4
@@ -179,7 +179,7 @@ want to extend the behavior of the *Data Context*.
 If your program gets bigger, you might want to add a '.gitignore' file to your DataContext 
 project, telling git to ignore all '*.base.cs' files. Git doesn't need to store that code, 
 because it can be autocreated again by running your *DataModel* console project. The file
-sould look like this
+should contain code like this
 
     #some comment explaining that autocreated files can be ignored by git
     *.base.cs

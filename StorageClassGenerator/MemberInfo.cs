@@ -3,9 +3,9 @@
 StorageLib.MemberInfo
 =====================
 
-Some info for each class defined in data model
+Some info for each property of a class defined in data model
 
-Written in 2020 by Jürgpeter Huber 
+Written in 2020-21 by Jürgpeter Huber 
 Contact: https://github.com/PeterHuberSg/StorageLib
 
 To the extent possible under law, the author(s) have dedicated all copyright and 
@@ -25,7 +25,7 @@ namespace StorageLib {
 
 
   /// <summary>
-  /// Some info for each class defined in data model
+  /// Some info for each property of a class defined in data model
   /// </summary>
   public class MemberInfo {
     public readonly string MemberText;
@@ -49,10 +49,14 @@ namespace StorageLib {
     public readonly bool IsLookupOnly = false;
     public readonly bool NeedsDictionary = false;
     public readonly int MaxStorageSize;
-    public readonly string? ChildTypeName; //used by List, Dictionary and SortedList
-    public readonly string? LowerChildTypeName; //used by List, Dictionary and SortedList
-    public string? ChildKeyPropertyName; //used by Dictionary and SortedList
-    public readonly string? ChildKeyTypeString; //used by Dictionary and SortedList
+    public readonly string? ChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
+    public readonly string? LowerChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
+    public string? ChildKeyPropertyName; //used by Dictionary, SortedList and SortedBucketCollection
+    public string? LowerChildKeyPropertyName; 
+    public string? ChildKey2PropertyName; //used by SortedBucketCollection
+    public string? LowerChildKey2PropertyName;
+    public readonly string? ChildKeyTypeString; //used by Dictionary, SortedList and SortedBucketCollection
+    public readonly string? ChildKey2TypeString; //used by SortedBucketCollection
     public readonly string? ParentTypeString;//is only different from TypeString when IsNullable
     public readonly string? LowerParentType;
     public readonly string? CsvReaderRead;
@@ -337,7 +341,9 @@ namespace StorageLib {
         throw new Exception("List uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenDictionary:
       case MemberTypeEnum.ParentMultipleChildrenSortedList:
-        throw new Exception("Dictionary and SortedList uses its own constructor.");
+        throw new Exception("Dictionary and SortedList use their own constructor.");
+      case MemberTypeEnum.ParentMultipleChildrenSortedBucket:
+        throw new Exception("SortedBucketCollection uses its own constructor.");
       default:
         throw new NotSupportedException();
       }
@@ -472,9 +478,56 @@ namespace StorageLib {
       ChildTypeName = childType;
       LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
       ChildKeyPropertyName = childKeyPropertyName;
+      if (childKeyPropertyName is not null) {
+        LowerChildKeyPropertyName = childKeyPropertyName[0..1].ToLower() + childKeyPropertyName[1..];
+      }
       ChildKeyTypeString = keyTypeString;
       SetIsNullable(false);
       IsReadOnly = false; //Collection properties are IReadOnlyXXX, but not need to mark them with ReadOnly
+      TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
+      CsvReaderRead = null;
+      CsvWriterWrite = null;
+      Comment = comment;
+      DefaultValue = null;
+    }
+
+
+    /// <summary>
+    /// constructor for CollectionKeyKeyValue, i.e. SortedBucketCollection&lt;TKey1, TKey2, TValue>
+    /// </summary>
+    public MemberInfo(
+      string memberText,
+      string name,
+      ClassInfo classInfo,
+      string memberTypeString,
+      MemberTypeEnum memberType,
+      string childType,
+      string? childKeyPropertyName,
+      string? childKey2PropertyName,
+      string key1TypeString,
+      string key2TypeString,
+      string? comment) 
+    {
+      MemberText = memberText;
+      MemberType = memberType;
+      MaxStorageSize = 0;//a reference is only stored in the child, not the parent
+      MemberName = name;
+      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      ClassInfo = classInfo;
+      ChildTypeName = childType;
+      LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
+      ChildKeyPropertyName = childKeyPropertyName;
+      if (childKeyPropertyName is not null) {
+        LowerChildKeyPropertyName = childKeyPropertyName[0..1].ToLower() + childKeyPropertyName[1..];
+      }
+      ChildKey2PropertyName = childKey2PropertyName;
+      if (childKey2PropertyName is not null) {
+        LowerChildKey2PropertyName = childKey2PropertyName[0..1].ToLower() + childKey2PropertyName[1..];
+      }
+      ChildKeyTypeString = key1TypeString;
+      ChildKey2TypeString = key2TypeString;
+      SetIsNullable(false);
+      IsReadOnly = false; //Collection properties are IReadOnlyXXX, but no need to mark them with ReadOnly
       TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
       CsvReaderRead = null;
       CsvWriterWrite = null;
@@ -537,7 +590,8 @@ namespace StorageLib {
       if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
         return $"List<{ChildTypeName}> {MemberName}";
       }else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary || 
-          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
+          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
+          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
       {
         return $"{TypeString} {MemberName}";
       } else {
@@ -585,7 +639,8 @@ namespace StorageLib {
           sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
         }
       } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
-        MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
+        MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
+        MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
       {
         sw.WriteLine($"    public {ReadOnlyTypeString} {MemberName} => {LowerMemberName};");
         sw.WriteLine($"    readonly {TypeString} {LowerMemberName};");

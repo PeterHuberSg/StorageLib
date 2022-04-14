@@ -8,12 +8,6 @@ using System.Threading.Tasks;
 
 namespace TestContext {
 
-  //partial class SimpleParent: ITestSimpleParent<SimpleChild> { }
-  //partial class SimpleParentN: ITestSimpleParent<SimpleChild> { }
-  //partial class SimpleParentR: ITestSimpleParent<SimpleChild> { }
-  //partial class SimpleParentNR: ITestSimpleParent<SimpleChild> { }
-
-
   partial class LookupParent: ILookupParent { }
   partial class LookupParentN: ILookupParent { }
   partial class LookupParentR: ILookupParent { }
@@ -119,6 +113,41 @@ namespace TestContext {
     public SortedListChild? AllChildrenFirst => sortedListChildren.FirstOrDefault().Value;
   }
   partial class SortedListChild: ITestChild<SortedListParent, SortedListParentN, SortedListParentR, SortedListParentNR> { }
+
+
+  partial class SortedBucketCollectionParent: ICollectionParent<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR, SortedBucketCollectionChild> {
+    public int CountAllChildren => sortedBucketCollectionChildren.Count;
+    public IEnumerable<SortedBucketCollectionChild> GetAllChildren => sortedBucketCollectionChildren;
+    public int CountStoredChildren => sortedBucketCollectionChildren.CountStoredItems;
+    public IEnumerable<SortedBucketCollectionChild> GetStoredChildren => sortedBucketCollectionChildren.GetStoredItems();
+    public SortedBucketCollectionChild? AllChildrenFirst => sortedBucketCollectionChildren.FirstOrDefault();
+  }
+  partial class SortedBucketCollectionParentN: ICollectionParent<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR, SortedBucketCollectionChild> {
+    public int CountAllChildren => sortedBucketCollectionChildren.Count;
+    public IEnumerable<SortedBucketCollectionChild> GetAllChildren => sortedBucketCollectionChildren;
+    public int CountStoredChildren => sortedBucketCollectionChildren.CountStoredItems;
+    public IEnumerable<SortedBucketCollectionChild> GetStoredChildren => sortedBucketCollectionChildren.GetStoredItems();
+    public SortedBucketCollectionChild? AllChildrenFirst => sortedBucketCollectionChildren.FirstOrDefault();
+  }
+  partial class SortedBucketCollectionParentR: ICollectionParent<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR, SortedBucketCollectionChild> {
+    public int CountAllChildren => sortedBucketCollectionChildren.Count;
+    public IEnumerable<SortedBucketCollectionChild> GetAllChildren => sortedBucketCollectionChildren;
+    public int CountStoredChildren => sortedBucketCollectionChildren.CountStoredItems;
+    public IEnumerable<SortedBucketCollectionChild> GetStoredChildren => sortedBucketCollectionChildren.GetStoredItems();
+    public SortedBucketCollectionChild? AllChildrenFirst => sortedBucketCollectionChildren.FirstOrDefault();
+  }
+  partial class SortedBucketCollectionParentNR: ICollectionParent<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR, SortedBucketCollectionChild> {
+    public int CountAllChildren => sortedBucketCollectionChildren.Count;
+    public IEnumerable<SortedBucketCollectionChild> GetAllChildren => sortedBucketCollectionChildren;
+    public int CountStoredChildren => sortedBucketCollectionChildren.CountStoredItems;
+    public IEnumerable<SortedBucketCollectionChild> GetStoredChildren => sortedBucketCollectionChildren.GetStoredItems();
+    public SortedBucketCollectionChild? AllChildrenFirst => sortedBucketCollectionChildren.FirstOrDefault();
+  }
+  partial class SortedBucketCollectionChild: ITestChild<SortedBucketCollectionParent, SortedBucketCollectionParentN, SortedBucketCollectionParentR, SortedBucketCollectionParentNR> {
+    public bool Update(string text, SortedBucketCollectionParent parent, SortedBucketCollectionParentN? parentN) {
+      return Update(text, Date, parent, parentN);
+    }
+  }
 
 
 }

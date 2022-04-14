@@ -5,7 +5,7 @@ TestDataModel
 
 Shows how Data Model classes can be defined for storage compiler
 
-Written in 2020 by Jürgpeter Huber 
+Written in 2020-21 by Jürgpeter Huber 
 Contact: https://github.com/PeterHuberSg/StorageLib
 
 To the extent possible under law, the author(s) have dedicated all copyright and 
@@ -161,7 +161,7 @@ namespace TestContext {
 
 
   /// <summary>
-  /// Example of a child with a none nullable and a nullable lookup parent. The child maintains links
+  /// Example of a child with a not nullable and a nullable lookup parent. The child maintains links
   /// to its parents, but the parents don't have children collections.
   /// </summary>
   [StorageClass(areInstancesUpdatable: true, areInstancesReleasable: true, pluralName: "LookupChildren")]
@@ -355,6 +355,42 @@ namespace TestContext {
   }
   #endregion
 
+  #region Parent with children SortedBucketCollection
+  //      -------------------------------------------
+
+  //Example where parent has a SortedBucketCollection instead a List for its children. The child needs 2 additional
+  //fields which can be used as Keys for the SortedBucketCollection.
+
+  public class SortedBucketCollectionParent {
+    public string Text;
+    public SortedBucketCollection<Date, string, SortedBucketCollectionChild> SortedBucketCollectionChildren;
+  }
+
+  public class SortedBucketCollectionParentN {
+    public string Text;
+    public SortedBucketCollection<Date, string, SortedBucketCollectionChild> SortedBucketCollectionChildren;
+  }
+
+  public class SortedBucketCollectionParentR {
+    public string Text;
+    public SortedBucketCollection<Date, string, SortedBucketCollectionChild> SortedBucketCollectionChildren;
+  }
+
+  public class SortedBucketCollectionParentNR {
+    public string Text;
+    public SortedBucketCollection<Date, string, SortedBucketCollectionChild> SortedBucketCollectionChildren;
+  }
+
+  [StorageClass(pluralName: "SortedBucketCollectionChildren")]
+  public class SortedBucketCollectionChild {
+    public string Text;
+    public Date Date;
+    public SortedBucketCollectionParent Parent;
+    public SortedBucketCollectionParentN? ParentN;
+    public readonly SortedBucketCollectionParentR ParentR;
+    public readonly SortedBucketCollectionParentNR? ParentNR;
+  }
+  #endregion
 
   #region Class using all supported data types 
   //      ------------------------------------
@@ -365,7 +401,7 @@ namespace TestContext {
   // then DateTime, if the time portion is not use. It is better to use Decimal2, which stores maximally 2 digits
   // after the decimal point than decimal, which gets stored with full precision.
 
-  // In general, it is better to use none nullable value types, they give the garbage collector less work to do.
+  // In general, it is better to use not nullable value types, they give the garbage collector less work to do.
 
 
   /// <summary>
@@ -674,8 +710,8 @@ namespace TestContext {
   #endregion
 
 
-  #region Parent with none standard name for children list
-  //      ------------------------------------------------
+  #region Parent with non standard name for children list
+  //      -----------------------------------------------
 
   // Example where the parent's List for it's children is not the plural of the child type type. 
 
@@ -727,22 +763,6 @@ namespace TestContext {
     public TestParent Parent;
   }
   #endregion
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   //Todo: TwoListsParent needs StorageProperty to link child property to parent list

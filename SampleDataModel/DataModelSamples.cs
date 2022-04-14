@@ -80,7 +80,6 @@ namespace DataModelSamples {
   }
   #endregion
 
-
   #region Readonly property
   //      -----------------
 
@@ -316,7 +315,7 @@ namespace DataModelSamples {
   //child 1 : mc parent relationship using SortedList
   public class SortedList_1_MC_Parent {
     public string Name;
-    //SortedListChild has only one property of type strig. No need for [StorageProperty(childKeyPropertyName: "Name")]
+    //SortedListChild has only one property of type string. No need for [StorageProperty(childKeyPropertyName: "Name")]
     public SortedList<string, SortedList_1_MC_Child> Children;
   }
   public class SortedList_1_MC_Child {
@@ -343,6 +342,61 @@ namespace DataModelSamples {
     public string Name;
     public string Address;
     public SortedListWithPropertyNameParent Parent;
+  }
+  #endregion
+
+  #region Parent with Children SortedBucketCollection, 1:mc or c:mc
+  //      ---------------------------------------------------------
+
+  //child 1 : mc parent relationship using SortedBucketCollection
+  public class SortedBucketCollection_1_MC_Parent {
+    public string Name;
+    //SortedBucketCollectionChild has only one property of type string. No need for [StorageProperty(childKeyPropertyName: "Name")]
+    public SortedBucketCollection<Date, string, SortedBucketCollection_1_MC_Child> Children;
+  }
+  public class SortedBucketCollection_1_MC_Child {
+    public string Name;
+    public Date Date;
+    public SortedBucketCollection_1_MC_Parent Parent;
+  }
+
+  //child c : mc parent relationship using SortedBucketCollection
+  public class SortedBucketCollection_C_MC_Parent {
+    public string Name;
+    public SortedBucketCollection<Date, string, SortedBucketCollection_C_MC_Child> Children;
+  }
+  public class SortedBucketCollection_C_MC_Child {
+    public string Name;
+    public Date Date;
+    public SortedBucketCollection_C_MC_Parent? Parent; //nullable parent indicates c:mc relation
+  }
+
+  public class SortedBucketCollectionWithPropertyNameParent {
+    public string Name;
+    [StorageProperty(childKeyPropertyName: "Date", childKey2PropertyName: "Name")] //SortedBucketCollection needs to know which properties to use for keys
+    public SortedBucketCollection<Date, string, SortedBucketCollectionWithPropertyNameChild> Children;
+  }
+  public class SortedBucketCollectionWithPropertyNameChild {
+    public string Name;
+    public Date Date;
+    public Date AnotherDate;
+    public string Address;
+    public SortedBucketCollectionWithPropertyNameParent Parent;
+  }
+
+  /// <summary>
+  /// The child's auto created property Key can be used as second key of SortedBucketCollection
+  /// </summary>
+  public class SortedBucketCollectionWithUsingKeyAsKey2Parent {
+    public string Name;
+    //the Key property can be used here, even it is not explicitely listed in the child's properties below
+    [StorageProperty(childKey2PropertyName: "Key")]
+    public SortedBucketCollection<Date, string, SortedBucketCollectionWithUsingKeyAsKey2Child> Children;
+  }
+  public class SortedBucketCollectionWithUsingKeyAsKey2Child {
+    public string Name;
+    public Date Date;
+    public SortedBucketCollectionWithUsingKeyAsKey2Parent Parent;
   }
   #endregion
 
