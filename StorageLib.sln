@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30804.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StorageLib", "StorageLib\StorageLib.csproj", "{D044B3D1-69E4-4FBF-BD45-013547D1C734}"
 EndProject
@@ -36,7 +36,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GetStartedDataContext", "Ge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GetStartedDataModel", "GetStartedDataModel\GetStartedDataModel.csproj", "{B1852E2A-E277-4DF6-BCDE-99CFF8CA68D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetStartedConsole", "GetStartedConsole\GetStartedConsole.csproj", "{641AF48C-B957-427D-85F6-59047E239D3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GetStartedConsole", "GetStartedConsole\GetStartedConsole.csproj", "{641AF48C-B957-427D-85F6-59047E239D3F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParserTest", "ParserTest\ParserTest.csproj", "{DC80257D-BFB3-4B60-B9E5-92E467313A79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +90,10 @@ Global
 		{641AF48C-B957-427D-85F6-59047E239D3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{641AF48C-B957-427D-85F6-59047E239D3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{641AF48C-B957-427D-85F6-59047E239D3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC80257D-BFB3-4B60-B9E5-92E467313A79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC80257D-BFB3-4B60-B9E5-92E467313A79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC80257D-BFB3-4B60-B9E5-92E467313A79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC80257D-BFB3-4B60-B9E5-92E467313A79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

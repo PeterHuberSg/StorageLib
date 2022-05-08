@@ -5,7 +5,7 @@ using System.Text;
 namespace StorageLib {
 
   /// <summary>
-  /// Data types supported by Storage compiler
+  /// Data types supported by StorageLib compiler
   /// </summary>
   public enum MemberTypeEnum {
     Undefined = 0,
@@ -38,7 +38,7 @@ namespace StorageLib {
 
 
   /// <summary>
-  /// Collection types supported by Storage compiler
+  /// Collection types supported by StorageLib compiler
   /// </summary>
   public enum ParentCollectionTypeEnum{
     Undefined = 0,

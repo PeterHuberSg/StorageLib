@@ -15,6 +15,7 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
+using System.Collections.Generic;
 
 
 namespace StorageLib {
@@ -26,11 +27,13 @@ namespace StorageLib {
   public class EnumInfo {
     public readonly string Name;
     public readonly string CodeLines;
+    public readonly IReadOnlyList<string> EnumValues;
 
 
-    public EnumInfo(string name, string codeLines) {
+    public EnumInfo(string name, string codeLines, List<string> enumValues) {
       Name = name;
       CodeLines = codeLines;
+      EnumValues = enumValues;
     }
   }
 }

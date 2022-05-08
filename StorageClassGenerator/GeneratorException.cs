@@ -27,10 +27,25 @@ namespace StorageLib {
   public class GeneratorException: Exception {
 
     /// <summary>
-    /// Constructor
+    /// Constructor for Generator specific exception taking one string as argument
     /// </summary>
-    public GeneratorException(string? message):base(message) {
+    public GeneratorException(string? message): base(message) {}
 
-    }
+
+    /// <summary>
+    /// Constructor for Generator specific exception taking className, memberText and exceptionMessage as argument
+    /// </summary>
+    public GeneratorException(string className, string memberText, string exceptionMessage) :
+    base($"Class: {className}" + Environment.NewLine +
+       $"Property: {memberText}" + Environment.NewLine + 
+      exceptionMessage) { }
+
+
+    /// <summary>
+    /// Constructor for Generator specific exception taking ClassInfo, MemberInfo and exceptionMessage as argument
+    /// </summary>
+    public GeneratorException(ClassInfo ci, MemberInfo mi, string exceptionMessage) : 
+    base($"Class: {ci.ClassName}" + Environment.NewLine +
+       $"Property: {mi.MemberText}" + Environment.NewLine + exceptionMessage) { }
   }
 }

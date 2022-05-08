@@ -186,7 +186,6 @@ namespace TestContext {
   #endregion
 
 
-
   #region Parent with at most one child
   //      -----------------------------
 
@@ -240,8 +239,8 @@ namespace TestContext {
   //Example where the parent uses a List for its children. 
   //If the child is not deletable, the parent must not be not deletable too. It's not possible to delete a parent and
   //leave the child with a link to that deleted parent.
-  //The child.Parent property can be nullable (conditional parent) or not nullable (parent required)
-  //The child.Parent property can be readonly (parent child relationship cannot be changed after child is created)
+  //The child.Parent property can be nullable (conditional parent) or not nullable (parent required).
+  //The child.Parent property can be readonly (parent child relationship cannot be changed after child is created).
   //[StorageClass(isGenerateReaderWriter: true)] creates ClassXyzReader and ClassXyzWriter, which allow to read and write 
   //the CSV file without using a data context nor DataStore. This is useful for administrative tasks, like deleting
   //of data which is not deletable within the data context.
@@ -275,6 +274,65 @@ namespace TestContext {
     public readonly ListParentNR? ParentNR;
   }
   #endregion
+
+
+  //#region Child with 2 parents, each using lists
+  ////      --------------------------------------
+
+  ////Example where a child has 2 parents 
+  ////If the child is not deletable, the parents must not be not deletable too. It's not possible to delete a parent and
+  ////leave the child with a link to that deleted parent.
+  ////The child.Parent property can be nullable (conditional parent) or not nullable (parent required).
+  ////The child.Parent property can be readonly (parent child relationship cannot be changed after child is created).
+  ////[StorageClass(isGenerateReaderWriter: true)] creates ClassXyzReader and ClassXyzWriter, which allow to read and write 
+  ////the CSV file without using a data context nor DataStore. This is useful for administrative tasks, like deleting
+  ////of data which is not deletable within the data context.
+
+  //public class Cw2PParent {
+  //  public string Text;
+  //  [StorageProperty(childPropertyName: "Parent1")]
+  //  public List<Cw2PChild> Children1;
+  //  [StorageProperty(childPropertyName: "Parent2")]
+  //  public List<Cw2PChild> Children2;
+  //}
+
+  //public class Cw2PParentN {
+  //  public string Text;
+  //  [StorageProperty(childPropertyName: "Parent1N")]
+  //  public List<Cw2PChild> Children1;
+  //  [StorageProperty(childPropertyName: "Parent2N")]
+  //  public List<Cw2PChild> Children2;
+  //}
+
+  //public class Cw2PParentR {
+  //  public string Text;
+  //  [StorageProperty(childPropertyName: "Parent1R")]
+  //  public List<Cw2PChild> Children1;
+  //  [StorageProperty(childPropertyName: "Parent2R")]
+  //  public List<Cw2PChild> Children2;
+  //}
+
+  //public class Cw2PParentNR {
+  //  public string Text;
+  //  [StorageProperty(childPropertyName: "Parent1NR")]
+  //  public List<Cw2PChild> Children1;
+  //  [StorageProperty(childPropertyName: "Parent2NR")]
+  //  public List<Cw2PChild> Children2;
+  //}
+
+  //[StorageClass(pluralName: "Cw2PChildren")]
+  //public class Cw2PChild {
+  //  public string Text;
+  //  public Cw2PParent Parent1;
+  //  public Cw2PParentN? Parent1N;
+  //  public readonly Cw2PParentR Parent1R;
+  //  public readonly Cw2PParentNR? Parent1NR;
+  //  public Cw2PParent Parent2;
+  //  public Cw2PParentN? Parent2N;
+  //  public readonly Cw2PParentR Parent2R;
+  //  public readonly Cw2PParentNR? Parent2NR;
+  //}
+  //#endregion
 
 
   #region Parent with children Dictionary
@@ -676,9 +734,9 @@ namespace TestContext {
     /// </summary>
     public SampleMaster? OneMaster;
 
-    /// <summary>
-    /// Some OtherMaster comment
-    /// </summary>
+    ///// <summary>
+    ///// Some OtherMaster comment
+    ///// </summary>
     public SampleMaster? OtherMaster;
 
     /// <summary>

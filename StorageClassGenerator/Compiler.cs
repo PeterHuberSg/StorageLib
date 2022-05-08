@@ -45,21 +45,26 @@ namespace StorageLib {
 
     #region Properties
     //      ----------
-
+    
     public readonly TracingEnum IsTracing; //Should tracing code be generated ?
     public readonly bool IsFullyCommented; //if the class.cs file does not exist, one gets created. Should all
                                            //code in it be commented out. Default: true
     public readonly bool IsAddTestCode; //adds test code for unit testing of StorageLib
+
+    public IReadOnlyDictionary<string, ClassInfo> Classes => classes;
+    readonly Dictionary<string, ClassInfo> classes;
+
+    public IReadOnlyList<ClassInfo> ParentChildTree => parentChildTree;
+    readonly List<ClassInfo> parentChildTree;
+
+    public IReadOnlyDictionary<string, EnumInfo> Enums => enums;
+    readonly Dictionary<string, EnumInfo> enums;
     #endregion
 
 
     #region Constructor
     //      -----------
 
-    readonly Dictionary<string, ClassInfo> classes;
-    readonly List<ClassInfo> parentChildTree;
-    readonly Dictionary<string, EnumInfo> enums;
-    public IReadOnlyDictionary<string, EnumInfo> Enums { get { return enums; } }
     bool isUsingDictionary = false; // is statement 'using System.Collections.Generic' needed in data context source file ? 
 
 
@@ -97,6 +102,10 @@ namespace StorageLib {
           throw new GeneratorException($"{fileName} contains not only class and enum declarations in namespace '{nameSpaceString}'.");
         }
         var className = classDeclaration.Identifier.Text;
+        if (className=="Cw2PParent") {
+          System.Diagnostics.Debugger.Break();
+        }
+
         string? classComment = getXmlComment(classDeclaration.GetLeadingTrivia());
         string? pluralName = className + 's';
         bool areInstancesUpdatable = true;
@@ -179,6 +188,7 @@ namespace StorageLib {
             bool isParentOneChild = false;
             bool needsDictionary = false;
             string? toLower = null;
+            string? childPropertyName = null;
             string? childKeyPropertyName = null;
             string? childKey2PropertyName = null;
             if (field.AttributeLists.Count==0) {
@@ -189,18 +199,27 @@ namespace StorageLib {
               }
               //use the default values
             } else if (field.AttributeLists.Count>1) {
-              throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain at most 1 attribute, i.e. StorageProperty attribute, but has '{field.AttributeLists.Count}' attributes: '{field.AttributeLists}'");
+              throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain at most " +
+                $"1 attribute, i.e. StorageProperty attribute, but has '{field.AttributeLists.Count}' attributes: " +
+                $"'{field.AttributeLists}'");
 
             } else {
               var attributes = field.AttributeLists[0].Attributes;
-              if (attributes.Count!=1) throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain at most 1 attribute, i.e. StorageProperty attribute, but has '{field.AttributeLists.Count}' attributes: '{attributes}'");
+              if (attributes.Count!=1) throw new GeneratorException($"Property {className}.{property.Identifier.Text} " +
+                $"should contain at most 1 attribute, i.e. StorageProperty attribute, but has " +
+                $"'{field.AttributeLists.Count}' attributes: '{attributes}'");
 
               var attribute = attributes[0];
-              if (attribute.Name is not IdentifierNameSyntax attributeName || attributeName.Identifier.Text!="StorageProperty") {
-                throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain only a StorageProperty attribute, but has: '{classDeclaration.AttributeLists}'");
+              if (attribute.Name is not IdentifierNameSyntax attributeName || 
+                attributeName.Identifier.Text!="StorageProperty") 
+              {
+                throw new GeneratorException($"Property {className}.{property.Identifier.Text} should contain only " +
+                  $"a StorageProperty attribute, but has: '{classDeclaration.AttributeLists}'");
               }
               foreach (var argument in attribute.ArgumentList!.Arguments) {
-                if (argument.NameColon is null) throw new GeneratorException($"Property {className}.{property.Identifier.Text} Attribute{attribute}: the argument name is missing, like 'defaultValue: null'.");
+                if (argument.NameColon is null) throw new GeneratorException($"Property {className}." +
+                  $"{property.Identifier.Text} Attribute{attribute}: the argument name is missing, like " +
+                  "'defaultValue: null'.");
 
                 var name = argument.NameColon.Name.Identifier.Text;
                 var isUnknown = false;
@@ -215,17 +234,19 @@ namespace StorageLib {
                     needsDictionary = bool.Parse(value);
                     if (needsDictionary) isUsingDictionary = true;
                     break;
+                  case "childPropertyName": childPropertyName = value[1..^1]; break;
                   case "childKeyPropertyName": childKeyPropertyName = value[1..^1]; break;
                   case "childKey2PropertyName": childKey2PropertyName = value[1..^1]; break;
                   default: isUnknown = true; break;
                   }
                 } catch (Exception ex) {
-                  throw new GeneratorException($"Property {className}.{property.Identifier.Text}: Exception '{ex.Message}' was thrown when processing attribute '{name}' in '{attribute}'.");
+                  throw new GeneratorException($"Property {className}.{property.Identifier.Text}: Exception " +
+                    $"'{ex.Message}' was thrown when processing attribute '{name}' in '{attribute}'.");
                 }
                 if (isUnknown) {
-                  throw new GeneratorException($"Property {className}.{property.Identifier.Text}: Illegal attribute name '{name}' in '{attribute}'. It " +
-                    "can only be: defaultValue, isLookupOnly, isParentOneChild, lowerFrom or " +
-                    "needsDictionary.");
+                  throw new GeneratorException($"Property {className}.{property.Identifier.Text}: Illegal attribute " +
+                    $"name '{name}' in '{attribute}'. It can only be: defaultValue, isLookupOnly, isParentOneChild, " +
+                    "lowerFrom or needsDictionary.");
                 }
               }
             }
@@ -233,8 +254,9 @@ namespace StorageLib {
               throw new GeneratorException($"Property {className}.{property.Identifier.Text} cannot have " + 
                 "isLookupOnly: true and isParentOneChild: true in its StorageProperty attribute.");
             }
-            classInfo.AddMember(classMember.ToString(), property.Identifier.Text, propertyType, propertyComment, defaultValue, 
-              isLookupOnly, isParentOneChild, toLower, needsDictionary, childKeyPropertyName, childKey2PropertyName, isReadOnly);
+            classInfo.AddMember(classMember.ToString(), property.Identifier.Text, propertyType, propertyComment, 
+              defaultValue, isLookupOnly, isParentOneChild, toLower, needsDictionary, childPropertyName, 
+              childKeyPropertyName, childKey2PropertyName, isReadOnly);
           }
         }
       }
@@ -246,8 +268,12 @@ namespace StorageLib {
       //var enumDeclarationWithLeadingComment = enumDeclaration.ToFullString();
       //var enumDeclarationOnly = removeRegionAndLeadingSimpleComments(enumDeclarationWithLeadingComment);
       var indentation = enumDeclaration.GetLastToken().LeadingTrivia.ToString();
+      var enumValues = new List<string>();
+      foreach (var enumMember in enumDeclaration.Members) {
+        enumValues.Add(enumMember.ToString());
+      }
       enums.Add(enumDeclaration.Identifier.Text, 
-        new EnumInfo(enumDeclaration.Identifier.Text, enumLeadingComment + indentation + enumDeclaration.ToString()));
+        new EnumInfo(enumDeclaration.Identifier.Text, enumLeadingComment + indentation + enumDeclaration.ToString(), enumValues));
     }
 
 
@@ -299,10 +325,21 @@ namespace StorageLib {
 
     public void AnalyzeDependencies() {
       var topClasses = classes.Values.ToDictionary(c=>c.ClassName);
+
+      //in the first loop, process all members except LinkToParent. The first loop establishes the link between
+      //parent and children, while the second loop (LinkToParent only) verifies that every child has a parent.
       foreach (var ci in classes.Values) {
         foreach (var mi in ci.Members.Values) {
+          if (mi.ChildTypeName==ci.ClassName) {
+            throw new GeneratorException($"In the class {ci}, the property '{mi}' references its own class, " +
+              $"which StorageLib cannot support. The reason is that 2 instances of {ci.ClassName} reference " + 
+              "each other. When the data gets read from a file, the first instance needs to get created with a " +
+              "reference to the other instance, which does not exist yet. A not existing reference throws " +
+              "an exception." + Environment.NewLine +
+              mi.MemberText);
+          }
+
           var isFound = false;
-          var parentMembersCount = 0;
           switch (mi.MemberType) {
 
           case MemberTypeEnum.ToLower:
@@ -310,275 +347,330 @@ namespace StorageLib {
             foreach (var member in ci.Members.Values) {
               if (member.MemberName==mi.PropertyForToLower) {
                 if (member.NeedsDictionary && mi.NeedsDictionary) {
-                  throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: is a lower case copy of {member.MemberName}. " +
-                    "Both haveOnly the attribute parameter NeedsDictionary, but only one of them at a time can have a " +
-                    "dictionary. The software could be extended to allow both having a Dictionary." + Environment.NewLine + 
-                    mi.MemberText);
+                  throw new GeneratorException(ci, mi, $"{mi.MemberName} is a lower case copy of {member.MemberName}. " +
+                    "Both have the attribute parameter NeedsDictionary, but only one of them at a time can have a " +
+                    "dictionary. StorageLib could be extended to allow both having a Dictionary.");
                 }
                 isFound = true;
                 member.ToLowerTarget = mi;
-                mi.SetIsNullable(member.IsNullable);
+                //mi.SetIsNullable(member.IsNullable); it seems IsNullable is already properly set, but not IsReadonly ?
                 mi.IsReadOnly = member.IsReadOnly;
                 break;
               }
             }
-            if (isFound) {
-              break;
-            }
-            throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: is supposed to be a lower case copy of a " +
-              $"{mi.PropertyForToLower} property in the same class, which cannot be found:" + Environment.NewLine + mi.MemberText);
+            if (!isFound)
+              throw new GeneratorException(ci, mi, $"{mi.MemberName} is supposed to be a lower case copy of a " +
+                $"{mi.PropertyForToLower} property in the same class, which cannot be found.");
+
+            break;
 
           case MemberTypeEnum.LinkToParent:
             //                -------------
-            if (classes.TryGetValue(mi.ParentTypeString!, out mi.ParentClassInfo)) {
-              ci.ParentsAll.Add(mi.ParentClassInfo);
-              topClasses.Remove(ci.ClassName);
-              mi.ParentClassInfo.Children.Add(ci);
-              if (mi.IsLookupOnly) {
-                if (mi.ParentClassInfo.AreInstancesReleasable) {
-                  throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: cannot use the deletable instances of class " +
-                    $"{mi.ParentClassInfo.ClassName} as lookup:" + Environment.NewLine + mi.MemberText);
-                }
-              } else {
-                ci.HasParents = true;
-                if (!mi.IsReadOnly && !mi.IsLookupOnly) {
-                  ci.HasNotReadOnlyAndNotLookupParents = true;
-                }
-                foreach (var parentMember in mi.ParentClassInfo.Members.Values) {
-                  if (parentMember.ChildTypeName==mi.ClassInfo.ClassName) {
-                    parentMembersCount++;
-                    mi.ParentMemberInfo = parentMember;
-                    if (parentMember.MemberType!=MemberTypeEnum.ParentOneChild) {
-                      parentMember.ChildCount++;
-                    }
-                  }
-                }
-                if (parentMembersCount==1) break;
+            //will be processed in the next loop
 
-                if (parentMembersCount<1) {
-                  throw new GeneratorException(
-                    $"Property {mi.MemberName} from child class {ci.ClassName} links to parent {mi.ParentClassInfo.ClassName}. " + 
-                    $"But the parent does not have a property which links to the child. Add a collection (list, dictionary or sortedList) " + 
-                    $"to the parent if many children are allowed or a property with the [StorageProperty(isParentOneChild: true)] attribute " + 
-                    $"if only 1 child is allowed. Add [StorageProperty(isLookupOnly: true)] to the child property if the parent " +
-                    "should not have a relation with the child:" + Environment.NewLine + mi.MemberText);
-                } else {
-                  throw new GeneratorException(
-                    $"Property {mi.MemberName} from child class {ci.ClassName} links to parent {mi.ParentClassInfo.ClassName}. " +
-                    $"But the parent has more than 1 property which links to the child:" + Environment.NewLine + mi.MemberText);
-                }
-                //if (!mi.ClassInfo.AreInstancesReleasable && mi.ParentClassInfo.AreInstancesReleasable) {
-                //  //todo: Compiler.AnalyzeDependencies() Add tests if child is at least updatable, parent property not readonly and nullable
-                //  throw new GeneratorException($"Child {mi.ClassInfo.ClassName} does not support deletion. Therefore, the " + 
-                //    $"parent {mi.ParentClassInfo.ClassName} can neither support deletion, because it can not delete its children:" 
-                //    + Environment.NewLine + mi.MemberText);
-                //}
-              }
+            //if (classes.TryGetValue(mi.TypeStringNotNullable, out mi.ParentClassInfo)) {
+            //  ci.ParentsAll.Add(mi.ParentClassInfo);
+            //  topClasses.Remove(ci.ClassName);
+            //  mi.ParentClassInfo.Children.Add(ci);
+            //  if (mi.IsLookupOnly) {
+            //    if (mi.ParentClassInfo.AreInstancesReleasable) {
+            //      throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: cannot use the deletable instances of class " +
+            //        $"{mi.ParentClassInfo.ClassName} as lookup:" + Environment.NewLine + mi.MemberText);
+            //    }
+            //  } else {
+            //    ci.HasParents = true;
+            //    if (!mi.IsReadOnly && !mi.IsLookupOnly) {
+            //      ci.HasNotReadOnlyAndNotLookupParents = true;
+            //    }
+            //    //if (ci.ClassName=="Cw2PChild") {
+            //    if (ci.ClassName=="DictionaryChild") {
+            //      System.Diagnostics.Debugger.Break();
+            //    }
+            //    foreach (var parentMember in mi.ParentClassInfo.Members.Values) {
+            //      if (parentMember.ChildPropertyName is not null) {
+            //        //parent member knows which child property to use
+            //        if (parentMember.ChildPropertyName==mi.MemberName) {
+            //          mi.ParentMemberInfo = parentMember;
+            //          parentMembersCount = 1;
+            //          if (parentMember.MemberType!=MemberTypeEnum.ParentOneChild) {
+            //            parentMember.ChildCount++;
+            //          }
+            //          break;
+            //        }
+            //      } else {
+            //        //parent member does not know which child property to use, find the one with the proper type
+            //        if (parentMember.ChildTypeName==mi.ClassInfo.ClassName) {
+            //          parentMembersCount++;
+            //          mi.ParentMemberInfo = parentMember;
+            //          if (parentMember.MemberType!=MemberTypeEnum.ParentOneChild) {
+            //            parentMember.ChildCount++;
+            //          }
+            //        }
+            //      }
+            //    }
+            //    if (parentMembersCount==1) break;
 
-            } else if (enums.TryGetValue(mi.ParentTypeString!, out mi.EnumInfo)) {
-              mi.MemberType = MemberTypeEnum.Enum;
-              mi.ToStringFunc = "";
-            } else {
-              throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: cannot find '{mi.ParentTypeString}'. Should this be a data type " +
-                "defined by Storage, a user defined enum or a link to a user defined class ?" + Environment.NewLine + 
-                mi.MemberText);
-            }
+            //    if (parentMembersCount<1) {
+            //      throw new GeneratorException(
+            //        $"Property {mi.MemberName} from child class {ci.ClassName} links to parent {mi.ParentClassInfo.ClassName}. " + 
+            //        $"But the parent does not have a property which links to the child. Add a collection (list, dictionary or sortedList) " + 
+            //        $"to the parent if many children are allowed or a property with the [StorageProperty(isParentOneChild: true)] attribute " + 
+            //        $"if only 1 child is allowed. Add [StorageProperty(isLookupOnly: true)] to the child property if the parent " +
+            //        "should not have a relation with the child:" + Environment.NewLine + mi.MemberText);
+            //    } else {
+            //      throw new GeneratorException(
+            //        $"Property {mi.MemberName} from child class {ci.ClassName} links to parent {mi.ParentClassInfo.ClassName}. " +
+            //        $"But the parent has more than 1 property which links to the child:" + Environment.NewLine + mi.MemberText);
+            //    }
+            //    //if (!mi.ClassInfo.AreInstancesReleasable && mi.ParentClassInfo.AreInstancesReleasable) {
+            //    //  //todo: Compiler.AnalyzeDependencies() Add tests if child is at least updatable, parent property not readonly and nullable
+            //    //  throw new GeneratorException($"Child {mi.ClassInfo.ClassName} does not support deletion. Therefore, the " + 
+            //    //    $"parent {mi.ParentClassInfo.ClassName} can neither support deletion, because it can not delete its children:" 
+            //    //    + Environment.NewLine + mi.MemberText);
+            //    //}
+            //  }
+
+            //} else if (enums.TryGetValue(mi.TypeStringNotNullable, out mi.EnumInfo)) {
+            //  mi.MemberType = MemberTypeEnum.Enum;
+            //  mi.ToStringFunc = "";
+            //} else {
+            //  throw new GeneratorException($"{ci.ClassName}.{mi.MemberName}: cannot find '{mi.TypeStringNotNullable}'. Should this be a data type " +
+            //    "defined by Storage, a data model defined enum or a data model defined class ?" + Environment.NewLine + 
+            //    mi.MemberText);
+            //}
             break;
 
           case MemberTypeEnum.ParentOneChild:
             //                --------------
-            if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
-              throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
-                mi.MemberText);
+            findLinkToParentPropertyInChildClassAndSetupParentChildLinks(mi, topClasses);
 
-            foreach (var childMI in mi.ChildClassInfo.Members.Values) {
-              if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
-                isFound = true;
-                mi.ChildMemberInfo = childMI;
-                mi.IsChildReadOnly = childMI.IsReadOnly;
-                break;
-              }
-            }
-            if (!isFound) {
-              //guarantee that there is a property linking to the parent for each child class.
-              throw new GeneratorException($"{ci} '{mi}' is a property which links to 0 or 1 child. A corresponding " +
-                $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
-                mi.MemberText);
-            }
+            //if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
+            //  throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //    mi.MemberText);
+
+            //foreach (var childMI in mi.ChildClassInfo.Members.Values) {
+            //  if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.TypeStringNotNullable==ci.ClassName) {
+            //    isFound = true;
+            //    mi.ChildMemberInfo = childMI;
+            //    mi.IsChildReadOnly = childMI.IsReadOnly;
+            //    break;
+            //  }
+            //}
+            //if (!isFound) {
+            //  //guarantee that there is a property linking to the parent for each child class.
+            //  throw new GeneratorException($"{ci} '{mi}' is a property which links to 0 or 1 child. A corresponding " +
+            //    $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //    mi.MemberText);
+            //}
             break;
 
           case MemberTypeEnum.ParentMultipleChildrenList:
             //                --------------------------
-            if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
-              throw new GeneratorException($"{ci} '{mi}': can not find class {mi.ChildTypeName}:" + Environment.NewLine + 
-                mi.MemberText);
+            findLinkToParentPropertyInChildClassAndSetupParentChildLinks(mi, topClasses);
+            //if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
+            //  throw new GeneratorException($"{ci} '{mi}': can not find class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //    mi.MemberText);
 
-            foreach (var childMI in mi.ChildClassInfo.Members.Values) {
-              if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
-                isFound = true;
-                mi.IsChildReadOnly |= childMI.IsReadOnly;
-              }
-            }
-            if (!isFound) {
-              //guarantee that there is a property linking to the parent for each child class.
-              throw new GeneratorException($"{ci} '{mi}': has a List<{mi.ChildTypeName}>. The corresponding " +
-                $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
-                mi.MemberText);
-            }
+            //foreach (var childMI in mi.ChildClassInfo.Members.Values) {
+            //  if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.TypeStringNotNullable==ci.ClassName) {
+            //    isFound = true;
+            //    mi.IsChildReadOnly |= childMI.IsReadOnly;
+            //  }
+            //}
+            //if (!isFound) {
+            //  //guarantee that there is a property linking to the parent for each child class.
+            //  throw new GeneratorException($"{ci} '{mi}': has a List<{mi.ChildTypeName}>. The corresponding " +
+            //    $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //    mi.MemberText);
+            //}
             break;
 
           case MemberTypeEnum.ParentMultipleChildrenDictionary:
           case MemberTypeEnum.ParentMultipleChildrenSortedList:
-            //                --------------------------------
-            //Dictionary, SortedList
-            if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
-              throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
-                mi.MemberText);
+            findLinkToParentPropertyInChildClassAndSetupParentChildLinks(mi, topClasses);
+            findKeyPropertyInChildClass(mi, mi.ChildKeyPropertyName, mi.ChildKeyTypeString, isSecondKey: false);
 
-            //search for member in child class which has a parent linking to mi
-            foreach (var childMI in mi.ChildClassInfo.Members.Values) {
-              if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
-                //child property found pointing to parent. 
-                mi.IsChildReadOnly = childMI.IsReadOnly;
-                MemberInfo? childKeyMIFound = null;
-                //Find another child property which is used as key into the Dictionary or SortedList
-                foreach (var childKeyMI in mi.ChildClassInfo.Members.Values) {
-                  if (mi.ChildKeyTypeString==childKeyMI.CsvTypeString || mi.ChildKeyTypeString==childKeyMI.TypeString) {
-                    if (mi.ChildKeyPropertyName is null) {
-                      //parent class does not know the name of the child property used as key. Use a property with the proper key type.
-                      if (childKeyMIFound is null) {
-                        //first property found with the expected key type
-                        childKeyMIFound = childKeyMI;
-                      } else {
-                        //second property found with the expected key type, throw exception
-                        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-                          $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but found two properties in {childMI.ClassInfo.ClassName} " +
-                          $"with the type {mi.ChildKeyTypeString}: {childKeyMIFound.MemberName}, {childKeyMI.MemberName}. Use " +
-                          $"[StorageProperty(childKeyPropertyName: \"Xyz\")] in the parent to indicate which property should be used." +
-                          Environment.NewLine + mi.MemberText);
-                      }
-                    } else {
-                      //parent collection class knows the name of the child property to be used as key
-                      if (mi.ChildKeyPropertyName==childKeyMI.MemberName) {
-                        //property found in child class which matches the expected key name
-                        childKeyMIFound = childKeyMI;
-                        //the c# compiler enforces that each property name of a class is unique. No need to check if there is another.
-                        break;
-                      }
-                    }
-                  } else {
-                    //child property has wrong key type. Throw exception if it has the expected key name.
-                    if (mi.ChildKeyPropertyName is not null && mi.ChildKeyPropertyName==childKeyMI.MemberName) {
-                      throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-                        $"{childKeyMI.ClassInfo.ClassName}.{childKeyMI.MemberName}, but it has wrong type: " +
-                        $"{childKeyMI.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
-                    }
-                  }
-                }
-
-                if (childKeyMIFound is null) {
-                  if (mi.ChildKeyPropertyName is null) {
-                    throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-                      $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property in {childMI.ClassInfo.ClassName} " +
-                      $"with the type {mi.ChildKeyTypeString} needed as key." + Environment.NewLine + mi.MemberText);
-                  } else {
-                    throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-                      $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property with the name" +
-                      $"{mi.ChildKeyPropertyName} and type {mi.ChildKeyTypeString} needed as key." + Environment.NewLine + mi.MemberText);
-                  }
-
-                } else {
-                  isFound = true;
-                  mi.ChildMemberInfo = childMI;
-                  if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-                    //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
-                    if (childMI.ClassInfo.AreInstancesReleasable) {
-                      mi.TypeString = $"StorageSortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                      mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    } else {
-                      mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                      mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    }
-                  } else {
-                    //Dictionary
-                    //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
-                    if (childMI.ClassInfo.AreInstancesReleasable) {
-                      mi.TypeString = $"StorageDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                      mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    } else {
-                      mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                      mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
-                    }
-                  }
-                  if (mi.ChildKeyPropertyName is null) {
-                    mi.ChildKeyPropertyName = childKeyMIFound.MemberName;
-                    mi.LowerChildKeyPropertyName = childKeyMIFound.MemberName[0..1].ToLower() + childKeyMIFound.MemberName[1..];
-                  }
-                  break;
-                }
-              }
-            }
-            if (!isFound) {
-              if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
-                //guarantee that there is a property linking to the parent for each child class.
-                throw new GeneratorException($"{ci} '{mi}': has a SortedList<{mi.ChildTypeName}>. The corresponding " +
-                  $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
-                  mi.MemberText);
+            var childKeyTypeString = mi.ChildKeyTypeString;
+            var childKeyClassName = mi.SingleChildMI!.ClassInfo.ClassName;
+            if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary) {
+              //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
+              if (mi.ChildClassInfo!.AreInstancesReleasable) {
+                mi.TypeString = $"StorageDictionary<{childKeyTypeString}, {childKeyClassName}>";
+                mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyTypeString}, {childKeyClassName}>";
               } else {
-                //guarantee that there is a property linking to the parent for each child class.
-                throw new GeneratorException($"{ci} '{mi}': has a Dictionary<{mi.ChildTypeName}>. The corresponding " +
-                  $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
-                  mi.MemberText);
+                mi.TypeString = $"Dictionary<{childKeyTypeString}, {childKeyClassName}>";
+                mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyTypeString}, {childKeyClassName}>";
+              }
+            } else {
+              //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
+              if (mi.ChildClassInfo!.AreInstancesReleasable) {
+                mi.TypeString = $"StorageSortedList<{childKeyTypeString}, {childKeyClassName}>";
+                mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyTypeString}, {childKeyClassName}>";
+              } else {
+                mi.TypeString = $"SortedList<{childKeyTypeString}, {childKeyClassName}>";
+                mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyTypeString}, {childKeyClassName}>";
               }
             }
+            mi.TypeStringNotNullable = mi.TypeString;
             break;
+ 
+          //case MemberTypeEnum.ParentMultipleChildrenSortedList:
+            //                --------------------------------
+
+            //Dictionary, SortedList
+
+            //if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
+            //  throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //    mi.MemberText);
+
+            ////search for member in child class which has a parent linking to mi
+            //foreach (var childMI in mi.ChildClassInfo.Members.Values) {
+            //  if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.TypeStringNotNullable==ci.ClassName) {
+            //    //child property found pointing to parent. 
+            //    mi.IsChildReadOnly = childMI.IsReadOnly;
+            //    MemberInfo? childKeyMIFound = null;
+            //    //Find another child property which is used as key into the Dictionary or SortedList
+            //    foreach (var childKeyMI in mi.ChildClassInfo.Members.Values) {
+            //      if (mi.ChildKeyTypeString==childKeyMI.CsvTypeString || mi.ChildKeyTypeString==childKeyMI.TypeString) {
+            //        if (mi.ChildKeyPropertyName is null) {
+            //          //parent class does not know the name of the child property used as key. Use a property with the proper key type.
+            //          if (childKeyMIFound is null) {
+            //            //first property found with the expected key type
+            //            childKeyMIFound = childKeyMI;
+            //          } else {
+            //            //second property found with the expected key type, throw exception
+            //            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+            //              $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but found two properties in {childMI.ClassInfo.ClassName} " +
+            //              $"with the type {mi.ChildKeyTypeString}: {childKeyMIFound.MemberName}, {childKeyMI.MemberName}. Use " +
+            //              $"[StorageProperty(childKeyPropertyName: \"Xyz\")] in the parent to indicate which property should be used." +
+            //              Environment.NewLine + mi.MemberText);
+            //          }
+            //        } else {
+            //          //parent collection class knows the name of the child property to be used as key
+            //          if (mi.ChildKeyPropertyName==childKeyMI.MemberName) {
+            //            //property found in child class which matches the expected key name
+            //            childKeyMIFound = childKeyMI;
+            //            //the c# compiler enforces that each property name of a class is unique. No need to check if there is another.
+            //            break;
+            //          }
+            //        }
+            //      } else {
+            //        //child property has wrong key type. Throw exception if it has the expected key name.
+            //        if (mi.ChildKeyPropertyName is not null && mi.ChildKeyPropertyName==childKeyMI.MemberName) {
+            //          throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+            //            $"{childKeyMI.ClassInfo.ClassName}.{childKeyMI.MemberName}, but it has wrong type: " +
+            //            $"{childKeyMI.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
+            //        }
+            //      }
+            //    }
+
+            //    if (childKeyMIFound is null) {
+            //      if (mi.ChildKeyPropertyName is null) {
+            //        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+            //          $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property in {childMI.ClassInfo.ClassName} " +
+            //          $"with the type {mi.ChildKeyTypeString} needed as key." + Environment.NewLine + mi.MemberText);
+            //      } else {
+            //        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+            //          $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property with the name" +
+            //          $"{mi.ChildKeyPropertyName} and type {mi.ChildKeyTypeString} needed as key." + Environment.NewLine + mi.MemberText);
+            //      }
+
+            //    } else {
+            //      isFound = true;
+            //      mi.ChildMemberInfo = childMI;
+            //      if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
+            //        //memberTypeString = $"SortedList<{keyTypeName}, {itemTypeName}>";
+            //        if (childMI.ClassInfo.AreInstancesReleasable) {
+            //          mi.TypeString = $"StorageSortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //          mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //        } else {
+            //          mi.TypeString = $"SortedList<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //          mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //        }
+            //      } else {
+            //        //Dictionary
+            //        //memberTypeString = $"Dictionary<{keyTypeName}, {itemTypeName}>";
+            //        if (childMI.ClassInfo.AreInstancesReleasable) {
+            //          mi.TypeString = $"StorageDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //          mi.ReadOnlyTypeString = $"IStorageReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //        } else {
+            //          mi.TypeString = $"Dictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //          mi.ReadOnlyTypeString = $"IReadOnlyDictionary<{childKeyMIFound.TypeString}, {childKeyMIFound.ClassInfo.ClassName}>";
+            //        }
+            //      }
+            //      if (mi.ChildKeyPropertyName is null) {
+            //        mi.ChildKeyPropertyName = childKeyMIFound.MemberName;
+            //        mi.LowerChildKeyPropertyName = childKeyMIFound.MemberName.ToCamelCase();
+            //      }
+            //      break;
+            //    }
+            //  }
+            //}
+            //if (!isFound) {
+            //  //guarantee that there is a property linking to the parent for each child class.
+            //  if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) {
+            //    throw new GeneratorException($"{ci} '{mi}': has a SortedList<{mi.ChildTypeName}>. The corresponding " +
+            //      $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //      mi.MemberText);
+            //  } else {
+            //    throw new GeneratorException($"{ci} '{mi}': has a Dictionary<{mi.ChildTypeName}>. The corresponding " +
+            //      $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine + 
+            //      mi.MemberText);
+            //  }
+            //}
+
+            //break;
 
           case MemberTypeEnum.ParentMultipleChildrenSortedBucket:
             //                ----------------------------------
-            if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
-              throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine +
-                mi.MemberText);
 
-            //search for member in child class which has a parent property linking to mi
-            foreach (var childMI in mi.ChildClassInfo.Members.Values) {
-              if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.ParentTypeString==ci.ClassName) {
-                //child property found pointing to parent.
-                if (mi.ChildMemberInfo is null) {
-                  mi.ChildMemberInfo = childMI;
-                  mi.IsChildReadOnly = childMI.IsReadOnly;
-                } else {
-                  throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: The 2 properties " + 
-                    $"{mi.ChildMemberInfo.MemberName} and {childMI.MemberName} in class {mi.ChildClassInfo.ClassName} link " +
-                    $"to parent {ci}, but StorageLib supports only 1 child property doing so." + Environment.NewLine + mi.MemberText);
-                }
-              }
-            }
-            if (mi.ChildMemberInfo is null) {
-              throw new GeneratorException($"{ci} '{mi}': has a SortedBucketCollection<{mi.ChildTypeName}>. The corresponding " +
-                $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine +
-                mi.MemberText);
-            }
+            findLinkToParentPropertyInChildClassAndSetupParentChildLinks(mi, topClasses);
 
-            //if parent class defines the names of the key properties in the child class, use them
-            findParentRelatedPropertiesinChild(
-              ci, 
-              mi, 
-              mi.ChildKeyTypeString!, 
-              "childKeyPropertyName",
-              ref mi.ChildKeyPropertyName,
-              ref mi.LowerChildKeyPropertyName,
-              out var childKey1TypeString);
-            findParentRelatedPropertiesinChild(
-              ci, 
-              mi, 
-              mi.ChildKey2TypeString!, 
-              "childKey2PropertyName",
-              ref mi.ChildKey2PropertyName,
-              ref mi.LowerChildKey2PropertyName,
-              out var childKey2TypeString);
+            //if (!classes.TryGetValue(mi.ChildTypeName!, out mi.ChildClassInfo))
+            //  throw new GeneratorException($"{ci} '{mi}': cannot find class {mi.ChildTypeName}:" + Environment.NewLine +
+            //    mi.MemberText);
+
+            ////search for member in child class which has a parent property linking to mi
+            //foreach (var childMI in mi.ChildClassInfo.Members.Values) {
+            //  if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.TypeStringNotNullable==ci.ClassName) {
+            //    //child property found pointing to parent.
+            //    if (mi.ChildMemberInfo is null) {
+            //      mi.ChildMemberInfo = childMI;
+            //      mi.IsChildReadOnly = childMI.IsReadOnly;
+            //    } else {
+            //      throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: The 2 properties " + 
+            //        $"{mi.ChildMemberInfo.MemberName} and {childMI.MemberName} in class {mi.ChildClassInfo.ClassName} link " +
+            //        $"to parent {ci}, but StorageLib supports only 1 child property doing so." + Environment.NewLine + mi.MemberText);
+            //    }
+            //  }
+            //}
+            //if (mi.ChildMemberInfo is null) {
+            //  throw new GeneratorException($"{ci} '{mi}': has a SortedBucketCollection<{mi.ChildTypeName}>. The corresponding " +
+            //    $"property with type {ci.ClassName} is missing in the class {mi.ChildTypeName}:" + Environment.NewLine +
+            //    mi.MemberText);
+            //}
+
+            //findParentRelatedPropertiesInChild(
+            //  ci,
+            //  mi,
+            //  mi.ChildKeyTypeString!,
+            //  "ChildKeyPropertyName",
+            //  ref mi.ChildKeyPropertyName,
+            //  ref mi.LowerChildKeyPropertyName,
+            //  out var childKey1TypeString);
+            //findParentRelatedPropertiesInChild(
+            //  ci,
+            //  mi,
+            //  mi.ChildKey2TypeString!,
+            //  "ChildKey2PropertyName",
+            //  ref mi.ChildKey2PropertyName,
+            //  ref mi.LowerChildKey2PropertyName,
+            //  out var childKey2TypeString);
+            findKeyPropertyInChildClass(mi, mi.ChildKeyPropertyName, mi.ChildKeyTypeString, isSecondKey: false);
+            findKeyPropertyInChildClass(mi, mi.ChildKey2PropertyName, mi.ChildKey2TypeString, isSecondKey: true);
 
             //memberTypeString = $"SortedBucketCollection<{key1TypeName}, {key2TypeName}, {itemTypeName}>";
-            var genericParameters = $"{childKey1TypeString}, {childKey2TypeString}, {mi.ChildClassInfo.ClassName}";
+            var genericParameters = $"{mi.ChildKeyTypeString}, {mi.ChildKey2TypeString}, {mi.ChildClassInfo!.ClassName}";
             if (mi.ChildClassInfo.AreInstancesReleasable) {
               mi.TypeString = $"StorageSortedBucketCollection<{genericParameters}>";
               mi.ReadOnlyTypeString = $"IStorageReadOnlySortedBucketCollection<{genericParameters}>";
@@ -586,100 +678,516 @@ namespace StorageLib {
               mi.TypeString = $"SortedBucketCollection<{genericParameters}>";
               mi.ReadOnlyTypeString = $"IReadOnlySortedBucketCollection<{genericParameters}>";
             }
+            mi.TypeStringNotNullable = mi.TypeString;
             break;
           }
         }
       }
 
-      //create parent child tree
-      foreach (var classInfo in topClasses.Values) {
-        addParentChildTree(classInfo);
+      //second loop over all classes, processing only MemberTypeEnum.LinkToParent, verifying that every child member
+      //has a parent
+      foreach (var ci in classes.Values) {
+        foreach (var mi in ci.Members.Values) {
+          if (mi.MemberType==MemberTypeEnum.LinkToParent) {
+            if (mi.ParentClassInfo is null) {
+              if (enums.TryGetValue(mi.TypeStringNotNullable, out mi.EnumInfo)) {
+                mi.MemberType = MemberTypeEnum.Enum;
+                mi.ToStringFunc = "";
+
+              } else if (mi.IsLookupOnly) {
+                if (classes.TryGetValue(mi.TypeStringNotNullable, out var parentClassInfo)) {
+                  if (parentClassInfo.AreInstancesReleasable) {
+                    throw new GeneratorException(ci, mi, $"Cannot use the deletable instances of class {parentClassInfo.ClassName} " +
+                      "as lookup.");
+                  }
+                  setupParentClassChildPropertyLinks(parentClassInfo, mi, topClasses);
+                } else {
+                  throw new GeneratorException(ci, mi, $"{mi.MemberName} links to the class {mi.TypeStringNotNullable}, which is " +
+                    "missing in the data model.");
+                }
+
+              } else {
+                if (classes.TryGetValue(mi.TypeStringNotNullable, out var parentClassInfo)) {
+                  foreach (var parentMi in parentClassInfo.Members.Values) {
+                    if (parentMi.ChildTypeName==ci.ClassName) {
+                      if (parentMi.MemberType==MemberTypeEnum.ParentMultipleChildrenList &&
+                        parentMi.MemberText.Contains("childPropertyName")) 
+                      {
+                        throw new GeneratorException(ci, mi, 
+                          $"Parent class: {parentMi.ClassInfo.ClassName}" + Environment.NewLine +
+                          $"Parent property: {parentMi.MemberText}" + Environment.NewLine +
+                          $"Property {mi.MemberName} in child class {mi.ClassInfo.ClassName} references property " + 
+                          $"{parentMi.MemberName} in parent class {parentMi.ClassInfo.ClassName}, which links " +
+                          $"explicitely to {parentMi.SingleChildMI!.MemberName} in class " +
+                          $"{parentMi.ChildClassInfo!.ClassName}. Remove StoragePropertyAttribute." + 
+                          $"childPropertyName from {parentMi.MemberName} if more than 1 property in child class " + 
+                          $"{mi.ClassInfo.ClassName} should reference {parentMi.ClassInfo.ClassName}." +
+                          $"{parentMi.MemberName}, in which case the List<> will get replaced by a HashSet<> " +
+                          "in the generated code.");
+                      } else {
+                        throw new GeneratorException(ci, mi, $"The parent class {mi.TypeStringNotNullable} is not linking back to " +
+                          $"{mi.MemberName} property. This can happen if 2 or more properties of {ci.ClassName} link to " +
+                          $"{mi.TypeStringNotNullable} class. In this case, several collections or properties for singel child " +
+                          $"are needed in the {mi.TypeStringNotNullable} class and they need to use " +
+                          $"StoragePropertyAttribute.ChildPropertyName to indicate which of their property links to which " +
+                          $"{ci.ClassName} property.");
+                      }
+                    }
+                  }
+                  throw new GeneratorException(ci, mi, $"Property {mi.MemberName} in child class {ci.ClassName} " +
+                    $"references parent class {parentClassInfo.ClassName}, which does not have a property referencing " +
+                    $"{ci.ClassName}.");
+
+
+                } else {
+                  throw new GeneratorException(ci, mi, $"The declaration of {mi.TypeStringNotNullable} is missing. Should this be a data " +
+                    "type defined by StorageLib, a data model defined enum or a data model defined class ?");
+                }
+              }
+
+            } else {
+              //parent has allready set up the links to the child, nothing to do
+
+              //if (!mi.ClassInfo.AreInstancesReleasable && mi.ParentClassInfo.AreInstancesReleasable) {
+              //  //todo: Compiler.AnalyzeDependencies() Add tests if child is at least updatable, parent property not readonly and nullable
+              //  throw new GeneratorException($"Child {mi.ClassInfo.ClassName} does not support deletion. Therefore, the " + 
+              //    $"parent {mi.ParentClassInfo.ClassName} can neither support deletion, because it can not delete its children:" 
+              //    + Environment.NewLine + mi.MemberText);
+              //}
+            }
+          }
+        }
       }
+
+      //create parent child tree. Classes which have no parents are the roots of the tree. Classes which have 
+      //parents are added to the parent class and are not roots.
+      foreach (var classInfo in topClasses.Values) {
+        addToParentChildTree(classInfo);
+      }
+      //verify that every class is part of the parent child tree. This test should never fail.
       foreach (var classInfo in classes.Values) {
         if (!classInfo.IsAddedToParentChildTree) throw new Exception();
       }
     }
 
 
-    private static void findParentRelatedPropertiesinChild(
-      ClassInfo ci, 
-      MemberInfo mi, 
-      string childKeyExpectedTypeString,
-      string StoragePropertyKey,
-      ref string? childKeyPropertyName, 
-      ref string? lowerChildKeyPropertyName,
-      out string childKeyFoundTypeString) 
+    /// <summary>
+    /// A member of the parent class links to a member in a child class. Find that member and update link properties of 
+    /// the parent and child accordingly.
+    /// </summary>
+    private void findLinkToParentPropertyInChildClassAndSetupParentChildLinks(
+      MemberInfo parentMI,
+      Dictionary<string, ClassInfo> topClasses) 
     {
-      childKeyFoundTypeString = null!;
-      var childMI = mi.ChildMemberInfo!;
-      if (childKeyPropertyName is null) {
-        //parent does not define name of key property
-        foreach (var childKeyMI in mi.ChildClassInfo!.Members.Values) {
-          if (childKeyExpectedTypeString==childKeyMI.CsvTypeString || childKeyExpectedTypeString==childKeyMI.TypeString) {
-            if (childKeyFoundTypeString is null) {
-              //first property found with the expected key type
-              childKeyFoundTypeString = childKeyMI.TypeString;
-              childKeyPropertyName = childKeyMI.MemberName;
-              lowerChildKeyPropertyName = childKeyMI.MemberName[0..1].ToLower() + childKeyMI.MemberName[1..];
-            } else {
-              //second property found with the expected key type, throw exception
-              throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-                $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but found two properties in {childMI.ClassInfo.ClassName} " +
-                $"with the type {childKeyExpectedTypeString}: {childKeyPropertyName}, {childKeyMI.MemberName}. Use " +
-                $"[StorageProperty({StoragePropertyKey}: \"Xyz\")] in the parent to indicate which property should be used." +
-                Environment.NewLine + mi.MemberText);
+      //the property in the child class referencing the parent class can be found:
+      //a) if the parent class property knows the child class property's name based on
+      //   StoragePropertyAttribute.childPropertyName. This is needed if 2 properties in the child class each have
+      //   the type of the parent class
+      //b) if the child class has only one property with the type of the parent class, use it.
+      var parentCI = parentMI.ClassInfo;
+      if (!classes.TryGetValue(parentMI.ChildTypeName!, out parentMI.ChildClassInfo))
+        throw new GeneratorException(parentCI, parentMI, $"Cannot find class {parentMI.ChildTypeName}.");
+
+      MemberInfo? childMemberInfo = null;
+      List<MemberInfo>? childMemberInfos = null;
+      if (parentMI.ChildPropertyName is null) {
+        //the data model does not specify which child property the parent should use. Search a matching one.
+        foreach (var childMI in parentMI.ChildClassInfo.Members.Values) {
+          if (childMI.MemberType==MemberTypeEnum.LinkToParent && childMI.TypeStringNotNullable==parentCI.ClassName) {
+            if (childMI.ParentMemberInfo is not null) {
+              throw new GeneratorException(parentCI, parentMI,
+                $"Property {parentMI.MemberName} in parent class {parentCI.ClassName} references child class " +
+                $"{parentMI.ChildTypeName}, which has the property {childMI.MemberName} with the proper type " +
+                $"{parentCI.ClassName}, but it is used already by {childMI.ParentMemberInfo.ClassInfo!.ClassName}." +
+                $"{childMI.ParentMemberInfo.MemberName}. If 2 or more properties in the parent class {parentCI.ClassName} " +
+                $"references 2 or more properties in the child class {parentMI.ChildTypeName}, use StoragePropertyAttribute." + 
+                $"childPropertyName to define which parent properties reference which child properties.");
             }
+
+            if (childMemberInfos is null) {
+              if (childMemberInfo is null) {
+                //first time we come here, so far only one child property linkg to parent class
+                childMemberInfo = childMI;
+              } else {
+                //second time we come here, 2 child properties link to parent class
+                if (parentMI.MemberType!=MemberTypeEnum.ParentMultipleChildrenList) {
+                  throw new GeneratorException(parentCI, parentMI, 
+                    $"The child class {parentMI.ChildClassInfo.ClassName} has 2 properties linking to parent class " + 
+                    $"{parentCI.ClassName}:" + Environment.NewLine + 
+                    $"{childMemberInfo.MemberText}" + Environment.NewLine + 
+                    $"{childMI.MemberText}" + Environment.NewLine +
+                    $"Only List<{parentMI.ChildClassInfo.ClassName}> allows multiple properties in the child class " +
+                    $"{parentMI.ChildClassInfo.ClassName} to link to the parent class {parentCI.ClassName}, but " + 
+                    $"{parentMI.MemberName} is not a List<> type.");
+                }
+                childMemberInfos = new();
+                childMemberInfos.Add(childMemberInfo);
+                childMemberInfo = null;
+                childMemberInfos.Add(childMI);
+              }
+            } else {
+              //there are more than 2 child properties linking to the parent
+              childMemberInfos.Add(childMI);
+            }
+            //The second loop in findParentRelatedPropertyInChildClass() dealing with LinkToParent will check and
+            //raise an exception if a child links to a not existing parent. The code here gets executed in the first
+            //loop of AnalyzeDependencies() dealing with all none LinkToParent properties.
           }
         }
 
-        if (childKeyFoundTypeString is null) {
-          if (childKeyExpectedTypeString=="int") {
-            //use the Key property as second key for SortedBucketCollection 
-            childKeyFoundTypeString = "int";
-            childKeyPropertyName = "Key";
-            lowerChildKeyPropertyName = "key";
-
-          } else {
-            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-              $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property in {childMI.ClassInfo.ClassName} " +
-              $"with the type {childKeyExpectedTypeString} needed as key." + Environment.NewLine + mi.MemberText);
-          }
+        if (childMemberInfo is not null) {
+          //setup links between parent property and single child property
+          setupParentPropertyChildPropertyLinks(parentMI, childMemberInfo!, topClasses);
+        } else if (childMemberInfos is not null) {
+          //setup links between parent property and multiple child properties
+          setupParentPropertyChildPropertiesLinks(parentMI, childMemberInfos!, topClasses);
+        } else {
+            //There is no property in the child class linking to the parent
+            throw new GeneratorException(parentCI, parentMI,
+              $"{parentMI.MemberName} references the class {parentMI.ChildTypeName}. A corresponding property with " +
+              $"type {parentCI.ClassName} is missing in {parentMI.ChildTypeName}.");
         }
-
 
       } else {
-        //parent defines name of key property
-        if (mi.ChildClassInfo!.Members.TryGetValue(childKeyPropertyName, out var childKeyMIFound)) {
-          if (childKeyExpectedTypeString==childKeyMIFound.CsvTypeString || childKeyExpectedTypeString==childKeyMIFound.TypeString) {
-            childKeyFoundTypeString = childKeyMIFound.TypeString;
-            childKeyPropertyName = childKeyMIFound.MemberName;
-            lowerChildKeyPropertyName = childKeyMIFound.MemberName[0..1].ToLower() + childKeyMIFound.MemberName[1..];
-          } else {
-            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
-              $"{childKeyMIFound.ClassInfo.ClassName}.{childKeyMIFound.MemberName}, but it has wrong type: " +
-              $"{childKeyMIFound.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
+        //parent knows the child's property name already
+        if (parentMI.ChildClassInfo.Members.TryGetValue(parentMI.ChildPropertyName, out childMemberInfo)) {
+          if (childMemberInfo.MemberType!=MemberTypeEnum.LinkToParent || 
+            childMemberInfo.TypeStringNotNullable!=parentCI.ClassName) 
+          {
+            //property in child class with the searched name has wrong type
+            //Note: TypeStringNotNullable for LinkToParent members has the same value like TypeString, but
+            //without the trailing '?' if nullable.
+            throw new GeneratorException(parentCI, parentMI,
+              $"Property {parentMI.ChildPropertyName} in child class {parentMI.ChildClassInfo.ClassName} should " +
+              $"have the type {parentCI.ClassName}, but its type is {childMemberInfo.TypeString}:" + Environment.NewLine + 
+              $"Class: {childMemberInfo.ClassInfo.ClassName}" + Environment.NewLine +
+              $"Property: {childMemberInfo.MemberText}");
           }
         } else {
-          if (childKeyPropertyName=="Key") {
-            childKeyFoundTypeString = "int";
-            childKeyPropertyName = "Key";
-            lowerChildKeyPropertyName = "key";
-          } else {
-            throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found class {mi.ChildClassInfo.ClassName} " +
-              $"but could not find property {childKeyPropertyName} in that class." + Environment.NewLine + mi.MemberText);
-          }
+          //cannot find property in child with the name==ChildPropertyName
+          throw new GeneratorException(parentCI, parentMI,
+            $"Can not find property {parentMI.ChildPropertyName} in child class {parentMI.ChildTypeName}.");
         }
+        //setup links between parent property and single child property
+        setupParentPropertyChildPropertyLinks(parentMI, childMemberInfo, topClasses);
       }
     }
 
 
-    private void addParentChildTree(ClassInfo classInfo) {
+    ///// <summary>
+    ///// Used by ParentOneChild, collections like List, Dictionary, etc. to set the properties in the parent and 
+    ///// child. Not used by IsLookupOnly child, because in that case there is no parentMI, only a parentCI.
+    ///// </summary>
+    //private static void setupParentChildLinks(
+    //  MemberInfo parentMI, 
+    //  MemberInfo? singleChildMI,
+    //  List<MemberInfo>? multipleChildrenMIs,
+    //  Dictionary<string, ClassInfo> topClasses) 
+    //{
+    //  //parentMI.SingleChildMI = singleChildMI;
+    //  //parentMI.MultipleChildrenMIs = multipleChildrenMIs;
+    //  //parentMI.IsChildReadOnly |= childMemberInfo.IsReadOnly;
+    //  //childMemberInfo!.ParentMemberInfo = parentMI;
+    //  //setupParentChildLinks(parentMI.ClassInfo, childMemberInfo!, topClasses);
+    //  //if (!childMemberInfo!.IsReadOnly && !childMemberInfo!.IsLookupOnly) {
+    //  //  childMemberInfo!.ClassInfo.HasNotReadOnlyAndNotLookupParents = true;
+    //  //}
+    //  parentMI.SingleChildMI = singleChildMI;
+    //  parentMI.MultipleChildrenMIs = multipleChildrenMIs;
+    //  if (singleChildMI is not null) {
+    //    parentMI.IsChildReadOnly |= singleChildMI.IsReadOnly;
+    //    singleChildMI.ParentMemberInfo = parentMI;
+    //    singleChildMI.ClassInfo.HasNotReadOnlyAndNotLookupParents =
+    //      !singleChildMI.IsReadOnly && !singleChildMI.IsLookupOnly;
+    //    setupParentSingleChildLinks(parentMI.ClassInfo, singleChildMI, topClasses);
+    //  } else {
+    //    //List<> which will get changed to HashSet
+    //    ClassInfo? childCI = null;
+    //    foreach (var childMI in multipleChildrenMIs!) {
+    //      if (childCI is null) {
+    //        childCI = childMI.ClassInfo;
+    //      }
+    //      parentMI.IsChildReadOnly |= childMI.IsReadOnly;
+    //      childMI.ParentMemberInfo = parentMI;
+    //      childCI.HasNotReadOnlyAndNotLookupParents |= !childMI.IsReadOnly && !childMI.IsLookupOnly;
+    //    }
+    //  }
+    //}
+
+
+    /// <summary>
+    /// Used by ParentOneChild, collections like List, Dictionary, etc. to set the properties in the parent and 
+    /// child. Not used by IsLookupOnly child, because in that case there is no parentMI, only a parentCI. Not
+    /// used by List<Child>, where child has multiple properties linking to parent.
+    /// </summary>
+    private static void setupParentPropertyChildPropertyLinks(
+      MemberInfo parentMI,
+      MemberInfo singleChildMI,
+      Dictionary<string, ClassInfo> topClasses) 
+    {
+      parentMI.SingleChildMI = singleChildMI;
+      parentMI.IsChildReadOnly |= singleChildMI.IsReadOnly;
+      singleChildMI.ParentMemberInfo = parentMI;
+      singleChildMI.ClassInfo.HasNotReadOnlyAndNotLookupParents |=
+        !singleChildMI.IsReadOnly && !singleChildMI.IsLookupOnly;
+      setupParentClassChildPropertyLinks(parentMI.ClassInfo, singleChildMI, topClasses);
+    }
+
+
+    /// <summary>
+    /// Used by List<>, if there are several properties in the child class referencing the parent class. List<>
+    /// will get replaced with a HasSet<>
+    /// </summary>
+    private static void setupParentPropertyChildPropertiesLinks(
+      MemberInfo parentMI,
+      List<MemberInfo> multipleChildrenMIs,
+      Dictionary<string, ClassInfo> topClasses) 
+    {
+      parentMI.MultipleChildrenMIs = multipleChildrenMIs;
+      ClassInfo? childCI = null;
+      foreach (var childMI in multipleChildrenMIs!) {
+        if (childCI is null) {
+          childCI = childMI.ClassInfo;
+        }
+        parentMI.IsChildReadOnly |= childMI.IsReadOnly;
+        childMI.ParentMemberInfo = parentMI;
+        childCI.HasNotReadOnlyAndNotLookupParents |= !childMI.IsReadOnly && !childMI.IsLookupOnly;
+      }
+      setupParentClassChildPropertiesLinks(parentMI.ClassInfo, multipleChildrenMIs, topClasses);
+    }
+
+
+    /// <summary>
+    /// Used by ParentOneChild, IsLookupOnly child and collections like Dictionary, SortedList, etc. It is only 
+    /// used by List<>, if there is only one property in the child class referencing the parent class
+    /// </summary>
+    private static void setupParentClassChildPropertyLinks(
+      ClassInfo parentCI,
+      MemberInfo singelChildMI,
+      Dictionary<string, ClassInfo> topClasses) 
+    {
+      singelChildMI.ParentClassInfo = parentCI;
+      setupParentClassChildClassLinks(parentCI, singelChildMI.ClassInfo, topClasses);
+    }
+
+
+    /// <summary>
+    /// Used by List<>, if there are several properties in the child class referencing the parent class. List<>
+    /// will get replaced with a HasSet<>
+    /// </summary>
+    private static void setupParentClassChildPropertiesLinks(
+      ClassInfo parentCI,
+      List<MemberInfo> multipleChildrenMIs,
+      Dictionary<string, ClassInfo> topClasses) 
+    {
+      var isFirst = true;
+      foreach (var childMI in multipleChildrenMIs!) {
+        if (isFirst) {
+          isFirst = false;
+          setupParentClassChildClassLinks(parentCI, childMI.ClassInfo, topClasses);
+        }
+        childMI.ParentClassInfo = parentCI;
+      }
+    }
+
+
+    /// <summary>
+    /// Used by ParentOneChild, IsLookupOnly child and collections like Dictionary, SortedList, etc. to setup
+    /// links between parent class and child class
+    /// </summary>
+    private static void setupParentClassChildClassLinks(
+       ClassInfo parentCI,
+       ClassInfo childCI,
+       Dictionary<string, ClassInfo> topClasses) 
+    {
+      parentCI.Children.Add(childCI);
+      childCI.ParentsAll.Add(parentCI);
+      childCI.HasParents = true;
+      topClasses.Remove(childCI.ClassName);
+    }
+
+
+    /// <summary>
+    /// Finds the child class property which should be used as key for a collection in the parent class. Returns
+    /// null if isSecondKey and the property child property Key is used as key. Key exisists for every class, but
+    /// has no MemberInfo.
+    /// </summary>
+    private MemberInfo? findKeyPropertyInChildClass(
+      MemberInfo parentMI,//has a value for parentMI.ChildClassInfo
+      string? childKeyPropertyName,
+      string? childKeyPropertyType,
+      bool isSecondKey) 
+    {
+      //the property in the child class used as key into the parent children collection can be found:
+      //a) if the parent class property knows the child class property's name based on
+      //   StoragePropertyAttribute.childPropertyName. This is needed if 2 properties in the child class each have
+      //   the type the parent class is looking for
+      //b) if the child class has only one property with the type the parent class is looking for.
+      var parentCI = parentMI.ClassInfo;
+      MemberInfo? childKeyMI = null;
+      if (childKeyPropertyName is null) {
+        //the data model does not specify which child property the parent should use. Search a property with the
+        //type the parent class is looking for.
+        foreach (var childMI in parentMI.ChildClassInfo!.Members.Values) {
+          if (childKeyPropertyType!=childMI.CsvTypeString && childKeyPropertyType==childMI.TypeStringNotNullable) {
+            System.Diagnostics.Debugger.Break();//Todo: Remove this test if Break is ever reached, otherwise simplify if()
+          }
+
+          if (childKeyPropertyType==childMI.CsvTypeString || childKeyPropertyType==childMI.TypeStringNotNullable) {
+            //if (childMI.TypeStringNotNullable==childKeyPropertyType) {
+            if (childKeyMI is null) {
+              childKeyMI = childMI;
+            } else {
+              var attribute = isSecondKey ? "ChildKeyPropertyName" : "ChildKey2PropertyName";
+              var second = isSecondKey ? "second " : "";
+              throw new GeneratorException(parentCI, parentMI,
+                $"The collection {parentMI.MemberName} in parent class {parentCI.ClassName} needs a {second}key " +
+                $"with the type {childKeyPropertyType}. There are 2 properties in {parentMI.ChildClassInfo.ClassName} " +
+                $"with the type {childKeyPropertyType}. Use StoragePropertyAttribute.{attribute} to indicate which " +
+                "property should be used.");
+            }
+          }
+        }
+
+        if (childKeyMI is null)
+          if (isSecondKey && childKeyPropertyType=="int") {
+            //use the Key property as second key for SortedBucketCollection 
+            parentMI.ChildKey2PropertyName = "Key";
+            parentMI.LowerChildKey2PropertyName = "key";
+            parentMI.ChildKey2TypeString = "int";
+            return null;
+
+          } else {
+            //No property was found in the child class with the type the parent class is looking for
+            var second = isSecondKey ? "second " : "";
+            throw new GeneratorException(parentCI, parentMI,
+                $"{parentMI.MemberName} references the class {parentMI.ChildTypeName}. A corresponding property with " +
+                $"type {childKeyPropertyType} used as {second}key into {parentMI.MemberName} is missing in {parentMI.ChildTypeName}.");
+          }
+
+      } else {
+        //parent knows the child's property name already
+        if (parentMI.ChildClassInfo!.Members.TryGetValue(childKeyPropertyName, out childKeyMI)) {
+          if (childKeyPropertyType!=childKeyMI.CsvTypeString && childKeyPropertyType==childKeyMI.TypeStringNotNullable) {
+            System.Diagnostics.Debugger.Break();//Todo: Remove this test if Break is ever reached, otherwise simplify if()
+          }
+          if (childKeyPropertyType!=childKeyMI.CsvTypeString && childKeyPropertyType!=childKeyMI.TypeStringNotNullable) {
+            //property in child class with the searched name has wrong type
+            throw new GeneratorException(parentCI, parentMI,
+              $"Property {childKeyPropertyName} in child class {parentMI.ChildClassInfo.ClassName} should " +
+              $"have the type {childKeyPropertyType}, but its type is {childKeyMI.TypeString}:" + Environment.NewLine +
+              $"Class: {childKeyMI.ClassInfo.ClassName}" + Environment.NewLine +
+              $"Property: {childKeyMI.MemberText}");
+          }
+
+        } else {
+          if (isSecondKey && childKeyPropertyName=="Key") {
+            //use the Key property as second key for SortedBucketCollection 
+            parentMI.ChildKey2PropertyName = "Key";
+            parentMI.LowerChildKey2PropertyName = "key";
+            parentMI.ChildKey2TypeString = "int";
+            return null;
+
+          } else {
+            //cannot find property in child with the name==ChildPropertyName
+            throw new GeneratorException(parentCI, parentMI,
+              $"Can not find property {childKeyPropertyName} in child class {parentMI.ChildTypeName}.");
+          }
+        }
+      }
+
+      //setup link between parent collection and key in child
+      if (isSecondKey) {
+        parentMI.ChildKey2PropertyName = childKeyMI.MemberName;
+        parentMI.LowerChildKey2PropertyName = childKeyMI.LowerMemberName;
+        parentMI.ChildKey2TypeString = childKeyMI.TypeStringNotNullable;
+      } else {
+        parentMI.ChildKeyPropertyName = childKeyMI.MemberName;
+        parentMI.LowerChildKeyPropertyName = childKeyMI.LowerMemberName;
+        parentMI.ChildKeyTypeString = childKeyMI.TypeStringNotNullable;
+      }
+      return childKeyMI;
+    }
+
+
+    //private static void findParentRelatedPropertiesInChild(
+    //  ClassInfo ci,
+    //  MemberInfo mi,
+    //  string childKeyExpectedTypeString,
+    //  string StoragePropertyKey,
+    //  ref string? childPropertyName,
+    //  ref string? lowerChildPropertyName,
+    //  out string childKeyFoundTypeString) 
+    //{
+    //  childKeyFoundTypeString = null!;
+    //  var childMI = mi.ChildMemberInfo!;
+    //  if (childPropertyName is null) {
+    //    //parent does not define name of key property
+    //    foreach (var childKeyMI in mi.ChildClassInfo!.Members.Values) {
+    //      if (childKeyExpectedTypeString==childKeyMI.CsvTypeString || childKeyExpectedTypeString==childKeyMI.TypeString) {
+    //        if (childKeyFoundTypeString is null) {
+    //          //first property found with the expected key type
+    //          childKeyFoundTypeString = childKeyMI.TypeString;
+    //          childPropertyName = childKeyMI.MemberName;
+    //          lowerChildPropertyName = childKeyMI.MemberName.ToCamelCase();
+    //        } else {
+    //          //second property found with the expected key type, throw exception
+    //          throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+    //            $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but found two properties in {childMI.ClassInfo.ClassName} " +
+    //            $"with the type {childKeyExpectedTypeString}: {childPropertyName}, {childKeyMI.MemberName}. Use " +
+    //            $"[StorageProperty({StoragePropertyKey}: \"Xyz\")] in the parent to indicate which property should be used." +
+    //            Environment.NewLine + mi.MemberText);
+    //        }
+    //      }
+    //    }
+
+    //    if (childKeyFoundTypeString is null) {
+    //      if (childKeyExpectedTypeString=="int" && StoragePropertyKey=="ChildKey2PropertyName") {
+    //        //use the Key property as second key for SortedBucketCollection 
+    //        childKeyFoundTypeString = "int";
+    //        childPropertyName = "Key";
+    //        lowerChildPropertyName = "key";
+
+    //      } else {
+    //        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+    //          $"{childMI.ClassInfo.ClassName}.{childMI.MemberName}, but could not find another property in {childMI.ClassInfo.ClassName} " +
+    //          $"with the type {childKeyExpectedTypeString} needed as key." + Environment.NewLine + mi.MemberText);
+    //      }
+    //    }
+
+    //  } else {
+    //    //parent defines name of key property
+    //    if (mi.ChildClassInfo!.Members.TryGetValue(childPropertyName, out var childKeyMIFound)) {
+    //      if (childKeyExpectedTypeString==childKeyMIFound.CsvTypeString || childKeyExpectedTypeString==childKeyMIFound.TypeString) {
+    //        childKeyFoundTypeString = childKeyMIFound.TypeString;
+    //        childPropertyName = childKeyMIFound.MemberName;
+    //        lowerChildPropertyName = childKeyMIFound.MemberName.ToCamelCase();
+    //      } else {
+    //        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found " +
+    //          $"{childKeyMIFound.ClassInfo.ClassName}.{childKeyMIFound.MemberName}, but it has wrong type: " +
+    //          $"{childKeyMIFound.CsvTypeString}:" + Environment.NewLine + mi.MemberText);
+    //      }
+    //    } else {
+    //      if (childPropertyName=="Key") {
+    //        childKeyFoundTypeString = "int";
+    //        childPropertyName = "Key";
+    //        lowerChildPropertyName = "key";
+    //      } else {
+    //        throw new GeneratorException($"{ci}.{mi.MemberName} {mi.TypeString}: found class {mi.ChildClassInfo.ClassName} " +
+    //          $"but could not find property {childPropertyName} in that class." + Environment.NewLine + mi.MemberText);
+    //      }
+    //    }
+    //  }
+    //}
+
+
+    private void addToParentChildTree(ClassInfo classInfo) {
       if (!classInfo.IsAddedToParentChildTree && allParentsAreAddedToParentChildTree(classInfo)) {
         classInfo.IsAddedToParentChildTree = true;
         classInfo.StoreKey = parentChildTree.Count;
         parentChildTree.Add(classInfo);
         foreach (var child in classInfo.Children) {
-          addParentChildTree(child);
+          addToParentChildTree(child);
         }
       }
     }

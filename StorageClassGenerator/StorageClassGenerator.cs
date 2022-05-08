@@ -128,7 +128,8 @@ namespace StorageLib {
         var oldForegroundColor = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine();
-        Console.WriteLine("Error: " + gex.Message);
+        Console.WriteLine("Error: ");
+        Console.WriteLine(gex.Message);
         Console.WriteLine();
         Console.ForegroundColor = oldForegroundColor;
 

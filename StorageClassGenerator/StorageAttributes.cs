@@ -58,23 +58,27 @@ namespace StorageLib {
     /// Constructor
     /// </summary>
     /// <param name="defaultValue">Provides a default value for this property in the class constructor.</param>
-    /// <param name="isLookupOnly">Normally, a parent has a child collection for every child type referencing it. If the
-    /// child just wants to link to the parent without the parent having a collection for that child, set isLookupOnly = true.</param>
-    /// <param name="needsDictionary">A dictionary gets created in the data context for quick access to an instance using
-    /// the value of this property.</param>
+    /// <param name="isLookupOnly">Normally, a parent has a child collection for every child type referencing it. 
+    /// If the child just wants to link to the parent without the parent having a collection for that child, set 
+    /// isLookupOnly = true.</param>
+    /// <param name="needsDictionary">A dictionary gets created in the data context for quick access to an instance
+    /// using the value of this property.</param>
     /// <param name="toLower">Copies the content of a string property into a second property of the same class using 
-    /// lower casing only. Can be helpful when creating case insensitive dictionaries in the data context (together with 
-    /// needsDictionary argument)</param>
-    /// <param name="childKeyPropertyName">Tells a dictionary or SortedList in a parent which property in the child should 
-    /// be used as key. For a SortedBucketCollection, it indicates which which property in the child should be used as key</param>
-    /// <param name="childKey2PropertyName">Tells a SortedBucketCollection in a parent which property in the child should 
-    /// be used as second key.</param>
+    /// lower casing only. Can be helpful when creating case insensitive dictionaries in the data context (together 
+    /// with needsDictionary argument)</param>
+    /// <param name="childPropertyName">Tells a parent which property in the child links to the parent.</param>
+    /// <param name="childKeyPropertyName">Tells a Dictionary or SortedList in a parent which property in the child 
+    /// should be used as key. For a SortedBucketCollection, it indicates which which property in the child should be 
+    /// used as key</param>
+    /// <param name="childKey2PropertyName">Tells a SortedBucketCollection in a parent which property in the child 
+    /// should be used as second key.</param>
     public StoragePropertyAttribute(
       string? defaultValue = null,
       bool isLookupOnly = false,
       bool isParentOneChild = false,
       bool needsDictionary = false,
       string? toLower = null,
+      string? childPropertyName = null,
       string? childKeyPropertyName = null,
       string? childKey2PropertyName = null) { }
   }

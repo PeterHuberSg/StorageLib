@@ -16,6 +16,7 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 This software is distributed without any warranty. 
 **************************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 
@@ -33,8 +34,9 @@ namespace StorageLib {
     public readonly string LowerMemberName;
     public MemberTypeEnum MemberType;
     public readonly ClassInfo ClassInfo;
-    public string? CsvTypeString;
+    public string? CsvTypeString;//uses types like Date instead of DateTime, which is needed when writing data to CSV files
     public string TypeString;
+    public string TypeStringNotNullable;//is only different from TypeString when IsNullable
     public string? PropertyForToLower; // used by ToLower to indicate from which other property in this class a lower 
                                        // case version should be made.
     public MemberInfo? ToLowerTarget; // ToLower source member can use ToLowerTarget to find target
@@ -51,13 +53,14 @@ namespace StorageLib {
     public readonly int MaxStorageSize;
     public readonly string? ChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
     public readonly string? LowerChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
+    public string? ChildPropertyName; //used by Dictionary, SortedList and SortedBucketCollection
+    public string? LowerChildPropertyName;
     public string? ChildKeyPropertyName; //used by Dictionary, SortedList and SortedBucketCollection
-    public string? LowerChildKeyPropertyName; 
+    public string? LowerChildKeyPropertyName;
+    public string? ChildKeyTypeString; //used by Dictionary, SortedList and SortedBucketCollection, gets corrected in AnalyzeDependencies()
     public string? ChildKey2PropertyName; //used by SortedBucketCollection
     public string? LowerChildKey2PropertyName;
-    public readonly string? ChildKeyTypeString; //used by Dictionary, SortedList and SortedBucketCollection
-    public readonly string? ChildKey2TypeString; //used by SortedBucketCollection
-    public readonly string? ParentTypeString;//is only different from TypeString when IsNullable
+    public string? ChildKey2TypeString; //used by SortedBucketCollection, might get corrected in AnalyzeDependencies(), i.e Date to DateTime
     public readonly string? LowerParentType;
     public readonly string? CsvReaderRead;
     public readonly string? CsvWriterWrite;
@@ -65,12 +68,18 @@ namespace StorageLib {
     public string? ToStringFunc;
 
     public ClassInfo? ChildClassInfo;
-    public MemberInfo? ChildMemberInfo;//is null for lists, because several child members can point to different parent lists
+    public List<MemberInfo>? MultipleChildrenMIs;//a List<Child> can be referenced by several properties in the child
+                                                 //class, in which case the List<Child> gets replaced by a HashSet<Child>
+    public MemberInfo? SingleChildMI;//all none List<> collections can have only 1 single property in the child class
+                                     //referencing the parent
     public bool IsChildReadOnly;
     public ClassInfo? ParentClassInfo; //not really used
     public MemberInfo? ParentMemberInfo;
     public EnumInfo? EnumInfo;
-    public int ChildCount = 0;
+
+    ////todo: delete next 2 lines
+    //public MemberInfo? ChildMemberInfo;//is null for lists, because several child members can point to different parent lists
+    //public int ChildCount = 0;
 
 
     /// <summary>
@@ -90,11 +99,10 @@ namespace StorageLib {
     {
       MemberText = memberText;
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       CsvTypeString = csvTypeString;
       MemberType = memberType;
       ClassInfo = classInfo;
-      SetIsNullable(isNullable);
       IsReadOnly = isReadOnly;
       if (isReadOnly) ClassInfo.HasReadOnlies = true;
       Comment = comment;
@@ -348,8 +356,11 @@ namespace StorageLib {
         throw new NotSupportedException();
       }
 
+      TypeStringNotNullable = TypeString;
+      IsNullable = isNullable;
       if (isNullable) {
         TypeString += '?';
+        QMark = "?";
       }
     }
 
@@ -368,18 +379,19 @@ namespace StorageLib {
     {
       MemberText = memberText;
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       CsvTypeString = "string";
       MemberType = MemberTypeEnum.ToLower;
       ClassInfo = classInfo;
       PropertyForToLower = toLower;
+      TypeString = "string";
+      TypeStringNotNullable = TypeString;
       SetIsNullable(isNullable);
       IsReadOnly = false;
       Comment = comment;
       DefaultValue = null;
       NeedsDictionary = needsDictionary;
       if (needsDictionary && !IsReadOnly) ClassInfo.HasNotReadOnlyNeedDirectories = true;
-      TypeString = "string";
 
       MaxStorageSize = 0;//toLower properties are not stored in CSV files, they live only in the RAM
       CsvWriterWrite = null;
@@ -404,19 +416,26 @@ namespace StorageLib {
       string name,
       ClassInfo classInfo,
       string childType,
+      string? childPropertyName,
       string? comment) 
     {
       MemberText = memberText;
       MemberType = MemberTypeEnum.ParentOneChild;
       MaxStorageSize = 0;//a reference is only stored in the child, not the parent
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       ClassInfo = classInfo;
       ChildTypeName = childType;
-      LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
-      SetIsNullable(true);
-      IsReadOnly = false; 
+      LowerChildTypeName = childType.ToCamelCase();
+      ChildPropertyName = childPropertyName;
+      if (childPropertyName is not null) {
+        LowerChildPropertyName = childPropertyName.ToCamelCase();
+      }
+      IsReadOnly = false;
+      IsNullable = true;
+      TypeStringNotNullable = childType;
       TypeString = childType + '?';
+      QMark = "?";
 
       CsvReaderRead = null;
       CsvWriterWrite = null;
@@ -435,19 +454,25 @@ namespace StorageLib {
       ClassInfo classInfo, 
       string listType, 
       string childType, 
+      string? childPropertyName,
       string? comment) 
     {
       MemberText = memberText;
       MemberType = MemberTypeEnum.ParentMultipleChildrenList;
       MaxStorageSize = 0;//a reference is only stored in the child, not the parent
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       ClassInfo = classInfo;
       ChildTypeName = childType;
-      LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
+      LowerChildTypeName = childType.ToCamelCase();
+      ChildPropertyName = childPropertyName;
+      if (childPropertyName is not null) {
+        LowerChildPropertyName = childPropertyName.ToCamelCase();
+      }
       SetIsNullable(false);
       IsReadOnly = false; //List properties are IReadOnlyList, but no need to mark them with ReadOnly
       TypeString = listType;
+      TypeStringNotNullable = TypeString;
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -465,6 +490,7 @@ namespace StorageLib {
       string memberTypeString,
       MemberTypeEnum memberType,
       string childType,
+      string? childPropertyName, 
       string? childKeyPropertyName, 
       string keyTypeString, 
       string? comment) 
@@ -473,18 +499,23 @@ namespace StorageLib {
       MemberType = memberType;
       MaxStorageSize = 0;//a reference is only stored in the child, not the parent
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       ClassInfo = classInfo;
       ChildTypeName = childType;
-      LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
+      LowerChildTypeName = childType.ToCamelCase();
+      ChildPropertyName = childPropertyName;
+      if (childPropertyName is not null) {
+        LowerChildPropertyName = childPropertyName.ToCamelCase();
+      }
       ChildKeyPropertyName = childKeyPropertyName;
       if (childKeyPropertyName is not null) {
-        LowerChildKeyPropertyName = childKeyPropertyName[0..1].ToLower() + childKeyPropertyName[1..];
+        LowerChildKeyPropertyName = childKeyPropertyName.ToCamelCase();
       }
       ChildKeyTypeString = keyTypeString;
       SetIsNullable(false);
       IsReadOnly = false; //Collection properties are IReadOnlyXXX, but not need to mark them with ReadOnly
       TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
+      TypeStringNotNullable = TypeString;
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -502,6 +533,7 @@ namespace StorageLib {
       string memberTypeString,
       MemberTypeEnum memberType,
       string childType,
+      string? childPropertyName,
       string? childKeyPropertyName,
       string? childKey2PropertyName,
       string key1TypeString,
@@ -512,23 +544,28 @@ namespace StorageLib {
       MemberType = memberType;
       MaxStorageSize = 0;//a reference is only stored in the child, not the parent
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       ClassInfo = classInfo;
       ChildTypeName = childType;
-      LowerChildTypeName = childType[0..1].ToLowerInvariant() + childType[1..];
+      LowerChildTypeName = childType.ToCamelCase();
+      ChildPropertyName = childPropertyName;
+      if (childPropertyName is not null) {
+        LowerChildPropertyName = childPropertyName.ToCamelCase();
+      }
       ChildKeyPropertyName = childKeyPropertyName;
       if (childKeyPropertyName is not null) {
-        LowerChildKeyPropertyName = childKeyPropertyName[0..1].ToLower() + childKeyPropertyName[1..];
+        LowerChildKeyPropertyName = childKeyPropertyName.ToCamelCase();
       }
       ChildKey2PropertyName = childKey2PropertyName;
       if (childKey2PropertyName is not null) {
-        LowerChildKey2PropertyName = childKey2PropertyName[0..1].ToLower() + childKey2PropertyName[1..];
+        LowerChildKey2PropertyName = childKey2PropertyName.ToCamelCase();
       }
       ChildKeyTypeString = key1TypeString;
       ChildKey2TypeString = key2TypeString;
       SetIsNullable(false);
       IsReadOnly = false; //Collection properties are IReadOnlyXXX, but no need to mark them with ReadOnly
       TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
+      TypeStringNotNullable = TypeString;
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -537,7 +574,7 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// constructor for a parent property in child class
+    /// constructor for a parent property in child class, which can be a collection, lookup or enum
     /// </summary>
     public MemberInfo(
       string memberText,
@@ -552,16 +589,17 @@ namespace StorageLib {
       MemberText = memberText;
       MemberType = MemberTypeEnum.LinkToParent;
       MemberName = name;
-      LowerMemberName = name[0..1].ToLowerInvariant() + name[1..];
+      LowerMemberName = name.ToCamelCase();
       ClassInfo = classInfo;
-      SetIsNullable(isNullable);
       IsReadOnly = isReadOnly;
       if (isReadOnly) ClassInfo.HasReadOnlies = true;
-      ParentTypeString = memberTypeString;
-      LowerParentType = memberTypeString[0..1].ToLowerInvariant() + memberTypeString[1..];
+      LowerParentType = memberTypeString.ToCamelCase();
       CsvWriterWrite = "Write";
+      TypeStringNotNullable = memberTypeString;
+      IsNullable = isNullable;
       if (isNullable) {
         TypeString = memberTypeString + '?';
+        QMark = "?";
         CsvReaderRead = "ReadIntNull()";
         NoValue = "null";
         ToStringFunc = "?.ToShortString()";
@@ -624,9 +662,21 @@ namespace StorageLib {
         sw.WriteLine("    ///  </summary>");
       }
       if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-        if (ChildCount<1) {
-          throw new Exception();
-        } else if (ChildCount==1) {
+        //if (ChildCount<1) {
+        //  throw new Exception();
+        //} else if (ChildCount==1) {
+        //  if (ChildClassInfo!.AreInstancesReleasable) {
+        //    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
+        //  } else {
+        //    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
+        //    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
+        //  }
+        //} else {
+        //  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+        //  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
+        //}
+        if (SingleChildMI is not null) {
           if (ChildClassInfo!.AreInstancesReleasable) {
             sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
             sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
@@ -634,9 +684,12 @@ namespace StorageLib {
             sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
             sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
           }
-        } else {
+        } else if (MultipleChildrenMIs is not null) {
+          //A parent List<> referenced by 2 properties in the child class
           sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
           sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
+        } else {
+          throw new Exception();
         }
       } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
         MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
@@ -664,6 +717,13 @@ namespace StorageLib {
           }
         }
       }
+    }
+  }
+
+
+  public static class ToCamelCaseExtension {
+    public static string ToCamelCase(this string str) {
+      return str[0..1].ToLowerInvariant() + str[1..];
     }
   }
 }

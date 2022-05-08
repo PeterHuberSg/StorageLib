@@ -351,7 +351,8 @@ namespace DataModelSamples {
   //child 1 : mc parent relationship using SortedBucketCollection
   public class SortedBucketCollection_1_MC_Parent {
     public string Name;
-    //SortedBucketCollectionChild has only one property of type string. No need for [StorageProperty(childKeyPropertyName: "Name")]
+    //SortedBucketCollectionChild has only one property of type string. No need for
+    //[StorageProperty(childKeyPropertyName: "Name")]
     public SortedBucketCollection<Date, string, SortedBucketCollection_1_MC_Child> Children;
   }
   public class SortedBucketCollection_1_MC_Child {

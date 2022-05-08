@@ -19,11 +19,13 @@ transactions and data backup.
 
 [**Design principals**](#design-principals)  
 [**- Supported relationships**](#supported-relationships)  
-[**- Parents first**](#parents-first)  
-[**- Children define the relationship**](#children-define-the-relationship)  
 [**- Relationship notation**](#relationship-notation)  
 [**- Nullability indicates conditionality**](#nullability-indicates-conditionality)  
 [**- Relationship examples**](#relationship-examples)  
+[**- Children define its end of a relationship by having a property with the parent's type**](#Children-define-its-end-of-a-relationship-by-having-a-property-with-the-parents-type)  
+[**- Parents define the details of a relationship**](#Parents-define-the-details-of-a-relationship)  
+[**- Parents first**](#parents-first)  
+[**- Children control the relationship**](#children-control-the-relationship)  
 [**- Data Model**](#Data-Model)  
 [**- Generated Data Model Classes**](#generated-data-model-classes)  
 [**- DC Data Context**](#DC-Data-Context)  
@@ -349,32 +351,6 @@ Parent2 <── mc : 1 ──┘
 
 ``` 
 
-## Parents first
-The parent objects must be stored before the child or the children linking to it. *StorageLib*
-stores all instances (objects) of one class in one file. On application startup, the file gets read 
-completely and all its objects created immediately, before the next file with the next 
-class gets read. It must be possible to create any parent without any children, meaning
-a `Child` property in a parent is always nullable (=conditional) and `Children` is always 
-a collection, which can be empty (=mc).
-
-## Children define the relationship
-The child defines to which parent(s) it belongs. For each relationship to a parent it has one 
-property. When a child property linking to a parent gets stored, the child gets added to the 
-`Child` or `Children` property of its parent. When a child changes (`Update()`) the value of 
-its `Parent` property from `Parent1` to `Parent2`, *StorageLib* 
-removes child from `Parent1.Children` and adds child to `Parent2.Children`. 
-
-The parents get written to a file without any children information. When the parent gets 
-read first during startup, the parents have no children. The children get added to the parent 
-once the children files gets read.
-
-*StorageLib* ensures that when a child has a link to a parent, that child is also added to the 
-children collection of the parent. *"Children define the child parent relationship"* is only 
-relevant in the sense that adding or removing a child from its
-parent can only be achieved by changing the value of the child property linking to the 
-parent. There is no method supporting removing the child directly form the children 
-collection in the parent.
-
 ## Relationship notation
 *Child:Parent*  
 1:c  
@@ -461,6 +437,129 @@ public class Child {
   public Parent2? Parent2;
 }
 ```
+
+## Children define its end of a relationship by having a property with the parent's type
+Setting up a child parent relationship from a child is easy. Just add a property to the child
+class which has the parents property. In rare cases, the child needs to define some relationship
+details:
+
+```csharp
+[StorageClass(areInstancesReleasable: false)]
+public class Item {
+  public string Name;
+}
+
+public class OrderDetail {
+  public Order Order;
+  public int Quantity;
+  [StorageProperty(isLookupOnly: true)]
+  public Item Item;
+}
+```
+
+In this example there is an *Item* class describing items that can be ordered and a class 
+*OrderDetail* which tracks the item belonging to a particular order. In this case, there 
+might be no need for the parent class *Item* to maitain a list with all orders which have
+ordered this item. When a child property has the type of a parent, *StorageClassGeneretor* 
+will show an error if there is not corresponding property in the parent class, unless 
+`[StorageProperty(isLookupOnly: true)]` specifies that the parent will not link back 
+to the child.
+
+However, this is a rare example when further definition is needed with the child property.
+
+## Parents define the details of a relationship
+Setting up a child parent relationship from the parent's end needs more information, for 
+example if the children collection should be:
+- List<Child>
+- Dictionary<Key, Child>
+- SortedList<Key, Child>
+- SortedBucketCollection<Key1, Key2, Child>
+
+Most often just a *List* is used. A *Dictionary* or *SortedList* allows to find a child quickly 
+based on it's key. Example of storing company shares and their prices:
+
+```csharp
+public class Share {
+  public string CompanyName;
+  public SortedList<Date, Activity> Quotes;
+}
+
+public class Quote {
+  public Share Share;
+  public Date Date;
+  public Decimal4 Amount;
+}
+```
+
+It is the parent property which defines that for each date there can be only one quote. It usese a 
+*SortedList* and not a *Dictionary* to define that. *SortedList* is much faster than *Dictionary* 
+when new data gets always written at the end.
+
+However, addional information might be needed, for example when the *Child* class has 2 properties 
+with the type `Date`. 
+
+```csharp
+public class Share {
+  public string CompanyName;
+  [StorageProperty(childKeyPropertyName: "Date")]
+  public SortedList<Date, Activity> Quotes;
+}
+
+public class Quote {
+  public Share Share;
+  public Date Date;
+  public Date ReportedDate;
+  public Decimal2 Amount;
+}
+```
+
+The additional information `[StorageProperty(childKeyPropertyName: "Date")]` tells 
+*StorageClassGeneretor* which Date in the child should be used for the *Quote* *Share* relationship.
+
+Sometimes it is helpful to access children by `Date`, but several children might have the same
+`Date`. Example of storing of share sales:
+
+```csharp
+public class Share {
+  public string CompanyName;
+  public SortedBucketCollection<Date, int, Sale> Sales;
+}
+
+public class Sale {
+  public Date Date;
+  public Decimal4 Amount;
+}
+```
+
+`SortedBucketCollection<Key1, Key2, Child>` sorts all children first by *Key1*. If several children 
+have the same value for *Key1*, they get sorted by *Key2*. This collection was specifically written for
+*StorageLib*.
+
+## Parents first
+The parent objects must be stored before the child or the children linking to it. *StorageLib*
+stores all instances (objects) of one class in one file. On application startup, the file gets read 
+completely and all its objects created immediately, before the next file with the next 
+class gets read. It must be possible to create any parent without any children, meaning
+a `Child` property in a parent is always nullable (=conditional) and `Children` is always 
+a collection, which can be empty (=mc).
+
+## Children control the relationship
+The child controls to which parent(s) it belongs. For each relationship to a parent it has one 
+property. When a child property linking to a parent gets stored, the child gets added to the 
+`Child` or `Children` property of its parent. When a child changes (`Update()`) the value of 
+its `Parent` property from `Parent1` to `Parent2`, *StorageLib* 
+removes child from `Parent1.Children` and adds child to `Parent2.Children`. 
+
+The parents get written to a file without any children information. When the parent gets 
+read first during startup, the parents have no children. The children get added to the parent 
+once the children files gets read.
+
+*StorageLib* ensures that when a child has a link to a parent, that child is also added to the 
+children collection of the parent. *"Children control the child parent relationship"* is only 
+relevant in the sense that adding or removing a child from its
+parent can only be achieved by changing the value of the child property linking to the 
+parent. There is no method supporting removing the child directly form the children 
+collection in the parent.
 
 ## Data Model
 

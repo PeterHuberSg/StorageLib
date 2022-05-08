@@ -309,7 +309,7 @@ namespace StorageLib {
             nextBucketItem = foundBucketItem.Next;
           }
 
-          //bucket has bigger Key2 than any exisitng bucktItem with same Key1
+          //bucket has bigger Key2 than any existing bucktItem with same Key1
           foundBucketItem.Next = new BucketItem(item, null);
         }
 
