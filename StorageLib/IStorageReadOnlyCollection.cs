@@ -51,6 +51,12 @@ namespace StorageLib {
 
 
   /// <summary>
+  /// Like IReadOnlySet, but for StorageHashSet, which provides CountStoredItems and GetStoredItems().
+  /// </summary>
+  public interface IStorageReadOnlySet<TItem>: IStorageReadOnly<TItem>, IReadOnlySet<TItem> { }
+
+
+  /// <summary>
   /// Like IReadOnlyDictionary, but for StorageDictionary or StorageSortedList, which provide CountStoredItems and 
   /// GetStoredItems(). 
   /// </summary>

@@ -54,25 +54,26 @@ namespace ParserTest {
         Property: public List<ListChild> Children;
         Children references the class ListChild. A corresponding property with type ListParent is missing in ListChild.");
 
-      //Todo: Replace with HashSetTest
-      ////Two properties in child class with parent's type
-      ////------------------------------------------------
-      //Generator.Analyze(@"  
-      //  public class ListParent {
-      //    public List<ListChild> Children;
-      //  }
+      //Two properties in child class with parent's type
+      //------------------------------------------------
+      Generator.Analyze(@"  
+        public class ListParent {
+          public List<ListChild> Children;
+        }
 
-      //  public class ListChild {
-      //    public ListParent Parent1;
-      //    public ListParent Parent2;
-      //  }
-      //",
-      //@"Class: ListChild
-      //  Property: public ListParent Parent2;
-      //  The parent class ListParent is not linking back to Parent2 property. This can happen if 2 or more properties " +
-      //  "of ListChild link to ListParent class. In this case, several collections or properties for singel child are " +
-      //  "needed in the ListParent class and they need to use StoragePropertyAttribute.ChildPropertyName to indicate " +
-      //  "which of their property links to which ListChild property.");
+        public class ListChild {
+          public ListParent Parent1;
+          public ListParent Parent2;
+        }
+      ",
+      @"Class: ListParent
+        Property: public List<ListChild> Children;
+        The child class ListChild has 2 properties linking to parent class ListParent:
+        public ListParent Parent1;
+        public ListParent Parent2;
+        Use HashSet<ListChild> if more than one child property links to Children or add to ListParent one " +
+        "List<ListChild> for each child property with the type ListParent and specify with attribut " +
+        "StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //missing children property in parent class
       //-----------------------------------------

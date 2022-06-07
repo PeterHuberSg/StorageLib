@@ -11,7 +11,6 @@ namespace StorageTest {
   public class BackupTest {
 
 
-
     [TestMethod]
     public void TestBackup() {
       var directoryInfo =  new DirectoryInfo("TestCsv");

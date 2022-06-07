@@ -51,8 +51,8 @@ namespace StorageLib {
     public readonly bool IsLookupOnly = false;
     public readonly bool NeedsDictionary = false;
     public readonly int MaxStorageSize;
-    public readonly string? ChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
-    public readonly string? LowerChildTypeName; //used by List, Dictionary, SortedList and SortedBucketCollection
+    public readonly string? ChildTypeName; //used by ParentMultipleChildrenXxx: List, HashSet, Dictionary, SortedList and SortedBucketCollection
+    public readonly string? LowerChildTypeName; //used by ParentMultipleChildrenXxx
     public string? ChildPropertyName; //used by Dictionary, SortedList and SortedBucketCollection
     public string? LowerChildPropertyName;
     public string? ChildKeyPropertyName; //used by Dictionary, SortedList and SortedBucketCollection
@@ -68,9 +68,8 @@ namespace StorageLib {
     public string? ToStringFunc;
 
     public ClassInfo? ChildClassInfo;
-    public List<MemberInfo>? MultipleChildrenMIs;//a List<Child> can be referenced by several properties in the child
-                                                 //class, in which case the List<Child> gets replaced by a HashSet<Child>
-    public MemberInfo? SingleChildMI;//all none List<> collections can have only 1 single property in the child class
+    public List<MemberInfo>? MultipleChildrenMIs;//used by HashSet<Child>
+    public MemberInfo? SingleChildMI;//all none HashSet<> collections can have only 1 single property in the child class
                                      //referencing the parent
     public bool IsChildReadOnly;
     public ClassInfo? ParentClassInfo; //not really used
@@ -347,9 +346,12 @@ namespace StorageLib {
         throw new Exception("ParentOneChild uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenList:
         throw new Exception("List uses its own constructor.");
+      case MemberTypeEnum.ParentMultipleChildrenHashSet:
+        throw new Exception("HashSet uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenDictionary:
+        throw new Exception("Dictionary uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenSortedList:
-        throw new Exception("Dictionary and SortedList use their own constructor.");
+        throw new Exception("SortedList uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenSortedBucket:
         throw new Exception("SortedBucketCollection uses its own constructor.");
       default:
@@ -445,20 +447,26 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// constructor for List
+    /// constructor for List and HashSet
     /// </summary>
     public MemberInfo(
-      int _,
+      bool isList,
       string memberText,
       string name, 
       ClassInfo classInfo, 
-      string listType, 
+      string typeString, 
       string childType, 
       string? childPropertyName,
       string? comment) 
     {
+      if (isList) {
+        MemberType = MemberTypeEnum.ParentMultipleChildrenList;
+
+      } else {
+        //is HashSet
+        MemberType = MemberTypeEnum.ParentMultipleChildrenHashSet;
+      }
       MemberText = memberText;
-      MemberType = MemberTypeEnum.ParentMultipleChildrenList;
       MaxStorageSize = 0;//a reference is only stored in the child, not the parent
       MemberName = name;
       LowerMemberName = name.ToCamelCase();
@@ -470,8 +478,8 @@ namespace StorageLib {
         LowerChildPropertyName = childPropertyName.ToCamelCase();
       }
       SetIsNullable(false);
-      IsReadOnly = false; //List properties are IReadOnlyList, but no need to mark them with ReadOnly
-      TypeString = listType;
+      IsReadOnly = false; //List and HashSet properties get changed to IReadOnlyXxx, but no need to mark them with ReadOnly
+      TypeString = typeString;
       TypeStringNotNullable = TypeString;
       CsvReaderRead = null;
       CsvWriterWrite = null;
@@ -661,39 +669,43 @@ namespace StorageLib {
         sw.WriteLine($"    /// {PrecissionComment}");
         sw.WriteLine("    ///  </summary>");
       }
-      if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-        //if (ChildCount<1) {
-        //  throw new Exception();
-        //} else if (ChildCount==1) {
-        //  if (ChildClassInfo!.AreInstancesReleasable) {
-        //    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
-        //  } else {
-        //    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-        //    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
-        //  }
-        //} else {
-        //  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-        //  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
-        //}
-        if (SingleChildMI is not null) {
-          if (ChildClassInfo!.AreInstancesReleasable) {
-            sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-            sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
-          } else {
-            sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-            sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
-          }
-        } else if (MultipleChildrenMIs is not null) {
-          //A parent List<> referenced by 2 properties in the child class
-          sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-          sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
-        } else {
-          throw new Exception();
-        }
-      } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
-        MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
-        MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
+      //if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
+      //  ////if (ChildCount<1) {
+      //  ////  throw new Exception();
+      //  ////} else if (ChildCount==1) {
+      //  ////  if (ChildClassInfo!.AreInstancesReleasable) {
+      //  ////    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+      //  ////    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
+      //  ////  } else {
+      //  ////    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
+      //  ////    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
+      //  ////  }
+      //  ////} else {
+      //  ////  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+      //  ////  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
+      //  ////}
+      //  //if (SingleChildMI is not null) {
+      //  //  if (ChildClassInfo!.AreInstancesReleasable) {
+      //  //    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+      //  //    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
+      //  //  } else {
+      //  //    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
+      //  //    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
+      //  //  }
+      //  //} else if (MultipleChildrenMIs is not null) {
+      //  //  //A parent List<> referenced by 2 properties in the child class
+      //  //  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
+      //  //  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
+      //  //} else {
+      //  //  throw new Exception();
+      //  //}
+      //} else 
+      if (MemberType is
+        MemberTypeEnum.ParentMultipleChildrenList or
+        MemberTypeEnum.ParentMultipleChildrenHashSet or
+        MemberTypeEnum.ParentMultipleChildrenDictionary or
+        MemberTypeEnum.ParentMultipleChildrenSortedList or
+        MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
       {
         sw.WriteLine($"    public {ReadOnlyTypeString} {MemberName} => {LowerMemberName};");
         sw.WriteLine($"    readonly {TypeString} {LowerMemberName};");

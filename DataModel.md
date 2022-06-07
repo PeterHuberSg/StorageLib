@@ -1,5 +1,5 @@
 # Introduction  
-This document specifies the content of a *Data Model* .cs file. The developer defines in the *Data Model* 
+This document specifies how a c# *Data Model* file should look like. The developer defines in the *Data Model* 
 the classes needed for his project, their properties and how they are related to the other classes.
 
 Code samples for the functionality described here can be found in the file *DataModelSamples.cs* in the *SampleDataModel* project.

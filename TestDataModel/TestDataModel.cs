@@ -276,63 +276,116 @@ namespace TestContext {
   #endregion
 
 
-  //#region Child with 2 parents, each using lists
-  ////      --------------------------------------
+  #region Child with 2 parents, each using lists
+  //      --------------------------------------
 
-  ////Example where a child has 2 parents 
-  ////If the child is not deletable, the parents must not be not deletable too. It's not possible to delete a parent and
-  ////leave the child with a link to that deleted parent.
-  ////The child.Parent property can be nullable (conditional parent) or not nullable (parent required).
-  ////The child.Parent property can be readonly (parent child relationship cannot be changed after child is created).
-  ////[StorageClass(isGenerateReaderWriter: true)] creates ClassXyzReader and ClassXyzWriter, which allow to read and write 
-  ////the CSV file without using a data context nor DataStore. This is useful for administrative tasks, like deleting
-  ////of data which is not deletable within the data context.
+  //Example where a child has 2 parents, i.e. 2 child properties have the same parent type and the parent has one List<>
+  //for each child property.
+  //If the child is not deletable, the parents must not be not deletable too. It's not possible to delete a parent and
+  //leave the child with a link to that deleted parent.
+  //The child.Parent property can be nullable (conditional parent) or not nullable (parent required).
+  //The child.Parent property can be readonly (parent child relationship cannot be changed after child is created).
+  //[StorageClass(isGenerateReaderWriter: true)] creates ClassXyzReader and ClassXyzWriter, which allow to read and write 
+  //the CSV file without using a data context nor DataStore. This is useful for administrative tasks, like deleting
+  //of data which is not deletable within the data context.
 
-  //public class Cw2PParent {
-  //  public string Text;
-  //  [StorageProperty(childPropertyName: "Parent1")]
-  //  public List<Cw2PChild> Children1;
-  //  [StorageProperty(childPropertyName: "Parent2")]
-  //  public List<Cw2PChild> Children2;
-  //}
+  public class Cw2PParent {
+    public string Text;
+    [StorageProperty(childPropertyName: "Parent0")]
+    public List<Cw2PChild> Children0;
+    [StorageProperty(childPropertyName: "Parent1")]
+    public List<Cw2PChild> Children1;
+  }
 
-  //public class Cw2PParentN {
-  //  public string Text;
-  //  [StorageProperty(childPropertyName: "Parent1N")]
-  //  public List<Cw2PChild> Children1;
-  //  [StorageProperty(childPropertyName: "Parent2N")]
-  //  public List<Cw2PChild> Children2;
-  //}
+  public class Cw2PParentN {
+    public string Text;
+    [StorageProperty(childPropertyName: "Parent0N")]
+    public List<Cw2PChild> Children0;
+    [StorageProperty(childPropertyName: "Parent1N")]
+    public List<Cw2PChild> Children1;
+  }
 
-  //public class Cw2PParentR {
-  //  public string Text;
-  //  [StorageProperty(childPropertyName: "Parent1R")]
-  //  public List<Cw2PChild> Children1;
-  //  [StorageProperty(childPropertyName: "Parent2R")]
-  //  public List<Cw2PChild> Children2;
-  //}
+  public class Cw2PParentR {
+    public string Text;
+    [StorageProperty(childPropertyName: "Parent0R")]
+    public List<Cw2PChild> Children0;
+    [StorageProperty(childPropertyName: "Parent1R")]
+    public List<Cw2PChild> Children1;
+  }
 
-  //public class Cw2PParentNR {
-  //  public string Text;
-  //  [StorageProperty(childPropertyName: "Parent1NR")]
-  //  public List<Cw2PChild> Children1;
-  //  [StorageProperty(childPropertyName: "Parent2NR")]
-  //  public List<Cw2PChild> Children2;
-  //}
+  public class Cw2PParentNR {
+    public string Text;
+    [StorageProperty(childPropertyName: "Parent0NR")]
+    public List<Cw2PChild> Children0;
+    [StorageProperty(childPropertyName: "Parent1NR")]
+    public List<Cw2PChild> Children1;
+  }
 
-  //[StorageClass(pluralName: "Cw2PChildren")]
-  //public class Cw2PChild {
-  //  public string Text;
-  //  public Cw2PParent Parent1;
-  //  public Cw2PParentN? Parent1N;
-  //  public readonly Cw2PParentR Parent1R;
-  //  public readonly Cw2PParentNR? Parent1NR;
-  //  public Cw2PParent Parent2;
-  //  public Cw2PParentN? Parent2N;
-  //  public readonly Cw2PParentR Parent2R;
-  //  public readonly Cw2PParentNR? Parent2NR;
-  //}
-  //#endregion
+  [StorageClass(pluralName: "Cw2PChildren")]
+  public class Cw2PChild {
+    public string Text;
+    public Cw2PParent Parent0;
+    public Cw2PParentN? Parent0N;
+    public readonly Cw2PParentR Parent0R;
+    public readonly Cw2PParentNR? Parent0NR;
+    public Cw2PParent Parent1;
+    public Cw2PParentN? Parent1N;
+    public readonly Cw2PParentR Parent1R;
+    public readonly Cw2PParentNR? Parent1NR;
+  }
+  #endregion
+
+
+  #region Parent with children HashSet
+  //      ----------------------------
+
+  //Example where the parent uses a HashSet for its children. A HashSet must be used instead of a List if 2 child
+  //properties link to the same parent class (both have the same parent class type). Reason: If Children is a List<>
+  //and if both properties link to the same parent class instance, the same child would be twice in the List. With a 
+  //HashSet, the child will always only be once in Children, regardless of how many child properties link to
+  //the same parent class instance.
+  //
+  //If the child is not deletable, the parent must not be not deletable too. It's not possible to delete a parent and
+  //leave the child with a link to that deleted parent.
+  //The child.Parent property can be nullable (conditional parent) or not nullable (parent required).
+  //The child.Parent property can be readonly (parent child relationship cannot be changed after child is created).
+  //[StorageClass(isGenerateReaderWriter: true)] creates ClassXyzReader and ClassXyzWriter, which allow to read and write 
+  //the CSV file without using a data context nor DataStore. This is useful for administrative tasks, like deleting
+  //of data which is not deletable within the data context.
+
+  public class HashSetParent {
+    public string Text;
+    public HashSet<HashSetChild> Children;
+  }
+
+  public class HashSetParentN {
+    public string Text;
+    public HashSet<HashSetChild> Children;
+  }
+
+  public class HashSetParentR {
+    public string Text;
+    public HashSet<HashSetChild> Children;
+  }
+
+  public class HashSetParentNR {
+    public string Text;
+    public HashSet<HashSetChild> Children;
+  }
+
+  [StorageClass(pluralName: "HashSetChildren")]
+  public class HashSetChild {
+    public string Text;
+    public HashSetParent Parent0;
+    public HashSetParent Parent1;
+    public HashSetParentN? Parent0N;
+    public HashSetParentN? Parent1N;
+    public readonly HashSetParentR Parent0R;
+    public readonly HashSetParentR Parent1R;
+    public readonly HashSetParentNR? Parent0NR;
+    public readonly HashSetParentNR? Parent1NR;
+  }
+  #endregion
 
 
   #region Parent with children Dictionary
@@ -615,7 +668,7 @@ namespace TestContext {
 
 
   #region SampleMaster -> Sample -> SampleDetail, grand parent, parent, child, using List for children
-  //      ---------------------------------------------------------------
+  //      --------------------------------------------------------------------------------------------
 
   //Sample.SampleMaster is nullable
   //SampleDetail.Sample is NOT nullable, it is not possible to store a SampleDetail without a parent Sample
@@ -646,9 +699,9 @@ namespace TestContext {
     public string Text;
 
     /// <summary>
-    /// List representing parent child relationship
+    /// HashSet<> must be used instead of List<> when more than one property in the child link to the same parent class.
     /// </summary>
-    public List<Sample> SampleX;
+    public HashSet<Sample> SampleX;
 
 
     /// <summary>

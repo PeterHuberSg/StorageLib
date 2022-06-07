@@ -202,20 +202,20 @@ namespace StorageLib {
           }
         }
 
-        if (AreItemsUpdated || AreItemsDeleted) {
-          //backup file and create a new one with only the latest items, but no deletions nor updates
-          try {
-            var backupFileName = PathFileName[..^3] + "bak";
-            if (File.Exists(backupFileName)) {
-              File.Delete(backupFileName);
-            }
+        try {
+          var backupFileName = PathFileName[..^3] + "bak";
+          if (File.Exists(backupFileName)) {
+            File.Delete(backupFileName);
+          }
+          if (AreItemsUpdated || AreItemsDeleted) {
+            //backup file and create a new one with only the latest items, but no deletions nor updates
             File.Move(PathFileName, backupFileName);
             using var fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, CsvConfig.BufferSize, FileOptions.SequentialScan);
             using var csvWriter = new CsvWriter("", CsvConfig, MaxLineLenght, fileStream);
             WriteToCsvFile(csvWriter);
-          } catch (Exception ex) {
-            CsvConfig.ReportException?.Invoke(ex);
           }
+        } catch (Exception ex) {
+          CsvConfig.ReportException?.Invoke(ex);
         }
 
         create = null!;
@@ -269,6 +269,7 @@ namespace StorageLib {
             if (!Remove(key)) {
               errorStringBuilder.AppendLine($"Deletion Line with key '{key}' did not exist in StorageDictonary.");
             }
+            //Todo: I guess Disconnect() should no longer be called, since delete, i.e. release no longer disconnects child from parent
             disconnect!(item);
 
           } else if (firstLineChar==CsvConfig.LineCharUpdate) {

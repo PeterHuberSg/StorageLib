@@ -116,8 +116,9 @@ namespace ParserTest {
         The child class SortedBucketChild has 2 properties linking to parent class SortedBucketParent:
         public SortedBucketParent Parent1;
         public SortedBucketParent Parent2;
-        Only List<SortedBucketChild> allows multiple properties in the child class SortedBucketChild to link to the " +
-        "parent class SortedBucketParent, but Children is not a List<> type.");
+        Use HashSet<SortedBucketChild> if more than one child property links to Children or add to SortedBucketParent " +
+        "one List<SortedBucketChild> for each child property with the type SortedBucketParent and specify with " +
+        "attribut StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class matching the first key type defined in the parent
       //-------------------------------------------------------------------------------

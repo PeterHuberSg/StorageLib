@@ -54,7 +54,7 @@ namespace StorageLib {
     public int HeaderLength;
     public bool IsAddedToParentChildTree;
     public int StoreKey;
-
+    private object sdw;
 
     public ClassInfo(
       string name, 
@@ -231,7 +231,25 @@ namespace StorageLib {
                 "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
             }
 
-            member = new MemberInfo(999, memberText, name, this, csvTypeString, csvTypeString[5..^1], childPropertyName, propertyComment);
+            member = new MemberInfo(isList: true, memberText, name, this, csvTypeString, csvTypeString[5..^1], childPropertyName, propertyComment);
+
+          }else if (csvTypeString.StartsWith("HashSet<") && csvTypeString.EndsWith(">")) {
+            //HashSet
+            //-------
+            if (isNullable) throw new GeneratorException($"Class '{ClassName}'.Property '{name}': {csvTypeString} cannot be nullable:" +
+              Environment.NewLine + memberText);
+
+            if (childKeyPropertyName is not null) {
+              throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
+                "StoragePropertyAttribute with a childKeyPropertyName argument, which is only for Directories, SortedLists and SortedBucketCollections:" + Environment.NewLine + memberText);
+            }
+
+            if (childKey2PropertyName is not null) {
+              throw new GeneratorException($"{ClassName}.{name} is of type {csvTypeString}. It cannot have a " +
+                "StoragePropertyAttribute with a childKey2PropertyName argument, which is only for SortedBucketCollections:" + Environment.NewLine + memberText);
+            }
+
+            member = new MemberInfo(isList: false, memberText, name, this, csvTypeString, csvTypeString[8..^1], childPropertyName, propertyComment);
 
           } else if ((csvTypeString.StartsWith("Dictionary<") || csvTypeString.StartsWith("SortedList<")) &&
             csvTypeString.EndsWith(">")) 
@@ -316,7 +334,7 @@ namespace StorageLib {
               key2TypeString,
               propertyComment);
           } else {
-            throw new GeneratorException(ClassName, memberText, $"'{csvTypeString}' is not support. Should " +
+            throw new GeneratorException(ClassName, memberText, $"'{csvTypeString}' is not supported. Should " +
               "it be a List<>, SortedList<,>, Dictionary<,> or SortedBucketCollection<,,> ?" +
               Environment.NewLine + memberText);
           }
@@ -586,7 +604,7 @@ namespace StorageLib {
             sw.WriteLine();
             sw.WriteLine();
           }
-        } else  if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //List, Dictionary, SortedList or SortedBucketCollection
+        } else  if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //ParentMultipleChildrenXxx
           sw.WriteLine("    /// <summary>");
           sw.WriteLine($"    /// Called after a {mi.LowerChildTypeName} gets added to {mi.MemberName}.");
           sw.WriteLine("    /// </summary>");
@@ -599,6 +617,16 @@ namespace StorageLib {
             sw.WriteLine($"    /// Called after a {mi.LowerChildTypeName} gets removed from {mi.MemberName}.");
             sw.WriteLine("    /// </summary>");
             sw.WriteLine($"    {cs}partial void onRemovedFrom{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName}){{");
+            sw.WriteLine($"    {cs}}}");
+            sw.WriteLine();
+            sw.WriteLine();
+          }
+          if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+            sw.WriteLine("    /// <summary>");
+            sw.WriteLine($"    /// Called after rollback of AddTo{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName}), removing {mi.LowerChildTypeName} from {mi.MemberName}");
+            sw.WriteLine($"    /// without testing {mi.LowerChildTypeName} properties.");
+            sw.WriteLine("    /// </summary>");
+            sw.WriteLine($"    {cs}partial void onRollbackAddTo{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName}){{");
             sw.WriteLine($"    {cs}}}");
             sw.WriteLine();
             sw.WriteLine();
@@ -714,7 +742,7 @@ namespace StorageLib {
         lines.Add("\"Key\"");
       }
       foreach (var mi in Members.Values) {
-        if (mi.MemberType<MemberTypeEnum.ParentOneChild && //not List, Dictionary, SortedList nor SortedBucketCollection
+        if (mi.MemberType<MemberTypeEnum.ParentOneChild && //not ParentMultipleChildrenXxx
           mi.MemberType!=MemberTypeEnum.ToLower) 
         {
           lines.Add($"\"{mi.MemberName}\"");
@@ -830,18 +858,15 @@ namespace StorageLib {
         if (mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.ParentOneChild) continue;
 
         if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-          if (mi.MultipleChildrenMIs is not null) {
-            //A parent List<> referenced by 2 properties in the child class
-            sw.WriteLine($"      {mi.LowerMemberName} = new HashSet<{mi.ChildTypeName}>();");
+          if (mi.ChildClassInfo!.AreInstancesReleasable) {
+            sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
           } else {
-            if (mi.ChildClassInfo!.AreInstancesReleasable) {
-              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
-            } else {
-              sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
-            }
+            sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
           }
-        } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
-          mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList)
+        } else if (mi.MemberType is
+          MemberTypeEnum.ParentMultipleChildrenHashSet or
+          MemberTypeEnum.ParentMultipleChildrenDictionary or
+          MemberTypeEnum.ParentMultipleChildrenSortedList)
         {
           sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
@@ -918,18 +943,15 @@ namespace StorageLib {
         if (mi.MemberType==MemberTypeEnum.ParentOneChild || mi.MemberType==MemberTypeEnum.ToLower) continue;
 
         if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-          if (mi.MultipleChildrenMIs is not null) {
-            //A parent List<> referenced by 2 properties in the child class
-            sw.WriteLine($"      {mi.LowerMemberName} = new HashSet<{mi.ChildTypeName}>();");
+          if (mi.ChildClassInfo!.AreInstancesReleasable) {
+            sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
           } else {
-            if (mi.ChildClassInfo!.AreInstancesReleasable) {
-              sw.WriteLine($"      {mi.LowerMemberName} = new StorageList<{mi.ChildTypeName}>();");
-            } else {
-              sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
-            }
+            sw.WriteLine($"      {mi.LowerMemberName} = new List<{mi.ChildTypeName}>();");
           }
-        } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
-          mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
+        } else if (mi.MemberType is
+          MemberTypeEnum.ParentMultipleChildrenHashSet or
+          MemberTypeEnum.ParentMultipleChildrenDictionary or
+          MemberTypeEnum.ParentMultipleChildrenSortedList) 
         {
           sw.WriteLine($"      {mi.LowerMemberName} = new {mi.TypeString}();");
         } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
@@ -941,26 +963,9 @@ namespace StorageLib {
             sw.WriteLine($"      if ({mi.LowerMemberName}Key.HasValue) {{");
             sw.WriteLine($"        {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
             sw.WriteLine("      }");
-            //if (isVarNullableNeeded) {
-            //  isVarNullableNeeded = false;
-            //  sw.WriteLine($"      var parentNullableKey = csvReader.ReadIntNull();");
-            //} else {
-            //  sw.WriteLine($"      parentNullableKey = csvReader.ReadIntNull();");
-            //}
-            //sw.WriteLine($"      if (parentNullableKey.HasValue) {{");
-            //sw.WriteLine($"        {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(parentNullableKey.Value)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-            //sw.WriteLine("      }");
           } else {
-            //sw.WriteLine($"      var {mi.ParentClassInfo!.LowerClassName}Key = csvReader.ReadInt();");
-            //sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.ParentClassInfo!.LowerClassName}Key)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
             sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadInt();");
             sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");            //if (isVarNeeded) {
-            //  isVarNeeded=false;
-            //  sw.WriteLine($"      var parentKey = csvReader.ReadInt();");
-            //} else {
-            //  sw.WriteLine($"      parentKey = csvReader.ReadInt();");
-            //}
-            //sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(parentKey)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
           }
         } else {
           //enum, simple data type
@@ -1060,14 +1065,6 @@ namespace StorageLib {
         sw.WriteLine("    }");
         sw.WriteLine();
         sw.WriteLine();
-        //sw.WriteLine("    /// <summary>");
-        //sw.WriteLine($"    /// Disconnecting {ClassName} from parents and data contaxt dictionaries is not supported.");
-        //sw.WriteLine("    /// </summary>");
-        //sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
-        //sw.WriteLine("      throw new NotSupportedException(\"Disconnect() is not supported, StorageClass attribute AreInstancesReleasable is false.\");");
-        //sw.WriteLine("    }");
-        //sw.WriteLine();
-        //sw.WriteLine();
       }
 
       writeTransactionSupport(sw, context, isTracing);
@@ -1236,12 +1233,23 @@ namespace StorageLib {
       Compiler.WriteLinesTracing(sw, isTracing,
                    $"      {context}.Trace?.Invoke($\"Updating {ClassName}: {{ToTraceString()}}\");");
 
+      var isFirst = true;
       if (HasNotReadOnlyAndNotLookupParents) {
-        sw.WriteLine();
-        sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
         foreach (var mi in Members.Values) {
-          if (mi.IsReadOnly || mi.MemberType!=MemberTypeEnum.LinkToParent || mi.IsLookupOnly) continue;
+          if (mi.IsReadOnly || 
+            mi.MemberType!=MemberTypeEnum.LinkToParent || 
+            mi.IsLookupOnly ||
+            (mi.ParentMemberInfo?.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet)) continue; 
+            //child needs to perform updating property linking to parent's HashSet and removing child from HashSet at
+            //the same time.
 
+          if (isFirst) {
+            isFirst = false;
+            sw.WriteLine();
+            sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+          }
+
+          //collections with keys: the child needs to be removed from the parent's collection before the key get updated.
           if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
             mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
           {
@@ -1258,7 +1266,7 @@ namespace StorageLib {
                 $"{mi.ParentMemberInfo.ChildKey2PropertyName}!={mi.ParentMemberInfo.LowerChildKey2PropertyName};");
             }
           } else {
-            //parent has single child or list of children
+            //parent has single child or list of children and child class has only one property with parent's type.
             sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName};");
           }
           if (mi.IsNullable) {
@@ -1276,24 +1284,46 @@ namespace StorageLib {
       sw.WriteLine("      //update properties and detect if any value has changed");
       sw.WriteLine("      var isChangeDetected = false;");
       foreach (var mi in Members.Values) {
-        if (mi.IsReadOnly || mi.MemberType>MemberTypeEnum.LinkToParent || mi.MemberType==MemberTypeEnum.ToLower) continue;
-        //ToLower properties get their value assigned to when their source property changes its value
+        if (mi.IsReadOnly || 
+          mi.MemberType>MemberTypeEnum.LinkToParent || 
+          mi.MemberType==MemberTypeEnum.ToLower) //ToLower properties get their value assigned to when their source
+                                                 //property changes its value
+          continue;
 
         if (mi.Rounding!=null) {
-          sw.WriteLine($"      var {mi.LowerMemberName}Rounded = {mi.LowerMemberName}{mi.Rounding};");
-          sw.WriteLine($"      if ({mi.MemberName}!={mi.LowerMemberName}Rounded) {{");
-          writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Update);
-          sw.WriteLine($"        {mi.MemberName} = {mi.LowerMemberName}Rounded;");
-          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Update);
+          sw.WriteLine($"      {mi.LowerMemberName} = {mi.LowerMemberName}{mi.Rounding};");
+        }
+        if (mi.ParentMemberInfo?.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+          //parent uses a HashSet instead a List for children, because more than one property in the child has
+          //the parent's type. The child should get added to parent's Children only once, regardless how many
+          //of the child's properties link to that parent. When removing a child parent link during updating such
+          //a child property, the parent will only remove the child if no other child property links to it. If 2
+          //child property each remove a particulat parent, the first property must be properly updated before
+          //the second property's update get processed. The second update can only remove the child from 
+          //parent.Children if the first property points already to a different parent or is null.
+          sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName};");
+          sw.WriteLine($"      if (has{mi.MemberName}Changed){{");
+          if (mi.IsNullable) {
+            sw.WriteLine($"        if ({mi.MemberName} is not null) {{");
+            sw.WriteLine($"          {mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(this);");
+            sw.WriteLine($"        }}");
+          } else {
+            sw.WriteLine($"          {mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(this);");
+          }
+          sw.WriteLine($"        {mi.MemberName} = {mi.LowerMemberName};");
+          sw.WriteLine($"        isChangeDetected = true;");
+          sw.WriteLine($"      }}");
+
         } else {
+          //all property types except links to parents using a HashSet for children
           sw.WriteLine($"      if ({mi.MemberName}!={mi.LowerMemberName}) {{");
           writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.Update);
           sw.WriteLine($"        {mi.MemberName} = {mi.LowerMemberName};");
           writeToLowerCopyStatement(sw, mi, needsDictEnum.Update);
           writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Update);
+          sw.WriteLine("        isChangeDetected = true;");
+          sw.WriteLine("      }");
         }
-        sw.WriteLine("        isChangeDetected = true;");
-        sw.WriteLine("      }");
       }
 
       if (HasNotReadOnlyAndNotLookupParents) {
@@ -1397,75 +1427,38 @@ namespace StorageLib {
               sw.WriteLine( "      } else {");
               sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
               sw.WriteLine( "      }");
-              //sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is null) {{");
-              //sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-              //sw.WriteLine( "          //nothing to do");
-              //sw.WriteLine( "        } else {");
-              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //}
-              //sw.WriteLine("        }");
-              //sw.WriteLine("      } else {");
-              //sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-              //  sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //  sw.WriteLine("          }");
-              //}
-              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = null;");
-              //sw.WriteLine("        } else {");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-              //  sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //  sw.WriteLine("          }");
-              //}
-              //sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //}
-              //sw.WriteLine("        }");
-              //sw.WriteLine("      }");
             } else {
-              //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
-              //sw.WriteLine($"        {mi.LowerMemberName} = {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-              //sw.WriteLine("      }");
-
               sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-              //sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-              //  sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //  sw.WriteLine("        }");
-              //}
-              //sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-              //if (!mi.IsLookupOnly) {
-              //  sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              //}
-              //sw.WriteLine("      }");
             }
 
           } else if (mi.MemberType<MemberTypeEnum.LinkToParent) {
             //enum, simple type
-            //writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
             if (mi.MemberType==MemberTypeEnum.Enum) {
               sw.WriteLine($"      var {mi.LowerMemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
             } else {
               sw.WriteLine($"      var {mi.LowerMemberName} = csvReader.{mi.CsvReaderRead};");
             }
-            //writeToLowerCopyStatement(sw, mi, isCSV: true); //toLower must be executed here once the source property has 
-            //                                                //its value and not when mi.MemberType==MemberTypeEnum.ToLower
-            //writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
           }
         }
       }
 
       //remove class from parent if link to parent or the child's key into the parent's children collection has changed
       if (HasNotReadOnlyAndNotLookupParents) {
-        sw.WriteLine();
-        sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+        isFirst = true;
         foreach (var mi in Members.Values) {
-          if (mi.IsReadOnly || mi.MemberType!=MemberTypeEnum.LinkToParent || mi.IsLookupOnly) continue;
+          if (
+            mi.IsReadOnly || 
+            mi.MemberType!=MemberTypeEnum.LinkToParent || 
+            mi.IsLookupOnly||
+            (mi.ParentMemberInfo?.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet)) continue; 
+            //child needs to perform updating property linking to parent's HashSet and removing child from HashSet
+            //at the same time.
+
+          if (isFirst) {
+            isFirst = false;
+            sw.WriteLine();
+            sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+          }
 
           if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
             mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList) 
@@ -1501,156 +1494,43 @@ namespace StorageLib {
       sw.WriteLine();
       sw.WriteLine("      //update not readonly properties");
       foreach (var mi in Members.Values) {
-        //if (mi.MemberType==MemberTypeEnum.ToLower) continue;
-
-        //if (mi.IsReadOnly) {
-        //  //LinkToParent, enum or simple type
-        //  //the parents collections or a parent linking to one child cannot be readonly
-        //  //ensure that the values stored in the CSV file are the same as the instance itself
-        //  if (mi.MemberType==MemberTypeEnum.Enum) {
-        //    sw.WriteLine($"      var {mi.LowerMemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
-          
-        //  } else if (mi.MemberType==MemberTypeEnum.LinkToParent) {
-        //    if (mi.IsNullable) {
-        //      sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
-        //      sw.WriteLine($"      {mi.TypeStringNotNullable}? {mi.LowerMemberName};");
-        //      sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
-        //      sw.WriteLine($"        {mi.LowerMemberName} = null;");
-        //      sw.WriteLine("      } else {");
-
-        //      //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
-        //      //sw.WriteLine($"          {mi.LowerMemberName} = {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-        //      //sw.WriteLine("        }");
-
-        //      sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
-        //      sw.WriteLine($"          {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-
-
-        //      sw.WriteLine("      }");
-        //    } else {
-        //      //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
-        //      //sw.WriteLine($"        {mi.LowerMemberName} = {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-        //      //sw.WriteLine("      }");
-
-        //      sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
-        //      sw.WriteLine($"          {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-
-
-        //    }
-
-        //  } else {
-        //    sw.WriteLine($"      var {mi.LowerMemberName} = csvReader.{mi.CsvReaderRead};");
-        //  }
-        //  sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
-        //  sw.WriteLine($"        throw new Exception($\"{ClassName}.Update(): Property {mi.MemberName}" +
-        //    $" '{{{LowerClassName}.{mi.MemberName}}}' is \" +");
-        //  sw.WriteLine($"          $\"readonly, {mi.LowerMemberName} '{{{mi.LowerMemberName}}}' read from the CSV file should be the" +
-        //    " same.\" + Environment.NewLine + ");
-        //  sw.WriteLine($"          {LowerClassName}.ToString());");
-        //  sw.WriteLine("      }");
-
-        //} else {
-          ////not readonly
-          //if (mi.MemberType==MemberTypeEnum.LinkToParent) {
-          //  if (mi.IsNullable) {
-          //    sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
-          //    sw.WriteLine($"      {mi.TypeStringNotNullable}? {mi.LowerMemberName};");
-          //    sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
-          //    sw.WriteLine($"        {mi.LowerMemberName} = null;");
-          //    sw.WriteLine("      } else {");
-          //    //**sw.WriteLine($"        if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem({mi.LowerMemberName}Key.Value, out {mi.LowerMemberName})) {{");
-          //    //sw.WriteLine($"          {mi.LowerMemberName} = {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-          //    //sw.WriteLine("        }");
-
-          //    sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??");
-          //    sw.WriteLine($"          {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-
-
-          //    sw.WriteLine("      }");
-          //    sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName} is null) {{");
-          //    sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-          //    sw.WriteLine("          //nothing to do");
-          //    sw.WriteLine("        } else {");
-          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //    }
-          //    sw.WriteLine("        }");
-          //    sw.WriteLine("      } else {");
-          //    sw.WriteLine($"        if ({mi.LowerMemberName} is null) {{");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-          //      sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //      sw.WriteLine("          }");
-          //    }
-          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = null;");
-          //    sw.WriteLine("        } else {");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"          if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-          //      sw.WriteLine($"            {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //      sw.WriteLine("          }");
-          //    }
-          //    sw.WriteLine($"          {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //    }
-          //    sw.WriteLine("        }");
-          //    sw.WriteLine("      }");
-          //  } else {
-          //    //**sw.WriteLine($"      if (!{context}.Data._{mi.ParentClassInfo!.PluralName}.TryGetItem(csvReader.ReadInt(), out var {mi.LowerMemberName})) {{");
-          //    //sw.WriteLine($"        {mi.LowerMemberName} = {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-          //    //sw.WriteLine("      }");
-
-          //    sw.WriteLine($"        var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??");
-          //    sw.WriteLine($"          {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
-
-
-          //    sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-          //      sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //      sw.WriteLine("        }");
-          //    }
-          //    sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
-          //    if (!mi.IsLookupOnly) {
-          //      sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.AddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-          //    }
-          //    sw.WriteLine("      }");
-          //  }
-
-          //} else if (mi.MemberType<MemberTypeEnum.LinkToParent) {
-          //  //enum, simple type
-          //  writeNeedsDictionaryRemoveStatement(sw, mi, context, isCSV: true);
-          //  if (mi.MemberType==MemberTypeEnum.Enum) {
-          //    sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
-          //  } else {
-          //    sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = csvReader.{mi.CsvReaderRead};");
-          //  }
-          //  writeToLowerCopyStatement(sw, mi, isCSV: true); //toLower must be executed here once the source property has 
-          //                                                  //its value and not when mi.MemberType==MemberTypeEnum.ToLower
-          //  writeNeedsDictionaryAddStatement(sw, mi, context, isCSV: true);
-          //  }
-
-        //}
         if (mi.IsReadOnly || mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType>MemberTypeEnum.LinkToParent) continue;
 
-        if (mi.NeedsDictionary || (mi.ToLowerTarget!=null && mi.ToLowerTarget.NeedsDictionary)) {
-          if (mi.Rounding!=null) {
-            sw.WriteLine($"      var {mi.LowerMemberName}Rounded = {mi.LowerMemberName}{mi.Rounding};");
-            sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}Rounded) {{");
-            writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
-            sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName}Rounded;");
-            writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+        if (mi.ParentMemberInfo?.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+          //parent uses a HashSet instead a List for children, because more than one property in the child has
+          //the parent's type. The child should get added to parent's Children only once, regardless how many
+          //of the child's properties link to that parent. When removing a child parent link during updating such
+          //a child property, the parent will only remove the child if no other child property links to it. If 2
+          //child property each remove a particulat parent, the first property must be properly updated before
+          //the second property's update get processed. The second update can only remove the child from 
+          //parent.Children if the first property points already to a different parent or is null.
+          sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName};");
+          sw.WriteLine($"      if (has{mi.MemberName}Changed){{");
+          if (mi.IsNullable) {
+            sw.WriteLine($"        if ({LowerClassName}.{mi.MemberName} is not null) {{");
+            sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+            sw.WriteLine($"        }}");
           } else {
+            sw.WriteLine($"          {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          }
+          sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
+          sw.WriteLine($"      }}");
+
+        } else {
+          if (mi.Rounding!=null) {
+            sw.WriteLine($"      {mi.LowerMemberName} = {mi.LowerMemberName}{mi.Rounding};");
+          }
+          if (mi.NeedsDictionary || (mi.ToLowerTarget!=null && mi.ToLowerTarget.NeedsDictionary)) {
+            //all property types except links to parents using a HashSet for children
             sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.LowerMemberName}) {{");
             writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.UpdateCsv);
             sw.WriteLine($"        {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
             writeToLowerCopyStatement(sw, mi, needsDictEnum.UpdateCsv);
             writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.UpdateCsv);
+            sw.WriteLine($"      }}");
+          } else {
+            sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
           }
-          sw.WriteLine("      }");
-        } else {
-          sw.WriteLine($"      {LowerClassName}.{mi.MemberName} = {mi.LowerMemberName};");
         }
       }
 
@@ -1707,7 +1587,7 @@ namespace StorageLib {
             sw.WriteLine();
 
           } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) {
-            //List, Dictionary, SortedList or SortedBucketCollection
+            //ParentMultipleChildrenXxx
             sw.WriteLine("    /// <summary>");
             sw.WriteLine($"    /// Add {mi.LowerChildTypeName} to {mi.MemberName}.");
             sw.WriteLine("    /// </summary>");
@@ -1717,6 +1597,8 @@ namespace StorageLib {
             sw.WriteLine($"      if (({mi.LowerChildTypeName}.Key>=0)&&(Key<0)) throw new Exception();");
             if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
               sw.WriteLine($"      if ({mi.LowerMemberName}.Contains({mi.LowerChildTypeName})) throw new Exception();");
+            }else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+              //no test needed
             } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
               sw.WriteLine($"      if ({mi.LowerMemberName}.Contains({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName}, " +
                 $"{mi.LowerChildTypeName}.{mi.ChildKey2PropertyName})) throw new Exception();");
@@ -1724,7 +1606,7 @@ namespace StorageLib {
               sw.WriteLine($"      if ({mi.LowerMemberName}.ContainsKey({mi.LowerChildTypeName}.{mi.ChildKeyPropertyName})) throw new Exception();");
             }
             sw.WriteLine($"#endif");
-            if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
+            if (mi.MemberType is MemberTypeEnum.ParentMultipleChildrenList or MemberTypeEnum.ParentMultipleChildrenHashSet) {
               sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName});");
             } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
               sw.WriteLine($"      {mi.LowerMemberName}.Add({mi.LowerChildTypeName});");
@@ -1764,39 +1646,32 @@ namespace StorageLib {
             sw.WriteLine($"    partial void onRemovedFrom{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName});");
 
           } else {
-            //ParentMultipleChildren
+            //ParentMultipleChildrenXxx
             sw.WriteLine($"    internal void RemoveFrom{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName}) {{");
             if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-              var linksLines = new List<string>();
+              sw.WriteLine("#if DEBUG");
+              sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
+              sw.WriteLine("#else");
+              sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
+              sw.WriteLine("#endif");
+            } else if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+              sw.WriteLine("      //Execute Remove() only when exactly one property in the child still links to this parent. If");
+              sw.WriteLine("      //no property links here (Count=0), the child should not be in the children collection. If");
+              sw.WriteLine("      //more than 1 child property links here, it cannot yet be removed from the children collection.");
+              sw.WriteLine("      var countLinks = 0;");
               foreach (var childMI in mi.ChildClassInfo!.Members.Values) {
                 if (childMI.MemberType==MemberTypeEnum.LinkToParent && (childMI.TypeStringNotNullable)==ClassName) {
-                  linksLines.Add($"      if ({childMI.ClassInfo.LowerClassName}.{childMI.MemberName}==this ) countLinks++;");
+                  sw.WriteLine($"      if ({childMI.ClassInfo.LowerClassName}.{childMI.MemberName}==this ) countLinks++;");
                 }
               }
-              if (linksLines.Count<1) throw new Exception();
+              sw.WriteLine("      if (countLinks>1) return;");
+              sw.WriteLine("#if DEBUG");
+              sw.WriteLine("      if (countLinks==0) throw new Exception();");
+              sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
+              sw.WriteLine("#else");
+              sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
+              sw.WriteLine("#endif");
 
-              if (linksLines.Count==1) {
-                sw.WriteLine("#if DEBUG");
-                sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
-                sw.WriteLine("#else");
-                sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
-                sw.WriteLine("#endif");
-              } else {
-                sw.WriteLine("      //Execute Remove() only when exactly one property in the child still links to this parent. If");
-                sw.WriteLine("      //no property links here (Count=0), the child should not be in the children collection. If");
-                sw.WriteLine("      //more than 1 child property links here, it cannot yet be removed from the children collection.");
-                sw.WriteLine("      var countLinks = 0;");
-                foreach (var linksLine in linksLines) {
-                  sw.WriteLine(linksLine);
-                }
-                sw.WriteLine("      if (countLinks>1) return;");
-                sw.WriteLine("#if DEBUG");
-                sw.WriteLine("      if (countLinks==0) throw new Exception();");
-                sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
-                sw.WriteLine("#else");
-                sw.WriteLine($"        {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
-                sw.WriteLine("#endif");
-              }
             } else if(mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
               sw.WriteLine("#if DEBUG");
               sw.WriteLine($"      if (!{mi.LowerMemberName}.Remove({mi.LowerChildTypeName})) throw new Exception();");
@@ -1820,7 +1695,25 @@ namespace StorageLib {
           }
           sw.WriteLine();
           sw.WriteLine();
-          //}
+        }
+
+        if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+          //RollbackAddTo
+          //-------------
+          sw.WriteLine("    /// <summary>");
+          sw.WriteLine($"    /// Removes {mi.LowerChildTypeName} from {mi.ClassInfo!.ClassName} without testing {mi.LowerChildTypeName} properties. Called from ");
+          sw.WriteLine($"    /// {mi.ChildTypeName}.RollbackItemNew().");
+          sw.WriteLine("    /// </summary>");
+          sw.WriteLine($"    internal void RollbackAddTo{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName}) {{");
+          sw.WriteLine($"      {mi.LowerMemberName}.Remove({mi.LowerChildTypeName});");
+          sw.WriteLine($"      onRollbackAddTo{mi.MemberName}({mi.LowerChildTypeName});");
+          Compiler.WriteLinesTracing(sw, isTracing,
+                       $"      {context}.Trace?.Invoke($\"RollbackAddTo{mi.MemberName}: Remove {mi.ChildTypeName} {{{mi.LowerChildTypeName}.GetKeyOrHash()}} from \" +",
+                       $"        $\"{{this.GetKeyOrHash()}} {ClassName}.{mi.MemberName}\");");
+          sw.WriteLine("    }");
+          sw.WriteLine($"    partial void onRollbackAddTo{mi.MemberName}({mi.ChildTypeName} {mi.LowerChildTypeName});");
+          sw.WriteLine();
+          sw.WriteLine();
         }
       }
     }
@@ -1845,21 +1738,19 @@ namespace StorageLib {
           sw.WriteLine("      }");
 
         } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //ParentMultipleChildren
-          if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList || 
-            mi.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
+          if (mi.MemberType is
+            MemberTypeEnum.ParentMultipleChildrenList or
+            MemberTypeEnum.ParentMultipleChildrenHashSet or
+            MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
           {
             sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}) {{");
           } else {
             sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}.Values) {{");
           }
-          foreach (var childMI in mi.ChildClassInfo!.Members.Values) {
-            if (childMI.MemberType==MemberTypeEnum.LinkToParent && (childMI.TypeStringNotNullable)==ClassName) {
-              sw.WriteLine($"        if ({mi.LowerChildTypeName}?.Key>=0) {{");
-              sw.WriteLine($"          throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
-              sw.WriteLine($"            $\"because '{{{mi.LowerChildTypeName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
-              sw.WriteLine("        }");
-            }
-          }
+          sw.WriteLine($"        if ({mi.LowerChildTypeName}?.Key>=0) {{");
+          sw.WriteLine($"          throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
+          sw.WriteLine($"            $\"because '{{{mi.LowerChildTypeName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
+          sw.WriteLine("        }");
           sw.WriteLine("      }");
         }
       }
@@ -1885,47 +1776,19 @@ namespace StorageLib {
     private void writeDisconnect(StreamWriter sw, string context, TracingEnum isTracing) {
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// Disconnects {ClassName} from parents and possibly from dictionaries in {context}.Data.");
-      //IsPerformReleaseNeeded = writeRemoveComment(sw, context, isCapitaliseFirstLetter: false);
-      //sw.WriteLine(".");
       sw.WriteLine("    /// </summary>");
       sw.WriteLine($"    internal static void Disconnect({ClassName} {LowerClassName}){{");
-      //foreach (var mi in Members.Values) {
-      //  if (mi.MemberType==MemberTypeEnum.ParentOneChild) {
-      //    sw.WriteLine($"      if ({mi.MemberName}{mi.QMark}.Key>=0) {{");
-      //    sw.WriteLine($"        throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
-      //    sw.WriteLine($"          $\"because '{{{mi.MemberName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
-      //    sw.WriteLine("      }");
-
-      //  } else if (mi.MemberType>MemberTypeEnum.ParentOneChild) { //ParentMultipleChildren
-      //    if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-      //      sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}) {{");
-      //    } else {
-      //      sw.WriteLine($"      foreach (var {mi.LowerChildTypeName} in {mi.MemberName}.Values) {{");
-      //    }
-      //    foreach (var childMI in mi.ChildClassInfo!.Members.Values) {
-      //      if (childMI.MemberType==MemberTypeEnum.LinkToParent && (childMI.TypeStringNotNullable)==ClassName) {
-      //        sw.WriteLine($"        if ({mi.LowerChildTypeName}?.Key>=0) {{");
-      //        sw.WriteLine($"          throw new Exception($\"Cannot release {ClassName} '{{this}}' \" + Environment.NewLine + ");
-      //        sw.WriteLine($"            $\"because '{{{mi.LowerChildTypeName}}}' in {ClassName}.{mi.MemberName} is still stored.\");");
-      //        sw.WriteLine("        }");
-      //      }
-      //    }
-      //    sw.WriteLine("      }");
-      //  }
-      //}
-      //foreach (var mi in Members.Values) {
-      //  if (mi.MemberType<MemberTypeEnum.ToLower || mi.MemberType==MemberTypeEnum.Enum) {
-      //    writeNeedsDictionaryRemoveStatement(sw, mi, context);
-      //  }
-      //}
 
       foreach (var mi in Members.Values) {
         if (mi.MemberType==MemberTypeEnum.LinkToParent && !mi.IsLookupOnly) {
           if (mi.IsNullable) {
             sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!=null && {LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-            sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
           } else {
             sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
+          }
+          if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+            sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RollbackAddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+          } else {
             sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
           }
           sw.WriteLine("      }");
@@ -1963,13 +1826,15 @@ namespace StorageLib {
           if (!mi.IsLookupOnly) {
             if (mi.IsNullable) {
               sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!=null && {LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-              sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              sw.WriteLine("      }");
             } else {
               sw.WriteLine($"      if ({LowerClassName}.{mi.MemberName}!={mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable}) {{");
-              sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
-              sw.WriteLine("      }");
             }
+            if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+              sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RollbackAddTo{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+            } else {
+              sw.WriteLine($"        {LowerClassName}.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}({LowerClassName});");
+            }
+            sw.WriteLine("      }");
           }
         }
       }
@@ -2051,15 +1916,41 @@ namespace StorageLib {
                 $" oldItem.{parentMI.ChildKeyPropertyName}!=item.{parentMI.ChildKeyPropertyName} ||" +
                 $" oldItem.{parentMI.ChildKey2PropertyName}!=item.{parentMI.ChildKey2PropertyName};");
             } else {
-              //List or parent with 1 child only
+              //List, HashSet or parent with 1 child only
               sw.WriteLine($"      var has{mi.MemberName}Changed = oldItem.{mi.MemberName}!=item.{mi.MemberName};");
             }
-            if (mi.IsNullable) {
-              sw.WriteLine($"      if (has{mi.MemberName}Changed && item.{mi.MemberName} is not null) {{");
-            } else {
+            //if (mi.IsNullable) {
+            //  sw.WriteLine($"      if (has{mi.MemberName}Changed && item.{mi.MemberName} is not null) {{");
+            //} else {
+            //  sw.WriteLine($"      if (has{mi.MemberName}Changed) {{");
+            //}
+            //sw.WriteLine($"        item.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(item);");
+            //if (parentMI.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+            //  //property needs to be updated already here, otherwise RemoveFrom() will not work if 2 properties link
+            //  //to the same parent.
+            //  sw.WriteLine($"        item.{mi.MemberName} = oldItem.{mi.MemberName};");
+            //}
+            //sw.WriteLine($"      }}");
+
+            if (mi.IsNullable && parentMI.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
               sw.WriteLine($"      if (has{mi.MemberName}Changed) {{");
+              sw.WriteLine($"        if (item.{mi.MemberName} is not null) {{");
+              sw.WriteLine($"          item.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(item);");
+              sw.WriteLine($"        }}");
+              sw.WriteLine($"        item.{mi.MemberName} = oldItem.{mi.MemberName};");
+            } else {
+              if (mi.IsNullable) {
+                sw.WriteLine($"      if (has{mi.MemberName}Changed && item.{mi.MemberName} is not null) {{");
+              } else {
+                sw.WriteLine($"      if (has{mi.MemberName}Changed) {{");
+              }
+              sw.WriteLine($"        item.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(item);");
+              if (parentMI.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
+                //property needs to be updated already here, otherwise RemoveFrom() will not work if 2 properties link
+                //to the same parent.
+                sw.WriteLine($"        item.{mi.MemberName} = oldItem.{mi.MemberName};");
+              }
             }
-            sw.WriteLine($"        item.{mi.MemberName}.RemoveFrom{mi.ParentMemberInfo!.MemberName}(item);");
             sw.WriteLine($"      }}");
           } else {
             writeNeedsDictionaryRemoveStatement(sw, mi, context, needsDictEnum.RollbackUpdate);
@@ -2070,7 +1961,11 @@ namespace StorageLib {
       sw.WriteLine();
       sw.WriteLine($"      // updated item: restore old values");
       foreach (var mi in Members.Values) {
-        if (mi.MemberType==MemberTypeEnum.ToLower || mi.MemberType>=MemberTypeEnum.ParentOneChild || mi.IsReadOnly) continue;
+        if (
+          mi.MemberType==MemberTypeEnum.ToLower || 
+          mi.MemberType>=MemberTypeEnum.ParentOneChild ||
+          mi.ParentMemberInfo?.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet || //value is already updated
+          mi.IsReadOnly) continue;
 
         sw.WriteLine($"      item.{mi.MemberName} = oldItem.{mi.MemberName};");
         writeToLowerCopyStatement(sw, mi, needsDictEnum.RollbackUpdate);
@@ -2640,15 +2535,6 @@ namespace StorageLib {
       if (mi!=null) {
         var className = "";
         var classNameDot = "";
-        //if (isCSV) {
-        //  if (isRollbackUpdate) {
-        //    className = "item";
-        //    classNameDot = className + ".";
-        //  } else {
-        //    className = memberInfo.ClassInfo.LowerClassName;
-        //    classNameDot = className + ".";
-        //  }
-        //}
         if (needsDict==needsDictEnum.RollbackUpdate) {
           className = "item";
           classNameDot = className + ".";
@@ -2656,24 +2542,13 @@ namespace StorageLib {
           className = memberInfo.ClassInfo.LowerClassName;
           classNameDot = className + ".";
         }
-        //var indent = "      " + addIndent;
         var indent = needsDict==needsDictEnum.UpdateCsv ? "        " : "      ";
-        //if (isUpdate) {
-        //  sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
-        //  indent = "            " + addIndent;
-        //}
         if (needsDict==needsDictEnum.Update) {
           sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
           indent += "   ";
         }
         if (mi.IsNullable) {
           sw.WriteLine($"{indent}if ({classNameDot}{mi.MemberName}!=null) {{");
-          //if (isCSV) {
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}"+ 
-          //    $"{mi.MemberName}, {className});");
-          //} else {
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
-          //}
           if (
             needsDict==needsDictEnum.RollbackRelease ||
             needsDict==needsDictEnum.UpdateCsv ||
@@ -2686,12 +2561,6 @@ namespace StorageLib {
           }
           sw.WriteLine($"{indent}}}");
         } else {
-          //if (isCSV) {
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({classNameDot}" +
-          //    $"{mi.MemberName}, {className});");
-          //} else {
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
-          //}
           if (
             needsDict==needsDictEnum.RollbackRelease ||
             needsDict==needsDictEnum.UpdateCsv ||
@@ -2703,9 +2572,6 @@ namespace StorageLib {
             sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Add({mi.MemberName}, this);");
           }
         }
-        //if (isUpdate) {
-        //  sw.WriteLine("        }");
-        //}
         if (needsDict==needsDictEnum.Update) {
           sw.WriteLine("        }");
         }
@@ -2742,13 +2608,6 @@ namespace StorageLib {
 
       if (mi!=null) {
         var classNameDot = "";
-        //if (isCSV) {
-        //  if (isRollbackUpdate) {
-        //    classNameDot = "item.";
-        //  } else {
-        //    classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
-        //  }
-        //}
         if (needsDict==needsDictEnum.RollbackUpdate) {
           classNameDot = "item.";
         } else if(
@@ -2759,52 +2618,16 @@ namespace StorageLib {
           classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
         }
         var indent = needsDict==needsDictEnum.UpdateCsv ? "        " : "      ";
-        //if (isUpdate) {
-        //  sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
-        //  indent = "            ";
-        //}
         if (needsDict==needsDictEnum.Update) {
           sw.WriteLine($"        if ({classNameDot}Key>=0) {{");
           indent = "            ";
         }
         if (mi.IsNullable) {
           sw.WriteLine($"{indent}if ({classNameDot}{mi.MemberName}!=null) {{");
-          //if (isCSV) {
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
-          //    $"{mi.MemberName});");
-          //} else {
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          //}
-          //if (
-          //  needsDict==needsDictEnum.UpdateCsv || 
-          //  needsDict==needsDictEnum.RollbackStore || 
-          //  needsDict==needsDictEnum.RollbackUpdate) 
-          //{
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
-          //    $"{mi.MemberName});");
-          //} else {
-          //  sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          //}
           sw.WriteLine($"{indent}  {context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}"+
             $"{mi.MemberName});");
           sw.WriteLine($"{indent}}}");
         } else {
-          //if (isCSV) {
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
-          //    $"{mi.MemberName});");
-          //} else {
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          //}
-          //if (
-          //  needsDict==needsDictEnum.UpdateCsv ||
-          //  needsDict==needsDictEnum.RollbackStore ||
-          //  needsDict==needsDictEnum.RollbackUpdate) 
-          //{
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
-          //    $"{mi.MemberName});");
-          //} else {
-          //  sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({mi.MemberName});");
-          //}
           sw.WriteLine($"{indent}{context}.Data._{mi.ClassInfo.PluralName}By{mi.MemberName}.Remove({classNameDot}" +
             $"{mi.MemberName});");
         }
@@ -2813,24 +2636,6 @@ namespace StorageLib {
         }
       }
     }
-
-
-    //enum needsDictEnum {
-    //  Contructor,
-    //  Update, //"  "
-    //  UpdateCsv, //"  "
-    //  RollbackUpdate, //isCSV: true, isRollbackUpdate: true
-
-    //  Store, //addIndent: ""
-    //  RollbackRelease, //isCSV: true
-
-    //  //both
-
-    //  //remove only
-    //  Release, //
-    //  Diconnect, //
-    //  RollbackStore, //isCSV: true
-    //}
 
 
     private void writeToLowerCopyStatement(
@@ -2842,13 +2647,6 @@ namespace StorageLib {
       
       var mi = memberInfo.ToLowerTarget;
       var classNameDot = "";
-      //if (isCSV) {
-      //  if (isRollbackUpdate) {
-      //    classNameDot = "item.";
-      //  } else {
-      //    classNameDot = memberInfo.ClassInfo.LowerClassName + ".";
-      //  }
-      //}
       if (needsDict==needsDictEnum.RollbackUpdate) {
         classNameDot = "item.";
       } else if (needsDict==needsDictEnum.UpdateCsv) {
@@ -2860,7 +2658,6 @@ namespace StorageLib {
 
 
     private bool writeParameters(StreamWriter streamWriter, List<string> lines, bool isConstructor, bool isWriterWrite = false) {
-      //isConstructor = false: Called by Update()
       if (!isConstructor && isWriterWrite) throw new Exception("Not supported combination.");
 
       lines.Clear();

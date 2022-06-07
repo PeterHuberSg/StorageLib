@@ -113,8 +113,9 @@ namespace ParserTest {
         The child class SingleChildChild has 2 properties linking to parent class SingleChildParent:
         public SingleChildParent Parent1;
         public SingleChildParent Parent2;
-        Only List<SingleChildChild> allows multiple properties in the child class SingleChildChild to link to the " +
-        "parent class SingleChildParent, but Child1 is not a List<> type.");
+        Use HashSet<SingleChildChild> if more than one child property links to Child1 or add to SingleChildParent " +
+        "one List<SingleChildChild> for each child property with the type SingleChildParent and specify with " +
+        "attribut StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class with parent's type and only 1 StorageProperty.childPropertyName
       //----------------------------------------------------------------------------------------------

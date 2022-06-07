@@ -93,8 +93,9 @@ namespace ParserTest {
         The child class DictionaryChild has 2 properties linking to parent class DictionaryParent:
         public DictionaryParent Parent1;
         public DictionaryParent Parent2;
-        Only List<DictionaryChild> allows multiple properties in the child class DictionaryChild to link to the " +
-        "parent class DictionaryParent, but Children is not a List<> type.");
+        Use HashSet<DictionaryChild> if more than one child property links to Children or add to DictionaryParent " +
+        "one List<DictionaryChild> for each child property with the type DictionaryParent and specify with attribut " +
+        "StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class matching the key type defined in the parent
       //-------------------------------------------------------------------------

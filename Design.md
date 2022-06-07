@@ -471,6 +471,7 @@ However, this is a rare example when further definition is needed with the child
 Setting up a child parent relationship from the parent's end needs more information, for 
 example if the children collection should be:
 - List<Child>
+- HashSet<Child>
 - Dictionary<Key, Child>
 - SortedList<Key, Child>
 - SortedBucketCollection<Key1, Key2, Child>
@@ -534,6 +535,12 @@ public class Sale {
 `SortedBucketCollection<Key1, Key2, Child>` sorts all children first by *Key1*. If several children 
 have the same value for *Key1*, they get sorted by *Key2*. This collection was specifically written for
 *StorageLib*.
+
+When 2 properties in a child link to a parent, the parent's children collection 
+should contain the child only once, regardless if one or more than one child 
+property link to that parent. For this reason, *StorageClassGenerator* replaces 
+List<Child> with a HashSet<Child> when 2 or more child properties have
+the same parent class type.
 
 ## Parents first
 The parent objects must be stored before the child or the children linking to it. *StorageLib*
@@ -663,11 +670,14 @@ property values of that instance. Also, in an 1:c relationship, it is not possib
 Even worse is a *readonly* 1:c relationship, where the `Parent` property in the child is readonly. 
 When the child gets created, immediately a parent child relationship gets established. Once the
 child should get "deleted", C# doesn't allow the reference to its parent to be changed, meaning 
-the garbage collector can never remove that child.
+the parent will also keep a link to the child and the garbage collector can never remove that child.
 
 As a consequence, even a deleted (released) child is still part of its parent's `Children` collection.
 
-
+It makes actually sense if also not yet stored children and parents can 
+establish relationships. For example the user creates some complicated objects 
+and only once everything is set up correctly he decides if the objects should 
+be stored or discarded.
 
 
 

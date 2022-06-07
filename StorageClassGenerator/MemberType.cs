@@ -30,21 +30,23 @@ namespace StorageLib {
     LinkToParent, //member of child linking to parent, but parent not linking to child
     ParentOneChild, // parent might have 1 child
     ParentMultipleChildrenList, //property of parent being a List<TValue> of children
+    ParentMultipleChildrenHashSet, //property of parent being a HashSet<TValue> of children
     ParentMultipleChildrenDictionary, //property of parent being a Dictionary<TKey, TValue> of children
     ParentMultipleChildrenSortedList, //property of parent being a SortedList<TKey, TValue> of children
     ParentMultipleChildrenSortedBucket, //property of parent being a SortedBucketCollection<TKey1, TKey2, TValue> of children
+
     Lenght
   }
 
 
-  /// <summary>
-  /// Collection types supported by StorageLib compiler
-  /// </summary>
-  public enum ParentCollectionTypeEnum{
-    Undefined = 0,
-    List,
-    Dictionary,
-    SortedList,
-    Lenght
-  }
+  ///// <summary>
+  ///// Collection types supported by StorageLib compiler
+  ///// </summary>
+  //public enum ParentCollectionTypeEnum{
+  //  Undefined = 0,
+  //  List,
+  //  Dictionary,
+  //  SortedList,
+  //  Lenght
+  //}
 }

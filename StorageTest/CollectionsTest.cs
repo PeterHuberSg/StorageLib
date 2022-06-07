@@ -11,7 +11,7 @@ parent variabls names:
 Parent: the parent property in the child is not nullable
 ParentN: the parent property in the child is nullable
 
-each activity like create, update or delete is done first in a rooled back transaction and none of the data should
+each activity like create, update or delete is done first in a rolled back transaction and none of the data should
 be changed, then the same activity is executed in a commited transactions and the data should change accordingly.
 
 After a transaction has been committed, the datacontext gets disposed, opened again and verified that the data
@@ -26,16 +26,15 @@ Variables with names ending with '_' or '__' are not stored in the data context.
 assertDataDisposeDCRecreateDCassertData() and can therefore contain children or parents stored in previous data
 contexts.
 */
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
-using TestContext;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using TestContext;
+
 
 namespace StorageTest {
 
