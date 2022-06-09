@@ -9,8 +9,8 @@ Code samples for the functionality described here can be found in the file *Data
 [**Data class**](#data-class)  
 [**Data Model File Structure**](#data-model-file-structure)  
 [**Supported Data Types in a Data Model**](#supported-data-types-in-a-data-model)  
-[**-DateTime Replacements**](#datetime-and-timespan-replacements)  
-[**-decimal Replacements**](#decimal-replacements)  
+[**- DateTime Replacements**](#datetime-and-timespan-replacements)  
+[**- decimal Replacements**](#decimal-replacements)  
 [**Create only, editable and deletable classes**](#create-only-editable-and-deletable-classes)  
 [**Class with none standard plural name**](#class-with-none-standard-plural-name)  
 [**Readonly property**](#readonly-property)  
@@ -23,10 +23,13 @@ Code samples for the functionality described here can be found in the file *Data
 [**Parent with single child, 1:c or c:c**](#parent-with-single-child-1c-or-cc)  
 [**One to one relationships cannot be implemented, 1:1**](#One-to-one-relationships-cannot-be-implemented-11)  
 [**Parent with multiple children, 1:mc or c:mc**](#parent-with-multiple-children-1mc-or-cmc)  
-[**-Parent with multiple children using List<>**](#parent-with-multiple-children-using-list)  
-[**-Parent with multiple children using Dictionary<> or SortedList<>**](#parent-with-multiple-children-using-dictionary-or-sortedList)  
-[**-Parent with multiple children using SortedBucketCollection**](#parent-with-multiple-children-using-sortedbucketcollection)
-[**Generated class with private constructor**](#Generated-class-with-private-constructor)  
+[**- Parent with multiple children using List<>**](#parent-with-multiple-children-using-list)  
+[**- Parent with several collections for the same child type**](#Parent-with-several-collections-for-the-same-child-type)  
+[**- Parent with multiple children using HashSet<>**](#parent-with-multiple-children-using-hashset)  
+[**- Parent with multiple children using Dictionary<> or SortedList<>**](#parent-with-multiple-children-using-dictionary-or-sortedList)  
+[**- Parent with multiple children using SortedBucketCollection**](#parent-with-multiple-children-using-sortedbucketcollection)  
+[**Generated class with private constructor**](#Generated-class-with-private-constructor) 
+[**Generate DC independend data access methods**](#Generate-dc-independend-data-access-methods)  
 [**Further Documentation**](#further-documentation)  
 
 
@@ -465,12 +468,20 @@ If `Child.Parent`  is updatable (not `readonly`), the `Parent` value can be chan
 `Parent0` to `Parent1`, which will remove the child from `Parent0.Children` and add it to 
 `Parent1.Children`.
 
-Note: As there are no *1:1* relationships, there are also no *1:m* nor *c:m* relationships. The reason
+**Note:** As there are no *1:1* relationships, there are also no *1:m* nor *c:m* relationships. The reason
 is the same. It must be possible to read the parent form the permanent storage (CSV file) before 
 the child. Each parent must be able to exist without children.
 
 The `Children` are stored in RAM in a collection. When the parent gets read during startup, that
-collection is empty. *StorageLib* supports 3 type of collections:
+collection is empty. 
+
+**Collections supported by StorageLib:**
+
+- `List<Child>`
+- `HashSet<Child>`
+- `Dictionary<Key, Child>`
+- `SortedList<Key, Child>`
+- `SortedBucketCollection<Key0, Key1, Child>`
 
 ## Parent with multiple children using List<>
 
@@ -529,10 +540,83 @@ children collection.
 **Note:** *StorageLib* guarantees that a not stored parent will never have any stored children. 
 For this reason all children must be released before the parent can be released.
 
+## Parent with several collections for the same child type
+
+Sometimes a parent can have several collections for the same child type.
+
+Example: A flight (=child) has a departure airport and a destination airport. An airport 
+(=parent) has a collection for departing flights and arriving flights.
+
+```charp
+public class Airport {
+  public string Name;
+  [StorageProperty(childPropertyName: "Departure")]
+  public List<Flight> Departures;
+  [StorageProperty(childPropertyName: "Arrival")]
+  public List<Flight> Arrivals;
+}
+
+public class Child {
+  public string FlightNumber;
+  public Airport Departure;
+  public Airport Arrival;
+}
+```
+
+*StorageClassGenerator* cannot guess which child property links to which parent collection. 
+The `StoragePropertyAttribute` provides the missing information.
+
+## Parent with multiple children using HashSet<>
+A `HashSet<Item>` and a `List<Item>` are very similar, they both collect Items. The difference 
+is that the same item can be several times in a List, but the HashSet ensures that each item 
+is contained only once.
+
+**Note:** An child can only be several times in a parent's children collection, when the 
+child class has several properties with the parent's type. Therefore, a `HashSet<Child>` can 
+only be used when the `Child` has several properties with the type `Parent`.
+
+**Example:**
+A system track persons and their activities. An activity needs a `Organiser` planning the 
+activity, a `Leader` exceuting the activity and a `Reporter` writing about the activity. 
+These roles can be executed by the same person or different people. The system needs to 
+know for each `Person` in which `Activty` that person is involved in. A person who covers 
+different roles for an activity should be only once in `Activities`.
+
+
+```charp
+public class Person {
+  public string Name;
+  public HashSet<Activity> Activities;
+}
+
+public class Activity {
+  public string Title;
+  public Person Organiser;
+  public Person Leader;
+  public Person Reporter;
+}
+```
+
+After reading `Person`, *StorageClassGenerator* searches for a *data class* 
+`Activity` in the DataModel and within `Activity` for at least 2 properties with type 
+`Person`. *StorageClassGenerator* creates code which will keep the data on both ends 
+synchronised. If one `Item` property links to a `Person` instance, `Activities` contains 
+that `Item`. If several `Item` properties links to the same `Person` instance, `Activities` 
+contains the `Item` instance only once.
+
+When a child is not releasable, the *StorageClassGenerator* uses a normal `HashSet<Child>` for the 
+parent's children collection, but when a child is releasable, it uses a `StorageHashSet<Child>`. 
+`StorageHashSet<>` behaves like a `HashSet<>`. When enumerating its items, **all** children are 
+shown, stored and not stored ones. `StorageHashSet.GetStoredItems()` enumerates over all stored 
+children, but skips over not stored children. `StorageHashSet.CountStoredItems` returns only 
+the number of stored children.
+
+
 ## Parent with multiple children using Dictionary<> or SortedList<>
 
 Sometimes it is necessary to find a child in the parent's children collection based on a child's 
-property value (=dictionary key). Example: Exchange rates (=children) stored in a currency (=parent) should 
+property value (=dictionary key). 
+**Example:** Exchange rates (=children) stored in a currency (=parent) should 
 be accessible by the date this exchange rate is valid for:
 
 ```csharp
@@ -588,6 +672,19 @@ the relationship is a bit more challenging in the second case, because if the  d
 child (in the example: `Date`) changes, the child needs to get removed from the parent's children 
 and added again so that the child will be found with the new dictionary key value and not the old one.
 
+When a child is not releasable, the *StorageClassGenerator* uses a normal 
+`Dictionary<Child, Key>` or `SortedList<Child, Key>` for the parent's children 
+collection, but when a child is releasable, it uses a `StorageDictionary<Child, Key>` or 
+`StorageSortedList<Child, Key>`. `StorageDictionary<>` and `StorageSortedList<>` 
+behave like a `Dictionary<>` and `SortedList<>`. When enumerating their items, **all** 
+children are shown, stored and not stored ones. `StorageXxx.GetStoredItems()` enumerates 
+over all stored children, but skips over not stored children. 
+`StorageXxx.CountStoredItems` returns only the number of stored children.
+
+**Note:** *StorageLib* guarantees that a not stored parent will never have any stored children. 
+For this reason all children must be released before the parent can be released.
+
+
 ## Parent with multiple children using SortedBucketCollection
 
 Sometimes it is convenient when a parent can store its children in a collection using 2 keys, 
@@ -631,11 +728,9 @@ The foreach loop will efficiently enumerate each Expenses AccountItem of month J
 weekly, monthly or yearly.
 
 SortedBucketCollection was written specifically for StorageLib to replace Dictionary when 
-it is possible that 2 items share the same key.
-
-
-
-
+it is possible that 2 items share the same key. `SortedBucketCollection.GetStoredItems()` 
+enumerates over all stored children, but skips over not stored children. 
+`SortedBucketCollection.CountStoredItems` returns only the number of stored children.
 
 
 # Generated class with private constructor
@@ -660,6 +755,84 @@ public class Xxx {
   public string Text;
 }
 ```
+
+# Generate DC independend data access methods
+
+The method created by add a lot of functionality to guarantee data consistency. For example, 
+there is no way to delete data which is not marked as `areInstancesReleasable`. However, 
+maybe some data maintenance needs to do exactly this at year end, deleting all data which is 
+older than 10 years. For this purpose, *StorageClassGenerator* can create methods which allow 
+to manipulate a data class without using the DC:
+
+```csharp
+[StorageClass(isGenerateReaderWriter: true, areInstancesUpdatable: false, areInstancesReleasable: false)]
+public class ImmutableLog {
+  public Date Date;
+  public string Text;
+}
+```
+
+Here some data gets written into a log file. Once the log is written, it normally should not 
+change. For this reason, `areInstancesUpdatable` and `areInstancesReleasable` are set to
+`false`. `isGenerateReaderWriter` tells *StorageClassGenerator* to create 3 additional 
+classes:
+
+* `ImmutableLogRaw`: It has exactly the same structure like 'ImmutableLog', but all properties are updatable. Links to parents are replaced with the parent's instance `Key`.
+* `ImmutableLogReader`: Allows reading an ImmutableLog file one `ImmutableLogRaw` at a time.
+* `ImmutableLogWriter`: Allows writing to a new ImmutableLog file one `ImmutableLogRaw` at a time
+
+The idea is to read all the data, manipulate it and the to write the data back. A maintenance 
+program removing all log entries older than 10 years and changing the existing log entries 
+could look like that:
+
+```csharp
+public void YearlyLogMaintenance() {
+  var csvConfig = new CsvConfig(DataDirectoryPath);
+  var deleteDate = DateTime.Now.Date.AddYears(-10);
+  using var reader = new ImmutableLogReader(DataDirectoryPath + "\\ImmutableLog.csv", csvConfig);
+  using var writer = new ImmutableLogWriter(DataDirectoryPath + "\\ImmutableLog.new", csvConfig);
+  var newKey = 0;
+  while (reader.ReadLine(out var immutableLogRaw)) {
+    if (deleteDate<immutableLogRaw.Date) {
+      immutableLogRaw.Key = newKey++;
+      immutableLogRaw.Text = "Log: " + immutableLogRaw.Text;
+      writer.Write(immutableLogRaw);
+    }
+  }
+}
+```
+
+It is also possible to combine DC based data access with direct reading or writing to files:
+
+```csharp
+public void YearlyLogMaintenance() {
+  var csvConfig = new CsvConfig(DataDirectoryPath);
+  _ = new DC(csvConfig);
+  var deleteDate = DateTime.Now.Date.AddYears(-10);
+  using var writer = new ImmutableLogWriter(DataDirectoryPath + "\\ImmutableLog.new", csvConfig);
+  var newKey = 0;
+  foreach (var immutableLog in DC.Data.ImmutableLogs) {
+    var immutableLogRaw = new ImmutableLogRaw(immutableLog);
+    if (deleteDate<immutableLogRaw.Date) {
+      immutableLogRaw.Key = newKey++;
+      immutableLogRaw.Text = "Log: " + immutableLogRaw.Text;
+      writer.Write(immutableLogRaw);
+    }
+  }
+  DC.DisposeData();
+}
+```
+
+This is possible thanks to a `ImmutableLogRaw` constructur taking a `ImmutableLog` as 
+parameter.
+
+The advantage of using a DC is that children link directly to their parent and the parent has
+a collection of all children. In a .csv file the link to the parent is stored in the child as 
+integer, which has the value of the parent's key. The same applies for XxxRaw classes. They 
+have no link to the parent, only the parent's key. Furthermore, a parentRaw has no infromation 
+which children links to it. A maintenance program can change these values, but when the DC 
+gets started the next time, the data integrity gets checked again and an exception is raised 
+if there is a data integrity violation.
 
 
 # Further Documentation

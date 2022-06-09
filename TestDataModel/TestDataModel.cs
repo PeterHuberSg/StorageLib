@@ -876,54 +876,18 @@ namespace TestContext {
   #endregion
 
 
-  //Todo: TwoListsParent needs StorageProperty to link child property to parent list
-  //#region Parent with 2 lists for same child type
-  ////      ---------------------------------------
+  #region Reader and Writer methods for data manipulation without DC
+  //      ----------------------------------------------------------
 
-  //// Example where the parent has 2 Lists for one child type. 
+  //Creates and additional class ImmutableLogRaw which can be used reading ImmutableLog.csv, manipulate the data and writing the data back. This can 
+  //be useful for data maintenance, like when "undeletable" data needs to be deleted, readonly properties updated, etc.
 
-  ///// <summary>
-  /////  Example where the parent has 2 Lists for one child type.
-  ///// </summary>
-  //public class TwoListsParent_Parent {
-
-  //  /// <summary>
-  //  /// Some Text
-  //  /// </summary>
-  //  public string Text;
-
-  //  /// <summary>
-  //  /// Deletable children which must have a parent
-  //  /// </summary>
-  //  public List<TwoListsParent_Child> ChildrenA;
-
-  //  /// <summary>
-  //  /// Deletable children which must have a parent
-  //  /// </summary>
-  //  public List<TwoListsParent_Child> ChildrenB;
-  //}
+  [StorageClass(isGenerateReaderWriter: true, areInstancesUpdatable: false, areInstancesReleasable: false)]
+  public class ImmutableLog {
+    public Date Date;
+    public string Text;
+  }
+  #endregion
 
 
-  ///// <summary>
-  ///// Example of deletable parent using a List for its children. It can have only deletable children. The child must have a 
-  ///// parent (the child.Parent property is not nullable). The relationship cannot be updated, since child is readonly.
-  ///// </summary>
-  //public class TwoListsParent_Child {
-
-  //  /// <summary>
-  //  /// Some Text
-  //  /// </summary>
-  //  public string Text;
-
-  //  /// <summary>
-  //  /// Deletable children which must have a parent
-  //  /// </summary>
-  //  public TwoListsParent_Parent ParentA;
-
-  //  /// <summary>
-  //  /// Deletable children which must have a parent
-  //  /// </summary>
-  //  public TwoListsParent_Parent? ParentB;
-  //}
-  //#endregion
 }
