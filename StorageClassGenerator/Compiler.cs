@@ -327,14 +327,28 @@ namespace StorageLib {
       //parent and children, while the second loop (LinkToParent only) verifies that every child has a parent.
       foreach (var ci in classes.Values) {
         foreach (var mi in ci.Members.Values) {
-          if (mi.ChildTypeName==ci.ClassName) {
-            throw new GeneratorException($"In the class {ci}, the property '{mi}' references its own class, " +
-              $"which StorageLib cannot support. The reason is that 2 instances of {ci.ClassName} reference " + 
-              "each other. When the data gets read from a file, the first instance needs to get created with a " +
-              "reference to the other instance, which does not exist yet. A not existing reference throws " +
-              "an exception." + Environment.NewLine +
-              mi.MemberText);
+          if (mi.MemberType==MemberTypeEnum.LinkToParent) {
+            if (mi.TypeStringNotNullable==ci.ClassName) {
+              //a property referencing its own class, of which it is a property 
+              if (!mi.IsNullable) {
+                throw new GeneratorException(ci, mi, $"Property {mi.MemberName} is linking to the class it belongs to, " +
+                  $"which is useful for tree shaped data structures. {mi.MemberName} must be nullable, because at least " +
+                  $"for the very first instance of {mi.ClassInfo.ClassName} (= tree trunk), no other instance exists that " +
+                  $"can be linked too.");
+              }
+              mi.IsSelfReferencing = mi.TypeStringNotNullable==ci.ClassName;
+            }
+          } else if (mi.ChildTypeName==ci.ClassName) {
+            //a child collection referencing its own class, of which it is a property
+            if (mi.MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
+              mi.IsSelfReferencing = true;
+            } else {
+              throw new GeneratorException(ci, mi, $"In the class {ci}, the property '{mi}' references its own class, " +
+                $"which StorageLib currently does not support. Hierachical tree functionality is presently only supported " +
+                $"where the children collection is a list. ");
+            }
           }
+
           if (mi.MemberType>=MemberTypeEnum.ToLower) {
             var isFound = false;
             switch (mi.MemberType) {
@@ -1037,7 +1051,12 @@ namespace StorageLib {
       parentCI.Children.Add(childCI);
       childCI.ParentsAll.Add(parentCI);
       childCI.HasParents = true;
-      topClasses.Remove(childCI.ClassName);
+      if (parentCI==childCI) {
+        //a self referencing class (isListTree==true). It is not just a child, but at the same time also a parent 
+        //and should therefore not yet get removed from topClasses
+      } else {
+        topClasses.Remove(childCI.ClassName);
+      }
     }
 
 
@@ -1229,7 +1248,7 @@ namespace StorageLib {
 
     private static bool allParentsAreAddedToParentChildTree(ClassInfo childClass) {
       foreach (var parentClass in childClass.ParentsAll) {
-        if (!parentClass.IsAddedToParentChildTree) return false;
+        if (!parentClass.IsAddedToParentChildTree && parentClass!=childClass) return false;
       }
       return true;
     }

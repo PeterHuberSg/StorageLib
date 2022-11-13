@@ -336,6 +336,26 @@ namespace TestContext {
   #endregion
 
 
+  #region ListTree: One class used as parent and child building a tree with roots, branches and leaves
+  //      ---------------------------------------------------------------------------------------------
+
+  //In a hierachical structure like a file directory, a directory can contain more directories, i.e. a directory class 
+  //can be parent with a children collection of directories and be child of another directory.
+
+  public class ListTreeBranch {
+    public string Text;
+    /// <summary>
+    /// If Parent is nul, this branch is a root
+    /// </summary>
+    public ListTreeBranch? Parent;
+    /// <summary>
+    /// If CHildren is empty, this branch is a leaf 
+    /// </summary>
+    public List<ListTreeBranch> Children;
+  }
+  #endregion
+
+
   #region Parent with children HashSet
   //      ----------------------------
 

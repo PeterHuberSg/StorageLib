@@ -86,9 +86,9 @@ namespace StorageLib {
     #region Constructor
     //     ------------
 
-    Func<int, CsvReader, TItemCSV?> create;
+    Func<int, CsvReader, DataStoreCSV<TItemCSV>, TItemCSV?> create;
     Func<TItemCSV, bool>? verify;
-    Action<TItemCSV, CsvReader>? update;
+    Action<TItemCSV, CsvReader, DataStoreCSV<TItemCSV>>? update;
     Action<TItemCSV, CsvWriter>? write;
     Action<TItemCSV>? disconnect;
 
@@ -131,9 +131,9 @@ namespace StorageLib {
       int maxLineLenght,
       string[] headers,
       Action<IStorageItem, int, /*isRollback*/bool> setKey,
-      Func<int, CsvReader, TItemCSV> create,
+      Func<int, CsvReader, DataStoreCSV<TItemCSV>, TItemCSV> create,
       Func<TItemCSV, bool>? verify,
-      Action<TItemCSV, CsvReader>? update,
+      Action<TItemCSV, CsvReader, DataStoreCSV<TItemCSV>>? update,
       Action<TItemCSV, CsvWriter> write,
       Action<TItemCSV>? disconnect,
       Action<IStorageItem> rollbackItemNew,
@@ -277,7 +277,7 @@ namespace StorageLib {
             IsReadFromBakFile = true;
             var key = csvReader.ReadInt();
             var item = this[key];
-            update!(item, csvReader);
+            update!(item, csvReader, this);
             csvReader.ReadEndOfLine();
 
           } else {
@@ -307,9 +307,9 @@ namespace StorageLib {
     private void addItem(CsvReader csvReader, StringBuilder errorStringBuilder) {
       TItemCSV? item;
       if (IsReadOnly) {
-        item = create(LastItemIndex+1, csvReader);
+        item = create(LastItemIndex+1, csvReader, this);
       } else {
-        item = create(csvReader.ReadInt(), csvReader);
+        item = create(csvReader.ReadInt(), csvReader, this);
       }
       if (errorStringBuilder.Length==0) {
         AddProtected(item!);

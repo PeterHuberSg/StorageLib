@@ -935,7 +935,7 @@ namespace StorageLib {
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// Constructor for {ClassName} read from CSV file");
       sw.WriteLine("    /// </summary>");
-      sw.WriteLine($"    private {ClassName}(int key, CsvReader csvReader){{");
+      sw.WriteLine($"    private {ClassName}(int key, CsvReader csvReader, DataStoreCSV<{ClassName}> dataStore){{");
       sw.WriteLine("      Key = key;");
       //var isVarNeeded = true;
       //var isVarNullableNeeded = true;
@@ -961,11 +961,19 @@ namespace StorageLib {
           if (mi.IsNullable) {
             sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadIntNull();");
             sw.WriteLine($"      if ({mi.LowerMemberName}Key.HasValue) {{");
-            sw.WriteLine($"        {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+            if (mi.IsSelfReferencing) {
+              sw.WriteLine($"        {mi.MemberName} = dataStore.GetItem({mi.LowerMemberName}Key.Value)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+            } else {
+              sw.WriteLine($"        {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+            }
             sw.WriteLine("      }");
           } else {
             sw.WriteLine($"      var {mi.LowerMemberName}Key = csvReader.ReadInt();");
-            sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");            //if (isVarNeeded) {
+            if (mi.IsSelfReferencing) {
+              sw.WriteLine($"      {mi.MemberName} = dataStore.GetItem({mi.LowerMemberName}Key)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+            } else {
+              sw.WriteLine($"      {mi.MemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key)?? {mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+            }
           }
         } else {
           //enum, simple data type
@@ -1002,8 +1010,8 @@ namespace StorageLib {
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// New {ClassName} read from CSV file");
       sw.WriteLine("    /// </summary>");
-      sw.WriteLine($"    internal static {ClassName} Create(int key, CsvReader csvReader) {{");
-      sw.WriteLine($"      return new {ClassName}(key, csvReader);");
+      sw.WriteLine($"    internal static {ClassName} Create(int key, CsvReader csvReader, DataStoreCSV<{ClassName}> dataStore) {{");
+      sw.WriteLine($"      return new {ClassName}(key, csvReader, dataStore);");
       sw.WriteLine("    }");
     }
 
@@ -1372,7 +1380,7 @@ namespace StorageLib {
       sw.WriteLine("    /// <summary>");
       sw.WriteLine($"    /// Updates this {ClassName} with values from CSV file");
       sw.WriteLine("    /// </summary>");
-      sw.WriteLine($"    internal static void Update({ClassName} {LowerClassName}, CsvReader csvReader){{");
+      sw.WriteLine($"    internal static void Update({ClassName} {LowerClassName}, CsvReader csvReader, DataStoreCSV<{ClassName}> dataStore){{");
 
       sw.WriteLine("      //read first all property values into local variables");
       var isFirst = true;
@@ -1398,11 +1406,19 @@ namespace StorageLib {
               sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
               sw.WriteLine($"        {mi.LowerMemberName} = null;");
               sw.WriteLine("      } else {");
-              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              if (mi.IsSelfReferencing) {
+                sw.WriteLine($"        {mi.LowerMemberName} = dataStore.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              } else {
+                sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              }
               sw.WriteLine("      }");
  
             } else {
-              sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              if (mi.IsSelfReferencing) {
+                sw.WriteLine($"      var {mi.LowerMemberName} = dataStore.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              } else {
+                sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              }
             }
 
           } else {
@@ -1425,10 +1441,18 @@ namespace StorageLib {
               sw.WriteLine($"      if ({mi.LowerMemberName}Key is null) {{");
               sw.WriteLine($"        {mi.LowerMemberName} = null;");
               sw.WriteLine( "      } else {");
-              sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              if (mi.IsSelfReferencing) {
+                sw.WriteLine($"        {mi.LowerMemberName} = dataStore.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              } else {
+                sw.WriteLine($"        {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem({mi.LowerMemberName}Key.Value)??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              }
               sw.WriteLine( "      }");
             } else {
-              sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              if (mi.IsSelfReferencing) {
+                sw.WriteLine($"      var {mi.LowerMemberName} = dataStore.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              } else {
+                sw.WriteLine($"      var {mi.LowerMemberName} = {context}.Data._{mi.ParentClassInfo!.PluralName}.GetItem(csvReader.ReadInt())??{mi.TypeStringNotNullable}.No{mi.TypeStringNotNullable};");
+              }
             }
 
           } else if (mi.MemberType<MemberTypeEnum.LinkToParent) {

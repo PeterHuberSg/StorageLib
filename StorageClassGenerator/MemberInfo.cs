@@ -48,8 +48,9 @@ namespace StorageLib {
     public readonly string? PrecissionComment;
     public readonly string? Rounding;
     public readonly string? DefaultValue;
-    public readonly bool IsLookupOnly = false;
-    public readonly bool NeedsDictionary = false;
+    public readonly bool IsLookupOnly;
+    public readonly bool NeedsDictionary;
+    public bool IsSelfReferencing; //this parent property links to the class it belongs to. This is typically used in a tree structure.
     public readonly int MaxStorageSize;
     public readonly string? ChildTypeName; //used by ParentMultipleChildrenXxx: List, HashSet, Dictionary, SortedList and SortedBucketCollection
     public readonly string? LowerChildTypeName; //used by ParentMultipleChildrenXxx
@@ -155,7 +156,7 @@ namespace StorageLib {
           NoValue = "DateTime.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores date and time with minute preclusion.";
+        PrecissionComment = "Stores date and time with minute precision.";
         Rounding = ".Round(Rounding.Minutes)";
         break;
 

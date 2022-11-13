@@ -39,7 +39,7 @@ namespace StorageTest {
     }
 
 
-    public static TestItemCsv Create(int key, CsvReader csvReader) {
+    public static TestItemCsv Create(int key, CsvReader csvReader, DataStoreCSV<TestItemCsv> _) {
       return new TestItemCsv(key, csvReader);
     }
 
@@ -49,7 +49,7 @@ namespace StorageTest {
     }
 
 
-    internal static void Update(TestItemCsv testItemCsv, CsvReader csvReader) 
+    internal static void Update(TestItemCsv testItemCsv, CsvReader csvReader, DataStoreCSV<TestItemCsv> _) 
     {
       testItemCsv.Text = csvReader.ReadString()!;
     }
