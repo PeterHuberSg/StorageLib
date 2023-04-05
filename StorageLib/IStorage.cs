@@ -23,7 +23,7 @@ Storage uses 2 Interfaces:
 --------------------------
 
 IStorageItem<TItem>: IStorageItem
-Implemented by classes who wants to store their data in DataStore
+Implemented by classes who want to store their data in DataStore
 
 IStorageItem
 None generic version of IStorageItem<TItem>, used for transaction processing mostly

@@ -25,9 +25,10 @@ namespace TestContext {
     where TParentN : IStorageItem
     where TParentR : IStorageItem
     where TParentNR : IStorageItem
-    where TChild : ITestChild<TParent, TParentN, TParentR, TParentNR> {
+    where TChild : ITestChild<TParent, TParentN, TParentR, TParentNR> 
+  {
     string Text { get; }
-    TChild Child { get; }
+    TChild? Child { get; }
 
     bool Update(string text);
   }
