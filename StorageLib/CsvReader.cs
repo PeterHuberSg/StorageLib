@@ -48,13 +48,13 @@ namespace StorageLib {
     /// <summary>
     /// Estimated chars in a line for average values. With max values and long strings, the actual length might be much longer.
     /// </summary>
-    public int EstimatedLineLenght { get; }
+    public int EstimatedLineLength { get; }
 
 
     /// <summary>
     /// How many bytes can a line max contain ? (25% of CsvConfig.BufferSize)
     /// </summary>
-    public int MaxLineByteLenght { get; }
+    public int MaxLineByteLength { get; }
 
 
     /// <summary>
@@ -86,7 +86,7 @@ namespace StorageLib {
     public CsvReader(
       string? fileName, 
       CsvConfig csvConfig, 
-      int estimatedLineLenght, 
+      int estimatedLineLength, 
       FileStream? existingFileStream = null) 
     {
       if (!string.IsNullOrEmpty(fileName) && existingFileStream!=null) 
@@ -108,12 +108,12 @@ namespace StorageLib {
 
       delimiter = (int)csvConfig.Delimiter;
 
-      MaxLineByteLenght = CsvConfig.BufferSize/Csv.ByteBufferToReserveRatio;
-      if (estimatedLineLenght*Csv.Utf8BytesPerChar>MaxLineByteLenght)
+      MaxLineByteLength = CsvConfig.BufferSize/Csv.ByteBufferToReserveRatio;
+      if (estimatedLineLength*Csv.Utf8BytesPerChar>MaxLineByteLength)
         throw new Exception($"CsvReader constructor: BufferSize {CsvConfig.BufferSize} should be at least " + 
-          $"{Csv.ByteBufferToReserveRatio*Csv.Utf8BytesPerChar} times bigger than MaxLineCharLenght {estimatedLineLenght} for file {fileName}.");
+          $"{Csv.ByteBufferToReserveRatio*Csv.Utf8BytesPerChar} times bigger than MaxLineCharLength {estimatedLineLength} for file {fileName}.");
 
-      EstimatedLineLenght = estimatedLineLenght;
+      EstimatedLineLength = estimatedLineLength;
       if (existingFileStream is null) {
         isFileStreamOwner = true;
         fileStream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.None, CsvConfig.BufferSize, 
@@ -122,11 +122,11 @@ namespace StorageLib {
         isFileStreamOwner = false;
         fileStream = existingFileStream;
       }
-      byteArray = new byte[CsvConfig.BufferSize + MaxLineByteLenght];
+      byteArray = new byte[CsvConfig.BufferSize + MaxLineByteLength];
       readIndex = 0;
       endIndex = 0;
       IsEof = false;
-      tempChars = new char[MaxLineByteLenght/Csv.Utf8BytesPerChar];
+      tempChars = new char[MaxLineByteLength/Csv.Utf8BytesPerChar];
     }
     #endregion
 
@@ -220,7 +220,7 @@ namespace StorageLib {
     /// </summary>
     public void ReadEndOfLine() {
       var remainingBytesCount = endIndex - readIndex;
-      if (remainingBytesCount<=MaxLineByteLenght) {
+      if (remainingBytesCount<=MaxLineByteLength) {
         if (!fillBufferFromFileStream(remainingBytesCount)) throw new Exception($"CsvReader.ReadEndOfLine() '{FileName}': premature EOF found:" + Environment.NewLine + GetPresentContent());
       }
 
@@ -234,7 +234,7 @@ namespace StorageLib {
         throw new Exception($"CsvReader.ReadEndOfLine() '{FileName}': Line feed missing: " + Environment.NewLine + GetPresentContent());
       }
 #if DEBUG
-      if ((readIndex-lineStart)%CsvConfig.BufferSize > MaxLineByteLenght) throw new Exception();
+      if ((readIndex-lineStart)%CsvConfig.BufferSize > MaxLineByteLength) throw new Exception();
       lineStart = readIndex;
 #endif
     }
@@ -592,7 +592,7 @@ namespace StorageLib {
     /// </summary>
     public char ReadFirstLineChar() {
       var remainingBytesCount = endIndex - readIndex;
-      if (remainingBytesCount<=MaxLineByteLenght) {
+      if (remainingBytesCount<=MaxLineByteLength) {
         if (!fillBufferFromFileStream(remainingBytesCount)) throw new Exception($"CsvReader.ReadFirstLineChar() '{FileName}': Premature EOF found: " + Environment.NewLine + GetPresentContent());
       }
 
@@ -883,7 +883,7 @@ namespace StorageLib {
     /// </summary>
     public string ReadLine() {
       var remainingBytesCount = endIndex - readIndex;
-      if (remainingBytesCount<=MaxLineByteLenght) {
+      if (remainingBytesCount<=MaxLineByteLength) {
         if (!fillBufferFromFileStream(remainingBytesCount)) throw new Exception($"CsvReader.ReadLine() '{FileName}': Premature EOF found: " + Environment.NewLine + GetPresentContent());
       }
 
