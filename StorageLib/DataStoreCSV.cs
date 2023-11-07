@@ -291,13 +291,13 @@ namespace StorageLib {
       if (verify!=null) {
         foreach (var item in this) {
           if (!verify(item)) {
-            errorStringBuilder.AppendLine($"DataStoreCSV<{typeof(TItemCSV).Name}>: item '{item}' could not be validated in {PathFileName}.");
+            errorStringBuilder.AppendLine($"DataStoreCSV<{typeof(TItemCSV).Name}>: item Key: {item.Key} Content: '{item}' could not be validated in {PathFileName}.");
           }
         }
       }
 
       if (errorStringBuilder.Length>0) {
-        throw new Exception($"Errors reading file {csvReader.FileName}, wrong formatting on following lines:" + Environment.NewLine +
+        throw new Exception($"Errors reading file {csvReader.FileName}, problems on following lines:" + Environment.NewLine +
           errorStringBuilder.ToString());
       }
       UpdateAreKeysContinuous();
