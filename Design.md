@@ -584,7 +584,8 @@ immediately to a file. Otherwise, the instance can get written later to the file
 `new(isStoring: true)` an `Store()` throw an exception.
 
 *StorageLib* adds to each class a **Key** property. Its value is smaller 0 until the
-object gets stored, at which time the key gets a unique value.
+object gets stored, at which time the key gets a unique value, which will be biggest key used 
+so far + 1.
 
 None of the properties can be changed directly, they must be changed by calling the object's
 **Update()** method. This allows changing and writing the new content to the file of several 
