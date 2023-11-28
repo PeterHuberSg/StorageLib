@@ -26,6 +26,7 @@ namespace StorageTest {
     public void TestDataStoreReadonlyCSV() {
       var directoryInfo = new DirectoryInfo("TestCsv");
       try {
+        //clean up from previous failed tests
         dataStore?.Dispose();
         if (directoryInfo.Exists) {
           directoryInfo.Delete(recursive: true);

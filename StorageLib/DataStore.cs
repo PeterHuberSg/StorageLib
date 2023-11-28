@@ -93,8 +93,9 @@ namespace StorageLib {
     /// Are all Keys just incremented by 1 from the previous Key ? 
     /// </summary>
     public bool AreKeysContinuous { get; protected set; }
+
     protected void UpdateAreKeysContinuous() {
-      AreKeysContinuous =IsReadOnly || Count==0 ||KeysArray[LastItemIndex] - KeysArray[FirstItemIndex] + 1 == Count;
+      AreKeysContinuous = IsReadOnly || Count==0 ||KeysArray[LastItemIndex] - KeysArray[FirstItemIndex] + 1 == Count;
     }
 
 
@@ -365,7 +366,6 @@ namespace StorageLib {
 
     TItem?[] items;
     //int[] keys; //keys don't get deleted when an item gets removed, because the key of the removed item is still needed for binary search
-    //static readonly int[] emptyKeys = new int[0];
     int version;
 
 
