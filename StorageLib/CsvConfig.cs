@@ -154,8 +154,6 @@ namespace StorageLib {
       if (bufferSize<_4k) throw new ArgumentOutOfRangeException("bufferSize " + bufferSize + " cannot be smaller 4k (4096).");
       if (bufferSize%_4k!=0) throw new ArgumentOutOfRangeException("bufferSize " + bufferSize + " should be a multiple of 4k (4096).");
       BufferSize = bufferSize;
-      //WritingIntervall = writingIntervall;
-      //MaxWaitIntervalls = maxWaitIntervalls;
       ReportException = reportException;
       LineCharAdd = lineCharAdd;
       LineCharUpdate = lineCharUpdate;

@@ -73,7 +73,7 @@ namespace SampleDataConsole {
 
 
     private static void reportException(Exception exception) {
-      Console.WriteLine("Exception occured: " + exception);
+      Console.WriteLine("Exception occurred: " + exception);
     }
   }
 }

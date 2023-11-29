@@ -148,9 +148,7 @@ namespace StorageLib {
     /// Returns number with at most digitsNumber of digits after decimal point 
     /// </summary>
     public static decimal? Round(this decimal? number, int digitsNumber) {
-      if (number is null) return null;
-
-      return Math.Round(number.Value, digitsNumber);
+      return number is null ? null : Math.Round(number.Value, digitsNumber);
     }
     #endregion
   }

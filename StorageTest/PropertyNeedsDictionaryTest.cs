@@ -12,15 +12,15 @@ namespace StorageTest {
   [TestClass]
   public class PropertyNeedsDictionaryTest {
 
-    static readonly DirectoryInfo directoryInfo =  new DirectoryInfo("TestCsv");
-    static readonly CsvConfig csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-    static readonly BakCsvFileSwapper bakCsvFileSwapper = new BakCsvFileSwapper(csvConfig);
-    static readonly Dictionary<int, string> expectedSamples = new Dictionary<int, string>();
-    static readonly Dictionary<int, string> expectedIdInts = new Dictionary<int, string>();
-    static readonly Dictionary<string, string> expectedIdStrings = new Dictionary<string, string>();
-    static readonly Dictionary<string, string> expectedTextLowers = new Dictionary<string, string>();
-    static readonly Dictionary<string, string> expectedTextNullableLowers = new Dictionary<string, string>();
-    static readonly Dictionary<string, string> expectedTextReadonlyLowers = new Dictionary<string, string>();
+    static readonly DirectoryInfo directoryInfo =  new("TestCsv");
+    static readonly CsvConfig csvConfig = new(directoryInfo.FullName, reportException: reportException);
+    static readonly BakCsvFileSwapper bakCsvFileSwapper = new(csvConfig);
+    static readonly Dictionary<int, string> expectedSamples = new();
+    static readonly Dictionary<int, string> expectedIdInts = new();
+    static readonly Dictionary<string, string> expectedIdStrings = new();
+    static readonly Dictionary<string, string> expectedTextLowers = new();
+    static readonly Dictionary<string, string> expectedTextNullableLowers = new();
+    static readonly Dictionary<string, string> expectedTextReadonlyLowers = new();
 
 
     [TestMethod]
@@ -35,7 +35,7 @@ namespace StorageTest {
         directoryInfo.Create();
         directoryInfo.Refresh();
 
-        new DC(csvConfig);
+        _ = new DC(csvConfig);
         assertData();
         var key0 = addData(1, "One", "FirstLower", "FirstLowerNull", "FirstReadonly");
         var key1 = addData(2, null, "SecondLower", "SecondLowerNull", "SecondReadonly");
@@ -66,12 +66,12 @@ namespace StorageTest {
 
     private int addData(int idInt, string? idString, string text, string? textNullable, string textReadonly) {
       DC.Data.StartTransaction();
-      new PropertyNeedsDictionaryClass(idInt, idString, text, textNullable, textReadonly, isStoring: false);
+      _ = new PropertyNeedsDictionaryClass(idInt, idString, text, textNullable, textReadonly, isStoring: false);
       DC.Data.RollbackTransaction();
       assertData();
 
       DC.Data.StartTransaction();
-      new PropertyNeedsDictionaryClass(idInt, idString, text, textNullable, textReadonly);
+      _ = new PropertyNeedsDictionaryClass(idInt, idString, text, textNullable, textReadonly);
       DC.Data.RollbackTransaction();
       assertData();
 

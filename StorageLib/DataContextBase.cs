@@ -19,8 +19,6 @@ This software is distributed without any warranty.
 **************************************************************************************/
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Text;
 using System.Threading;
 
 
@@ -113,8 +111,8 @@ namespace StorageLib {
       none,
       StartTransaction,
       CommitTransaction,
-      RollingbackTransaction,
-      RolledbackTransaction
+      RollingBackTransaction,
+      RolledBackTransaction
     }
 
 
@@ -133,7 +131,7 @@ namespace StorageLib {
         throw new Exception("Commit or roll back the currently running transaction before starting a new one.");
       }
       IsTransaction = true;
-      startTransactio();
+      startTransaction();
     }
 
 
@@ -145,12 +143,12 @@ namespace StorageLib {
       if (IsTransaction) return false;
       
       IsTransaction = true;
-      startTransactio();
+      startTransaction();
       return true;
     }
 
 
-    private void startTransactio() {
+    private void startTransaction() {
       TraceFromBase(TraceMessageEnum.StartTransaction);
 #if DEBUG
       if (TransactionItems.Count>0) throw new Exception();
@@ -190,7 +188,7 @@ namespace StorageLib {
         throw new Exception("It is not possible to roll back a transaction, there is no transaction active.");
       }
       IsTransaction = false;
-      TraceFromBase(TraceMessageEnum.RollingbackTransaction);
+      TraceFromBase(TraceMessageEnum.RollingBackTransaction);
       //rollback the changes since transaction started in each DataStore which was changed during the transaction.
       for (int storeIndex = 0; storeIndex < (int)TransactionStoreFlags.Length; storeIndex++) {
         if (TransactionStoreFlags[storeIndex]) {
@@ -204,7 +202,7 @@ namespace StorageLib {
         DataStores[(int)transactionItem.StoreKey].RollbackItem(transactionItem);
       }
       TransactionItems.Clear();
-      TraceFromBase(TraceMessageEnum.RolledbackTransaction);
+      TraceFromBase(TraceMessageEnum.RolledBackTransaction);
     }
     #endregion
 
@@ -227,10 +225,10 @@ namespace StorageLib {
     /// <summary>
     /// Is DataContextBase already disposed ?
     /// </summary>
-    public bool IsStaticDisposed {
+    public static bool IsStaticDisposed {
       get { return isStaticDisposed==1; }
     }
-    static int isStaticDisposed =1;
+    static int isStaticDisposed = 1;
 
 
     protected virtual void Dispose(bool disposing) {

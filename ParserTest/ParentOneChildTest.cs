@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 
 namespace ParserTest {
@@ -115,7 +116,7 @@ namespace ParserTest {
         public SingleChildParent Parent2;
         Use HashSet<SingleChildChild> if more than one child property links to Child1 or add to SingleChildParent " +
         "one List<SingleChildChild> for each child property with the type SingleChildParent and specify with " +
-        "attribut StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
+        "attribute StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class with parent's type and only 1 StorageProperty.childPropertyName
       //----------------------------------------------------------------------------------------------
@@ -133,7 +134,7 @@ namespace ParserTest {
         Property: public SingleChildParent Parent2;
         The parent class SingleChildParent is not linking back to Parent2 property. This can happen if 2 or more " +
         "properties of SingleChildChild link to SingleChildParent class. In this case, several collections or " +
-        "properties for singel child are needed in the SingleChildParent class and they need to use " +
+        "properties for single child are needed in the SingleChildParent class and they need to use " +
         "StoragePropertyAttribute.ChildPropertyName to indicate which of their property links to which " +
         "SingleChildChild property.");
 

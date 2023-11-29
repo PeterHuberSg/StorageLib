@@ -26,8 +26,9 @@ namespace StorageLib {
   /// while CountStoredItems() counts all stored children. 
   /// </summary>
   public class StorageSortedList<TKey, TValue>: SortedList<TKey, TValue>, IStorageReadOnlyDictionary<TKey, TValue>
-   where TKey : notnull
-   where TValue : class, IStorageItem<TValue> {
+    where TKey : notnull
+    where TValue : class, IStorageItem<TValue> 
+  {
 
     /// <summary>
     /// Count how many items from StorageSortedList are stored in the Data Context

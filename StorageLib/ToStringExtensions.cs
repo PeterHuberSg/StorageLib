@@ -1,6 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿/**************************************************************************************
+
+StorageLib.ToStringExtensions
+=============================
+
+Extension methods to generate compact strings for data storage 
+
+Written in 2021 by Jürgpeter Huber 
+Contact: https://github.com/PeterHuberSg/StorageLib
+
+To the extent possible under law, the author(s) have dedicated all copyright and 
+related and neighboring rights to this software to the public domain worldwide under
+the Creative Commons 0 license (details see COPYING.txt file, see also
+<http://creativecommons.org/publicdomain/zero/1.0/>). 
+
+This software is distributed without any warranty. 
+**************************************************************************************/
+using System;
 
 namespace StorageLib {
 
@@ -17,10 +32,7 @@ namespace StorageLib {
     /// Converts true to "y" and false to "n".
     /// </summary>
     public static string ToYNString(this bool value) {
-      if (value)
-        return "y";
-
-      return "n";
+      return value ? "y" : "n";
     }
 
 
@@ -28,11 +40,7 @@ namespace StorageLib {
     /// Converts null to "", true to "y" and false to "n".
     /// </summary>
     public static string ToYNNullString(this bool? value) {
-      if (!value.HasValue) return "";
-
-      if (value.Value) return "y";
-
-      return "n";
+      return !value.HasValue ? "" : value.Value ? "y" : "n";
     }
     #endregion
 
@@ -50,7 +58,7 @@ namespace StorageLib {
 
       if (returnString[newLength]!='0') return returnString;
 
-      if (!returnString.Contains(".")) return returnString;
+      if (!returnString.Contains('.')) return returnString;
 
       while (newLength>0) {
         newLength--;
@@ -59,9 +67,7 @@ namespace StorageLib {
 
       if (returnString[newLength]=='.') newLength--;
 
-      if (newLength<0) return "0";
-
-      return returnString.Substring(0, newLength+1);
+      return newLength<0 ? "0" : returnString[..(newLength+1)];
     }
 
 
@@ -69,9 +75,7 @@ namespace StorageLib {
     /// Converts a decimal to a string, without trailing 0s or decimal point
     /// </summary>
     public static string? ToCompactString(this decimal? value) {
-      if (value.HasValue) return value.Value.ToCompactString();
-
-      return null;
+      return value.HasValue ? value.Value.ToCompactString() : null;
     }
 
 
@@ -88,9 +92,7 @@ namespace StorageLib {
     /// Converts a decimal to a string, without trailing 0s or decimal point
     /// </summary>
     public static string? ToCompactString(this decimal? value, int decimals) {
-      if (value.HasValue) return value.Value.ToCompactString(decimals);
-
-      return null;
+      return value.HasValue ? value.Value.ToCompactString(decimals) : null;
     }
     #endregion
 

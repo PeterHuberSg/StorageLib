@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
+using System;
+using System.Text;
 
 
 namespace StorageTest {
@@ -67,7 +65,7 @@ namespace StorageTest {
     }
 
 
-    private void assertInt(int i) {
+    private static void assertInt(int i) {
       var field = i.ToString();
       var errorStringBuilder = new StringBuilder();
       var i2 = Csv.ParseInt("Test", field, field, errorStringBuilder);
@@ -76,14 +74,14 @@ namespace StorageTest {
     }
 
 
-    private void assertIntFailed(string field) {
+    private static void assertIntFailed(string field) {
       var errorStringBuilder = new StringBuilder();
       Csv.ParseInt("Test", field, field, errorStringBuilder);
       Assert.AreNotEqual(0, errorStringBuilder.Length);
     }
 
 
-    private void assertIntNull(int? i) {
+    private static void assertIntNull(int? i) {
       string field = i.ToString()??"";
       var errorStringBuilder = new StringBuilder();
       var i2 = Csv.ParseIntNull("Test", field, field, errorStringBuilder);
@@ -92,14 +90,14 @@ namespace StorageTest {
     }
 
 
-    private void assertIntNullFailed(string field) {
+    private static void assertIntNullFailed(string field) {
       var errorStringBuilder = new StringBuilder();
       Csv.ParseIntNull("Test", field, field, errorStringBuilder);
       Assert.AreNotEqual(0, errorStringBuilder.Length);
     }
 
 
-    private void assertDecimal(Decimal i) {
+    private static void assertDecimal(Decimal i) {
       var field = i.ToString();
       var errorStringBuilder = new StringBuilder();
       var i2 = Csv.ParseDecimal("Test", field, field, errorStringBuilder);
@@ -108,14 +106,14 @@ namespace StorageTest {
     }
 
 
-    private void assertDecimalFailed(string field) {
+    private static void assertDecimalFailed(string field) {
       var errorStringBuilder = new StringBuilder();
       Csv.ParseDecimal("Test", field, field, errorStringBuilder);
       Assert.AreNotEqual(0, errorStringBuilder.Length);
     }
 
 
-    private void assertDecimalNull(Decimal? i) {
+    private static void assertDecimalNull(Decimal? i) {
       var field = i.ToString()??"";
       var errorStringBuilder = new StringBuilder();
       var i2 = Csv.ParseDecimalNull("Test", field, field, errorStringBuilder);
@@ -124,7 +122,7 @@ namespace StorageTest {
     }
 
 
-    private void assertDecimalNullFailed(string field) {
+    private static void assertDecimalNullFailed(string field) {
       var errorStringBuilder = new StringBuilder();
       Csv.ParseDecimalNull("Test", field, field, errorStringBuilder);
       Assert.AreNotEqual(0, errorStringBuilder.Length);

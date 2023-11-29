@@ -1,10 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestContext;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using StorageLib;
+using System;
 using System.IO;
+using TestContext;
 
 namespace StorageTest {
 
@@ -25,7 +23,7 @@ namespace StorageTest {
         directoryInfo.Create();
 
         var csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-        new DC(csvConfig);
+        _ = new DC(csvConfig);
         var now = DateTime.Now;
         var nowDate = now.Date;
         var nowMinute = nowDate.AddMinutes(1);
@@ -42,7 +40,7 @@ namespace StorageTest {
           "abc", "abc", SampleStateEnum.None, SampleStateEnum.Some, isStoring: true);
         DC.DisposeData();
 
-        new DC(csvConfig);
+        _ = new DC(csvConfig);
         var newDts = DC.Data.DataTypeSamples[0];
         assert(oldDts, newDts);
         oldDts = new DataTypeSample(nowDate, null, nowTime, null, nowMinute, null, nowSecond, null,
@@ -50,7 +48,7 @@ namespace StorageTest {
           "abc", null, SampleStateEnum.None, SampleStateEnum.Some, isStoring: true);
         DC.DisposeData();
 
-        new DC(csvConfig);
+        _ = new DC(csvConfig);
         newDts = DC.Data.DataTypeSamples[1];
         assert(oldDts, newDts);
         oldDts = new DataTypeSample(DateTime.MinValue.Date, DateTime.MaxValue.Date, TimeSpan.FromTicks(0), new TimeSpan(0, 23, 59, 59, 0),
@@ -62,7 +60,7 @@ namespace StorageTest {
           char.MinValue, char.MaxValue, "", new string('a', 1000), (SampleStateEnum)int.MinValue, (SampleStateEnum)int.MaxValue, isStoring: true);
         DC.DisposeData();
 
-        new DC(csvConfig);
+        _ = new DC(csvConfig);
         newDts = DC.Data.DataTypeSamples[2];
         assert(oldDts, newDts);
 
@@ -72,7 +70,7 @@ namespace StorageTest {
     }
 
 
-    private void assert(DataTypeSample oldDts, DataTypeSample newDts) {
+    private static void assert(DataTypeSample oldDts, DataTypeSample newDts) {
       Assert.AreEqual(oldDts.ADate, newDts.ADate);
       Assert.AreEqual(oldDts.ANullableDate, newDts.ANullableDate);
       Assert.AreEqual(oldDts.ANullableDate, newDts.ANullableDate);

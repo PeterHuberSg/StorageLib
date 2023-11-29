@@ -16,17 +16,10 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-//using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
+using System;
+using System.IO;
 
 /*
 https://github.com/dotnet/roslyn/wiki/Getting-Started-C%23-Syntax-Analysis
@@ -145,7 +138,7 @@ namespace StorageLib {
     }
 
 
-    private DirectoryInfo findDirectory(string directoryString, string directoryName) {
+    private static DirectoryInfo findDirectory(string directoryString, string directoryName) {
       DirectoryInfo directory;
       try {
         directory = new DirectoryInfo(directoryString);
@@ -160,9 +153,9 @@ namespace StorageLib {
     }
 
 
-    private bool isModelFile(FileInfo file, out NamespaceDeclarationSyntax? namespaceDeclaration) {
+    private static bool isModelFile(FileInfo file, out NamespaceDeclarationSyntax? namespaceDeclaration) {
       var tree = CSharpSyntaxTree.ParseText(file.OpenText().ReadToEnd());
-      if (!(tree.GetRoot() is CompilationUnitSyntax root)) {
+      if (tree.GetRoot() is not CompilationUnitSyntax root) {
         Console.WriteLine($"{file.Name} skipped, it cannot be converted to a compilation unit.");
         namespaceDeclaration = null;
         return false;
@@ -179,8 +172,8 @@ namespace StorageLib {
 
       }
       foreach (var member in namespaceDeclaration.Members) {
-        if (!(member is ClassDeclarationSyntax classDeclaration)) {
-          if (!(member is EnumDeclarationSyntax)) {
+        if (member is not ClassDeclarationSyntax classDeclaration) {
+          if (member is not EnumDeclarationSyntax) {
             Console.WriteLine($"{file.Name} skipped, namespace does not contain just class and enum declarations.");
             return false;
           }

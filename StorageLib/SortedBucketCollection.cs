@@ -107,7 +107,7 @@ namespace StorageLib {
   /// <summary>
   /// Like a SortedList, SortedBucketCollection stores TValue items which can be retrieved by their TKey1 value. In SortedList, 
   /// each TKey accesses at most 1 item. In SortedBucketCollection, each TKey1 accesses a bucket, which can contain 0 to many items 
-  /// with the same TKey1, but different, unique TKey2. Items are sorted by TKey1, then TKey2. Tkey1 and TKey2 are 
+  /// with the same TKey1, but different, unique TKey2. Items are sorted by TKey1, then TKey2. TKey1 and TKey2 are 
   /// properties within TValue.
   /// </summary>
   public class SortedBucketCollection<TKey1, TKey2, TValue>: ICollection<TValue>, IReadOnlySortedBucketCollection<TKey1, TKey2, TValue>
@@ -309,7 +309,7 @@ namespace StorageLib {
             nextBucketItem = foundBucketItem.Next;
           }
 
-          //bucket has bigger Key2 than any existing bucktItem with same Key1
+          //bucket has bigger Key2 than any existing bucketItem with same Key1
           foundBucketItem.Next = new BucketItem(item, null);
         }
 
@@ -461,9 +461,9 @@ namespace StorageLib {
     /// Copies the elements of the SortedBucketCollection to an Array, starting at a particular Array index.
     /// </summary>
     public void CopyTo(TValue[] array, int arrayIndex) {
-      if (array is null) throw new ArgumentNullException("array is null.");
+      if (array is null) throw new ArgumentNullException(nameof(array));
 
-      if (arrayIndex<0) throw new ArgumentOutOfRangeException("arrayIndex is less than 0.");
+      if (arrayIndex<0) throw new ArgumentOutOfRangeException(nameof(array), $"value needs to be greater 0, but was {arrayIndex}.");
 
       if (array.Length - arrayIndex < Count) throw new ArgumentException("array is too small.");
 

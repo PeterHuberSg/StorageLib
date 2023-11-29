@@ -37,7 +37,7 @@ namespace StorageLib {
       if (i<0) {
         charArray[index++] = '-';
         start = index;
-        //since -int.MinValue is bigger than int.MaxValue, i=-i does not work of int.Minvalue.
+        //since -int.MinValue is bigger than int.MaxValue, i=-i does not work of int.MinValue.
         //therefore write 1 character first and guarantee that i>int.MinValue
         charArray[index++] = (char)(-(i % 10) + '0');
         i /= 10;
@@ -73,7 +73,7 @@ namespace StorageLib {
       string fieldName,
       StringBuilder errorStringBuilder) 
     {
-      var startindex = index;
+      var startIndex = index;
       if (index>=length) {
         if (index==length) {
           errorStringBuilder.AppendLine($"{fieldName} should be int, but was empty '' in line: '{new string(charArray[lineStart..lineLength])}'.");
@@ -90,7 +90,7 @@ namespace StorageLib {
       while (index<length) {
         var inChar = charArray[index++];
         if (inChar<'0' || inChar>'9') {
-          errorStringBuilder.AppendLine($"{fieldName} should be int, but contained illegal character '{inChar}' in field '{new string(charArray[startindex..length])}' and line: '{new string(charArray[lineStart..lineLength])}'.");
+          errorStringBuilder.AppendLine($"{fieldName} should be int, but contained illegal character '{inChar}' in field '{new string(charArray[startIndex..length])}' and line: '{new string(charArray[lineStart..lineLength])}'.");
           return int.MinValue;
         }
         i = 10*i + inChar - '0';

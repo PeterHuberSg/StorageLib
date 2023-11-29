@@ -3,7 +3,6 @@ using StorageLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 
 
 namespace StorageTest {
@@ -22,7 +21,7 @@ namespace StorageTest {
     static readonly DateTime day3 = day2.AddDays(1);
     static readonly DateTime day4 = day3.AddDays(1);
     static readonly DateTime day5 = day4.AddDays(1);
-    static readonly DateTime day6 = day5.AddDays(1);
+    //static readonly DateTime day6 = day5.AddDays(1);
 
 
     [TestMethod]
@@ -83,16 +82,16 @@ namespace StorageTest {
     }
 
 
-    List<Item>[] allItems = initialiseAllItems();
+    //List<Item>[] allItems = initialiseAllItems();
 
 
-    private static List<Item>[] initialiseAllItems() {
-      var items = new List<Item>[daysCount];
-      for (int itemsIndex = 0; itemsIndex < items.Length; itemsIndex++) {
-        items[itemsIndex] = new();
-      }
-      return items;
-    }
+    //private static List<Item>[] initialiseAllItems() {
+    //  var items = new List<Item>[daysCount];
+    //  for (int itemsIndex = 0; itemsIndex < items.Length; itemsIndex++) {
+    //    items[itemsIndex] = new();
+    //  }
+    //  return items;
+    //}
 
 
     private void assertItems() {
@@ -136,9 +135,9 @@ namespace StorageTest {
 
       for (int day1Index = 0; day1Index<expectedItems.Length; day1Index++) {
         for (int day2Index = 0; day2Index<expectedItems.Length; day2Index++) {
-          var day1 = day0.AddDays(day1Index);
-          var day2 = day0.AddDays(day2Index);
-          var dayRangeItems = items[day1, day2].ToArray();
+          //var day1 = day0.AddDays(day1Index);
+          //var day2 = day0.AddDays(day2Index);
+          //var dayRangeItems = items[day1, day2].ToArray();
           for (int dayRangeIndex = day1Index; dayRangeIndex<=day2Index; dayRangeIndex++) {
             var dayList = expectedItems[dayRangeIndex];
             if (dayList.Count>0) {

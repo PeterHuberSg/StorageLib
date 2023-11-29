@@ -21,10 +21,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+#pragma warning disable IDE0045 // Convert to conditional expression
 
 
 // https://csharp-source.net/last-projects: add link to Storage on that website
-// http://prevayler.org/ java oject persitence library
+// http://prevayler.org/ java object persistence library
 
 namespace StorageLib {
 
@@ -81,7 +82,7 @@ namespace StorageLib {
     #region Parse
     //      -----
     string? nameSpaceString;
-    const string onlyAcceptableConsts = "should only contain properties and configuration constants for " +
+    const string onlyAcceptableConstants = "should only contain properties and configuration constants for " +
             "MaxLineLenght, AreInstancesUpdatable and AreInstancesReleasable, but not";
 
 
@@ -176,7 +177,7 @@ namespace StorageLib {
           }
 
           if (field.Declaration is not VariableDeclarationSyntax variableDeclaration) {
-            throw new GeneratorException($"Class {className} {onlyAcceptableConsts} '{field.Declaration}'.");
+            throw new GeneratorException($"Class {className} {onlyAcceptableConstants} '{field.Declaration}'.");
           }
           var propertyType = variableDeclaration.Type.ToString();
           foreach (var property in variableDeclaration.Variables) {
@@ -262,8 +263,6 @@ namespace StorageLib {
 
     private void parseEnum(EnumDeclarationSyntax enumDeclaration) {
       var enumLeadingComment = getXmlComment(enumDeclaration.GetLeadingTrivia());
-      //var enumDeclarationWithLeadingComment = enumDeclaration.ToFullString();
-      //var enumDeclarationOnly = removeRegionAndLeadingSimpleComments(enumDeclarationWithLeadingComment);
       var indentation = enumDeclaration.GetLastToken().LeadingTrivia.ToString();
       var enumValues = new List<string>();
       foreach (var enumMember in enumDeclaration.Members) {
@@ -274,18 +273,18 @@ namespace StorageLib {
     }
 
 
-    private static string addLeadingSpaces(string declaration, int pos) {
-      pos--;
-      while (pos>0) {
-        var c = declaration[pos];
-        if (c!=' ') {
-          break;
-        }
-        pos--;
-      }
-      pos++;
-      return declaration[pos..];
-    }
+    //private static string addLeadingSpaces(string declaration, int pos) {
+    //  pos--;
+    //  while (pos>0) {
+    //    var c = declaration[pos];
+    //    if (c!=' ') {
+    //      break;
+    //    }
+    //    pos--;
+    //  }
+    //  pos++;
+    //  return declaration[pos..];
+    //}
 
 
     private static string? getXmlComment(SyntaxTriviaList syntaxTriviaList) {
@@ -344,7 +343,7 @@ namespace StorageLib {
               mi.IsSelfReferencing = true;
             } else {
               throw new GeneratorException(ci, mi, $"In the class {ci}, the property '{mi}' references its own class, " +
-                $"which StorageLib currently does not support. Hierachical tree functionality is presently only supported " +
+                $"which StorageLib currently does not support. Hierarchical tree functionality is presently only supported " +
                 $"where the children collection is a list. ");
             }
           }
@@ -751,7 +750,7 @@ namespace StorageLib {
                           $"Parent property: {parentMi.MemberText}" + Environment.NewLine +
                           $"Property {mi.MemberName} in child class {mi.ClassInfo.ClassName} references property " +
                           $"{parentMi.MemberName} in parent class {parentMi.ClassInfo.ClassName}, which links " +
-                          $"explicitely to {parentMi.SingleChildMI!.MemberName} in class " +
+                          $"explicitly to {parentMi.SingleChildMI!.MemberName} in class " +
                           $"{parentMi.ChildClassInfo!.ClassName}. Remove StoragePropertyAttribute." +
                           $"childPropertyName from {parentMi.MemberName} if more than 1 property in child class " +
                           $"{mi.ClassInfo.ClassName} should reference {parentMi.ClassInfo.ClassName}." +
@@ -767,7 +766,7 @@ namespace StorageLib {
                       } else {
                         throw new GeneratorException(ci, mi, $"The parent class {mi.TypeStringNotNullable} is not linking back to " +
                           $"{mi.MemberName} property. This can happen if 2 or more properties of {ci.ClassName} link to " +
-                          $"{mi.TypeStringNotNullable} class. In this case, several collections or properties for singel child " +
+                          $"{mi.TypeStringNotNullable} class. In this case, several collections or properties for single child " +
                           $"are needed in the {mi.TypeStringNotNullable} class and they need to use " +
                           $"StoragePropertyAttribute.ChildPropertyName to indicate which of their property links to which " +
                           $"{ci.ClassName} property.");
@@ -786,7 +785,7 @@ namespace StorageLib {
               }
 
             } else {
-              //parent has allready set up the links to the child, nothing to do
+              //parent has already set up the links to the child, nothing to do
 
               //if (!mi.ClassInfo.AreInstancesReleasable && mi.ParentClassInfo.AreInstancesReleasable) {
               //  //todo: Compiler.AnalyzeDependencies() Add tests if child is at least updatable, parent property not readonly and nullable
@@ -846,7 +845,7 @@ namespace StorageLib {
 
             if (childMemberInfos is null) {
               if (childMemberInfo is null) {
-                //first time we come here, so far only one child property linkg to parent class
+                //first time we come here, so far only one child property links to parent class
                 childMemberInfo = childMI;
               } else {
                 //second time we come here, 2 child properties link to parent class
@@ -858,7 +857,7 @@ namespace StorageLib {
                     $"{childMI.MemberText}" + Environment.NewLine +
                     $"Use HashSet<{childMI.ClassInfo.ClassName}> if more than one child property links to " +
                     $"{parentMI.MemberName} or add to {parentCI.ClassName} one List<{childMI.ClassInfo.ClassName}> " +
-                    $"for each child property with the type {parentCI.ClassName} and specify with attribut " +
+                    $"for each child property with the type {parentCI.ClassName} and specify with attribute " +
                     $"StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
                 }
                 childMemberInfos = new();
@@ -880,7 +879,7 @@ namespace StorageLib {
           //setup links between parent property and single child property
           if (parentMI.MemberType==MemberTypeEnum.ParentMultipleChildrenHashSet) {
             throw new GeneratorException(parentMI.ClassInfo, parentMI,
-              $"{parentMI.MemberName} is of type HashSet, which is used when the child class hass several properties " +
+              $"{parentMI.MemberName} is of type HashSet, which is used when the child class has several properties " +
               $"linking to the parent class. But the child class {childMemberInfo.ClassInfo.ClassName} has only " +
               $"the property {childMemberInfo.MemberName} with they type {parentMI.ClassInfo.ClassName}. With only " + 
               $"one child class property linking to parent class use List<> instead of HashSet<>.");
@@ -994,9 +993,7 @@ namespace StorageLib {
       parentMI.MultipleChildrenMIs = multipleChildrenMIs;
       ClassInfo? childCI = null;
       foreach (var childMI in multipleChildrenMIs!) {
-        if (childCI is null) {
-          childCI = childMI.ClassInfo;
-        }
+        childCI ??= childMI.ClassInfo;
         parentMI.IsChildReadOnly |= childMI.IsReadOnly;
         childMI.ParentMemberInfo = parentMI;
         childCI.HasNotReadOnlyAndNotLookupParents |= !childMI.IsReadOnly && !childMI.IsLookupOnly;
@@ -1011,11 +1008,11 @@ namespace StorageLib {
     /// </summary>
     private static void setupParentClassChildPropertyLinks(
       ClassInfo parentCI,
-      MemberInfo singelChildMI,
+      MemberInfo singleChildMI,
       Dictionary<string, ClassInfo> topClasses) 
     {
-      singelChildMI.ParentClassInfo = parentCI;
-      setupParentClassChildClassLinks(parentCI, singelChildMI.ClassInfo, topClasses);
+      singleChildMI.ParentClassInfo = parentCI;
+      setupParentClassChildClassLinks(parentCI, singleChildMI.ClassInfo, topClasses);
     }
 
 
@@ -1062,10 +1059,10 @@ namespace StorageLib {
 
     /// <summary>
     /// Finds the child class property which should be used as key for a collection in the parent class. Returns
-    /// null if isSecondKey and the property child property Key is used as key. Key exisists for every class, but
+    /// null if isSecondKey and the property child property Key is used as key. Key exists for every class, but
     /// has no MemberInfo.
     /// </summary>
-    private MemberInfo? findKeyPropertyInChildClass(
+    private static MemberInfo? findKeyPropertyInChildClass(
       MemberInfo parentMI,//has a value for parentMI.ChildClassInfo
       string? childKeyPropertyName,
       string? childKeyPropertyType,
@@ -1312,7 +1309,7 @@ namespace StorageLib {
       sw.WriteLine();
       sw.WriteLine("  /// <summary>");
       sw.WriteLine($"  /// A part of {context} is static, which gives easy access to all stored data (=context) through {context}.Data. But most functionality is in the");
-      sw.WriteLine($"  /// instantiatable part of {context}. Since it is instantiatable, is possible to use different contexts over the lifetime of a program. This ");
+      sw.WriteLine($"  /// instantiable part of {context}. Since it is instantiable, is possible to use different contexts over the lifetime of a program. This ");
       sw.WriteLine($"  /// is helpful for unit testing. Use {context}.Init() to create a new context and dispose it with DisposeData() before creating a new one.");
       sw.WriteLine("  /// </summary>");
       sw.WriteLine($"  public partial class {context}: DataContextBase {{");
@@ -1551,8 +1548,8 @@ namespace StorageLib {
         sw.WriteLine("      case TraceMessageEnum.none: return;");
         sw.WriteLine("      case TraceMessageEnum.StartTransaction: message = \"Start transaction\"; break;");
         sw.WriteLine("      case TraceMessageEnum.CommitTransaction: message = \"Commit transaction\"; break;");
-        sw.WriteLine("      case TraceMessageEnum.RollingbackTransaction: message = \"Rolling back transaction\"; break;");
-        sw.WriteLine("      case TraceMessageEnum.RolledbackTransaction: message = \"Rolled back transaction\"; break;");
+        sw.WriteLine("      case TraceMessageEnum.RollingBackTransaction: message = \"Rolling back transaction\"; break;");
+        sw.WriteLine("      case TraceMessageEnum.RolledBackTransaction: message = \"Rolled back transaction\"; break;");
         sw.WriteLine("      default:");
         sw.WriteLine("        throw new NotSupportedException();");
         sw.WriteLine("      }");

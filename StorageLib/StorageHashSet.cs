@@ -15,7 +15,6 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
-using System.Collections;
 using System.Collections.Generic;
 
 
@@ -28,7 +27,8 @@ namespace StorageLib {
   /// stored children. Count() counts all children, while CountStoredItems() counts all stored children. 
   /// </summary>
   public class StorageHashSet<TItem>: HashSet<TItem>, IStorageReadOnlySet<TItem>
-    where TItem : class, IStorageItem<TItem> {
+    where TItem : class, IStorageItem<TItem> 
+  {
     /// <summary>
     /// Count how many items from StorageList are stored in the Data Context
     /// </summary>

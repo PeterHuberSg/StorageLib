@@ -17,8 +17,8 @@ namespace StorageTest {
       public int Value;
     }
 
-    readonly SortedList<DateTime, itemClass> sortedListClass = new SortedList<DateTime, itemClass>();
-    readonly SortedList<DateTime, int> sortedListStruct = new SortedList<DateTime, int>();
+    readonly SortedList<DateTime, itemClass> sortedListClass = new();
+    readonly SortedList<DateTime, int> sortedListStruct = new();
 
 
     [TestMethod]

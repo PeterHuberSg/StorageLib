@@ -20,7 +20,7 @@ namespace StorageTest {
     DC dc;
 #pragma warning restore CS8618
 
-    //these variables get updated by assertDataDisposeDCRecreateDCassertData() each time a new data context gets created
+    //these variables get updated by assertDataDisposeDCRecreateDCAssertData() each time a new data context gets created
     LookupParent? parent0;
     LookupParent? parent0__;
     LookupParent? parent1;
@@ -52,25 +52,25 @@ namespace StorageTest {
 
       for each combination above some test code is written
 
-      parent variabls names:
+      parent variables names:
       Parent: the parent property in the child is not nullable
       ParentN: the parent property in the child is nullable
       ParentR: the parent property in the child is readonly
       ParentNR: the parent property in the child is nullable and readonly
 
       each activity like create, update or delete is done first in a rolled back transaction and none of the data should
-      be changed, then the same activity is executed in a commited transactions and the data should change accordingly.
+      be changed, then the same activity is executed in a committed transactions and the data should change accordingly.
 
-      After a transaction has been committed, the datacontext gets disposed, opened again and verified, that the data
+      After a transaction has been committed, the dataContext gets disposed, opened again and verified, that the data
       is still the same. This is done twice, first using the .bak files, then the .csv files. There is one exception: 
       stored parents might have some not stored children. In the new data context, those parents have no longer those 
       children.
 
       For convenience, the variables parent0, parentN1, child1, etc. contain always the data from the latest data context. They
-      get updated, each time assertDataDisposeDCRecreateDCassertData() gets called.
+      get updated, each time assertDataDisposeDCRecreateDCAssertData() gets called.
 
       child_, child__, parent_ and parent___ are not stored in the data context. They do not get updated by 
-      assertDataDisposeDCRecreateDCassertData() and can therefore contain children or parents stored in previous data
+      assertDataDisposeDCRecreateDCAssertData() and can therefore contain children or parents stored in previous data
       contexts.
       */
       var directoryInfo = new DirectoryInfo("TestCsv");
@@ -102,7 +102,7 @@ namespace StorageTest {
         dc.StartTransaction();
         parent0_ = new LookupParent("p_", isStoring: false);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("");
+        assertDataDisposeDCRecreateDCAssertData("");
 
 
         traceHeader("create stored parent");
@@ -114,7 +114,7 @@ namespace StorageTest {
         dc.StartTransaction();
         parent0 = new LookupParent("p0", isStoring: true);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|");
 
         // Create child with Parent==parent0, ParentN==null, ParentR==parentR0, ParentNR=parentNR0
         // ---------------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ namespace StorageTest {
         Assert.AreEqual(child0_.Parent, parent0_);
         Assert.AreEqual(child0_.ParentR, parentR0_);
         Assert.AreEqual(child0_.ParentNR, parentNR0_);
-        assertDataDisposeDCRecreateDCassertData("p0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|");
 
 
         traceHeader("create not stored child with stored parent");
@@ -152,7 +152,7 @@ namespace StorageTest {
         Assert.AreEqual(parent0__, child0__.Parent);
         Assert.AreEqual(parentR0__, child0__.ParentR);
         Assert.AreEqual(parentNR0__, child0__.ParentNR);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|pR0__|pNR0__|", "p0|p0__|pR0__|pNR0__|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|pR0__|pNR0__|", "p0|p0__|pR0__|pNR0__|");
 
 
         traceHeader("create stored child with stored parent");
@@ -166,7 +166,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0 = new LookupChild("c0", parent0, null, parentR0, parentNR0, isStoring: true);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
 
         //Fail to create stored child with not stored parent
         traceHeader("fail to create stored child with not stored parents");
@@ -182,7 +182,7 @@ namespace StorageTest {
         //Todo: Ideally, an exception during create, store or remove should not change any data. Is additional code needed undoing 
         //any potentially changed data ? 
         //Assert.AreEqual(0, parent0_.Children.Count);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
 
         // Update
         // ======
@@ -203,7 +203,7 @@ namespace StorageTest {
         dc.CommitTransaction();
         Assert.AreEqual(child0_.ParentN, parentN0_);
         Assert.AreEqual(child0_.Parent, parent1_);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update with stored parents");
@@ -223,7 +223,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.1", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.AreEqual(parentN0__, child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|pN0__|pR0__|pR0|pNR0__|pNR0|c0:p0,pR0,pNR0|");
 
 
@@ -238,7 +238,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.1", parent1, parentN0);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|p1__|p1|pN0__|pN0|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|p1__|p1|pN0__|pN0|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
 
         // Update child.ParentN to parent1N
         // --------------------------------
@@ -259,7 +259,7 @@ namespace StorageTest {
         Assert.AreEqual("c0_.2", child0_.Text);
         Assert.AreEqual(child0_.Parent, parent1_);
         Assert.AreEqual(child0_.ParentN, parentN1_);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|p1__|p1|pN0__|pN0|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|p1__|p1|pN0__|pN0|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update stored ParentN");
@@ -270,7 +270,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.1", child0__.Text);
         Assert.AreEqual(parent1__.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN0__.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
 
         dc.StartTransaction();
@@ -279,7 +279,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.2", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.AreEqual(parentN1__, child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pR0__|pR0|pNR0__|pNR0|c0.1:p1,pN0,pR0,pNR0|");
 
 
@@ -293,7 +293,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.2", parent1, parentN1);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.2:p1,pN1,pR0,pNR0|");
 
         // Update child.ParentN to null
@@ -313,7 +313,7 @@ namespace StorageTest {
         dc.CommitTransaction();
         Assert.AreEqual("c0_.3", child0_.Text);
         Assert.AreEqual(child0_.Parent, parent1_);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.2:p1,pN1,pR0,pNR0|");
 
 
@@ -324,7 +324,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.2", child0__.Text);
         Assert.AreEqual(parent1__.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN1__.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.2:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
@@ -333,7 +333,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.3", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.IsNull(child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.2:p1,pN1,pR0,pNR0|");
 
 
@@ -346,7 +346,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.3", parent1, null);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pNR0__|pNR0|c0.3:p1,pR0,pNR0|");
 
 
@@ -368,7 +368,7 @@ namespace StorageTest {
         parentR1 = new LookupParentR("pR1", isStoring: true);
         parentNR1 = new LookupParentNR("pNR1", isStoring: true);
         child1 = new LookupChild("c1", parent0, parentN1, parentR1, parentNR1, isStoring: true);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pR1|pNR0__|pNR0|pNR1|c0.3:p1,pR0,pNR0|c1:p0,pN1,pR1,pNR1|");
         dc.StartTransaction();
         child1.Release();
@@ -379,7 +379,7 @@ namespace StorageTest {
         child1.Release();
         dc.CommitTransaction();
         child1 = null;
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1|pN0__|pN0|pN1__|pN1|pR0__|pR0|pR1|pNR0__|pNR0|pNR1|c0.3:p1,pR0,pNR0|");
 
       } finally {
@@ -421,7 +421,7 @@ namespace StorageTest {
     }
 
 
-    private void assertDataDisposeDCRecreateDCassertData(string expectedDcString1, string? expectedDcString2 = null) {
+    private void assertDataDisposeDCRecreateDCAssertData(string expectedDcString1, string? expectedDcString2 = null) {
       assertData(expectedDcString1);
       DC.DisposeData();
 
@@ -466,18 +466,18 @@ namespace StorageTest {
     }
 
 
-    static readonly StringBuilder traceStrinBuilder = new StringBuilder();
+    static readonly StringBuilder traceStringBuilder = new StringBuilder();
 
     public static string TracesString {
       get {
-        return traceStrinBuilder.ToString();
+        return traceStringBuilder.ToString();
       }
     }
 
 
     private static void traceHeader(string line) {
-      traceStrinBuilder.AppendLine();
-      traceStrinBuilder.AppendLine(line);
+      traceStringBuilder.AppendLine();
+      traceStringBuilder.AppendLine(line);
     }
 
 
@@ -489,7 +489,7 @@ namespace StorageTest {
         isInitialisingDcTrace = false;
       }
       if (!isInitialisingDcTrace) {
-        traceStrinBuilder.AppendLine(message);
+        traceStringBuilder.AppendLine(message);
       }
       if (message=="Context DC initialising") {
         isInitialisingDcTrace = true;
@@ -497,352 +497,3 @@ namespace StorageTest {
     }
   }
 }
-
-
-#region Old Test
-//      --------
-
-//////////////////////////////////////////////////////////////
-// Todo: Lookups should only be allowed for undeletable parents or copy
-//
-// Lookups should only be allowed for undeletable parents. Otherwise it's too complicated what to
-// do when the parent gets deleted. Idea: Lookup could copy the actual values into the child, so when the
-// lookup parent gets deleted, the value is still valid in the child
-//////////////////////////////////////////////////////////////
-//using System;
-//using System.Collections.Generic;
-//using System.IO;
-//using Microsoft.VisualStudio.TestTools.UnitTesting;
-//using StorageLib;
-//using TestContext;
-
-
-//namespace StorageTest {
-
-
-//  [TestClass]
-//  public class LookupTest {
-
-
-//    CsvConfig? csvConfig;
-//    readonly Dictionary<int, string> expectedParents = new Dictionary<int, string>();
-//    readonly Dictionary<int, string> expectedParentsNullable = new Dictionary<int, string>();
-//    readonly Dictionary<int, string> expectedChildren= new Dictionary<int, string>();
-
-
-//    [TestMethod]
-//    public void TestLookup() {
-//      try {
-//        var directoryInfo = new DirectoryInfo("TestCsv");
-//        if (directoryInfo.Exists) {
-//          directoryInfo.Delete(recursive: true);
-//          directoryInfo.Refresh();
-//        }
-
-//        directoryInfo.Create();
-
-//        csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-//        initDL();
-//        assertDL();
-
-//        //stored immediately
-//        var now = DateTime.Now.Date;
-//        var dayIndex = 1;
-//        var parent1Key = addParent(now, 1, isStoring: true).Key;
-//        var parent1NullableKey = addParentNullable(now, 1, isStoring: true).Key;
-//        var child1Key = addChild("1", parent1Key, parent1NullableKey, isStoring: true).Key;
-
-//        var parent2Key = addParent(now.AddDays(dayIndex), 2, isStoring: true).Key;
-//        var parent2NullableKey = addParentNullable(now.AddDays(dayIndex++), 2, isStoring: true).Key;
-//        addChild("2", parent2Key, parent2NullableKey, isStoring: true);
-//        addChild("3", parent2Key, parent2NullableKey, isStoring: true);
-
-//        //not stored
-//        var parent3 = addParent(now.AddDays(dayIndex++), 3, isStoring: false);
-//        var child4 = addChild("4", parent3, null, isStoring: false);
-//        DC.Data.StartTransaction();
-//        parent3.Store();
-//        child4.Store();
-//        DC.Data.RollbackTransaction();
-//        DC.Data.StartTransaction();
-//        store(parent3);
-//        store(child4);
-//        DC.Data.CommitTransaction();
-//        assertData();
-
-//        var parent4 = addParent(now.AddDays(dayIndex), 4, isStoring: false);
-//        var parent4Nullable = addParentNullable(now.AddDays(dayIndex++), 4, isStoring: false);
-//        var child5 = addChild("5", parent4, parent4Nullable, isStoring: false);
-//        var child6 = addChild("6", parent4, parent4Nullable, isStoring: false);
-//        DC.Data.StartTransaction();
-//        parent4.Store();
-//        parent4Nullable.Store();
-//        child5.Store();
-//        child6.Store();
-//        DC.Data.RollbackTransaction();
-//        DC.Data.StartTransaction();
-//        store(parent4);
-//        store(parent4Nullable);
-//        store(child5);
-//        store(child6);
-//        DC.Data.CommitTransaction();
-//        assertData();
-
-//        //test update()
-//        updateParent(parent2Key, 2.1m);
-//        updateParentNullable(parent2NullableKey, 2.1m);
-//        updateChild(child1Key, parent2Key, parent2NullableKey, "11.U1");
-//        updateChild(child1Key, parent2Key, parent2NullableKey, "11.U2");
-//        updateChild(child1Key, parent1Key, parent1NullableKey, "11.U3");
-//        updateChild(child1Key, parent1Key, null, "11.U4");
-//        updateChild(child1Key, parent1Key, parent1NullableKey, "11.U5");
-
-//        removeChild(child1Key);
-//      } finally {
-//        DC.DisposeData();
-//      }
-//    }
-
-
-//    private void reportException(Exception obj) {
-//      System.Diagnostics.Debug.WriteLine(obj);
-//      System.Diagnostics.Debugger.Break();
-//      Assert.Fail();
-//    }
-
-
-//    private void initDL() {
-//      new DC(csvConfig);
-//    }
-
-
-//    private void assertDL() {
-//      Assert.AreEqual(expectedParents.Count, DC.Data.Lookup_Parents.Count);
-//      foreach (var parent in DC.Data.Lookup_Parents) {
-//        Assert.AreEqual(expectedParents[parent.Key], parent.ToString());
-//      }
-
-//      Assert.AreEqual(expectedParentsNullable.Count, DC.Data.Lookup_ParentNullables.Count);
-//      foreach (var parentNullable in DC.Data.Lookup_ParentNullables) {
-//        Assert.AreEqual(expectedParentsNullable[parentNullable.Key], parentNullable.ToString());
-//      }
-
-//      Assert.AreEqual(expectedChildren.Count, DC.Data.Lookup_Children.Count);
-//      foreach (var child in DC.Data.Lookup_Children) {
-//        Assert.AreEqual(expectedChildren[child.Key], child.ToString());
-//      }
-//    }
-
-
-//    private Lookup_Parent addParent(DateTime date, decimal someValue, bool isStoring) {
-//      //var newParent = new Lookup_Parent(date, someValue, isStoring);
-//      //if (isStoring) {
-//      //  expectedParents.Add(newParent.Key, newParent.ToString());
-//      //  assertData();
-//      //}
-//      //return newParent;
-//      if (isStoring) {
-//        DC.Data.StartTransaction();
-//        new Lookup_Parent(date, someValue, isStoring);
-//        DC.Data.RollbackTransaction();
-//        assertData();
-
-//        DC.Data.StartTransaction();
-//        var newParent = new Lookup_Parent(date, someValue, isStoring);
-//        DC.Data.CommitTransaction();
-//        expectedParents.Add(newParent.Key, newParent.ToString());
-//        assertData();
-//        return newParent;
-//      } else {
-//        return new Lookup_Parent(date, someValue, isStoring);
-//      }
-//    }
-
-
-//    private void store(Lookup_Parent newParent) {
-//      newParent.Store();
-//      expectedParents.Add(newParent.Key, newParent.ToString());
-//    }
-
-
-//    private Lookup_ParentNullable addParentNullable(DateTime date, decimal someValue, bool isStoring) {
-//      //var newParentNullable = new Lookup_ParentNullable(date, someValue, isStoring);
-//      //if (isStoring) {
-//      //  expectedParentsNullable.Add(newParentNullable.Key, newParentNullable.ToString());
-//      //  assertData();
-//      //}
-//      //return newParentNullable;
-//      if (isStoring) {
-//        DC.Data.StartTransaction();
-//        new Lookup_ParentNullable(date, someValue, isStoring);
-//        DC.Data.RollbackTransaction();
-//        assertData();
-
-//        DC.Data.StartTransaction();
-//        var newParentNullable = new Lookup_ParentNullable(date, someValue, isStoring);
-//        DC.Data.CommitTransaction();
-//        expectedParentsNullable.Add(newParentNullable.Key, newParentNullable.ToString());
-//        assertData();
-//        return newParentNullable;
-//      } else {
-//        return new Lookup_ParentNullable(date, someValue, isStoring);
-//      }
-//    }
-
-
-//    private void store(Lookup_ParentNullable newParentNullable) {
-//      newParentNullable.Store();
-//      expectedParentsNullable.Add(newParentNullable.Key, newParentNullable.ToString());
-//    }
-
-
-//    private Lookup_Child addChild(string info, int parentKey, int? parentNullableKey, bool isStoring) {
-//      //var parent = DC.Data.Lookup_Parents[parentKey];
-//      //Lookup_ParentNullable? parentNullable = null;
-//      //if (parentNullableKey.HasValue) {
-//      //  parentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey.Value];
-//      //}
-//      //var newChild = new Lookup_Child(info, parent, parentNullable, isStoring);
-//      //if (isStoring) {
-//      //  expectedChildren.Add(newChild.Key, newChild.ToString());
-//      //  assertData();
-//      //}
-//      //return newChild;
-//      var parent = DC.Data.Lookup_Parents[parentKey];
-//      Lookup_ParentNullable? parentNullable = null;
-//      if (parentNullableKey.HasValue) {
-//        parentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey.Value];
-//      }
-
-//      return addChild(info, parent, parentNullable, isStoring);
-//    }
-
-
-//    private Lookup_Child addChild(string info, Lookup_Parent parent, Lookup_ParentNullable? parentNullable, bool isStoring){
-//      //var newChild = new Lookup_Child(info, parent, parentNullable, isStoring);
-//      //if (isStoring) {
-//      //  expectedChildren.Add(newChild.Key, newChild.ToString());
-//      //  assertData();
-//      //}
-//      //return newChild;
-//      if (isStoring) {
-//        DC.Data.StartTransaction();
-//        new Lookup_Child(info, parent, parentNullable, isStoring: true);
-//        DC.Data.RollbackTransaction();
-//        assertData();
-
-//        parent = DC.Data.Lookup_Parents[parent.Key];
-//        if (parentNullable!=null) {
-//          parentNullable = DC.Data.Lookup_ParentNullables[parentNullable.Key];
-//        }
-//        DC.Data.StartTransaction();
-//        var newChild = new Lookup_Child(info, parent, parentNullable, isStoring: true);
-//        DC.Data.CommitTransaction();
-//        expectedChildren.Add(newChild.Key, newChild.ToString());
-//        assertData();
-//        return newChild;
-//      } else {
-//        return new Lookup_Child(info, parent, parentNullable, isStoring: false);
-//      }
-//    }
-
-
-//    private void store(Lookup_Child newChild) {
-//      newChild.Store();
-//      expectedChildren.Add(newChild.Key, newChild.ToString());
-//    }
-
-
-//    private void updateParent(int parentKey, decimal newValue) {
-//      var parent = DC.Data.Lookup_Parents[parentKey];
-//      DC.Data.StartTransaction();
-//      parent.Update(parent.Date, newValue);
-//      DC.Data.RollbackTransaction();
-//      assertData();
-//      parent = DC.Data.Lookup_Parents[parentKey];
-//      DC.Data.StartTransaction();
-//      parent.Update(parent.Date, newValue);
-//      DC.Data.CommitTransaction();
-//      expectedParents[parent.Key] = parent.ToString();
-//      foreach (var child in DC.Data.Lookup_Children) {
-//        if (child.LookupParent==parent) {
-//          expectedChildren[child.Key] = child.ToString();
-//        }
-//      }
-//      assertData();
-//    }
-
-
-//    private void updateParentNullable(int parentNullableKey, decimal newValue) {
-//      var parentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey];
-//      DC.Data.StartTransaction();
-//      parentNullable.Update(parentNullable.Date, newValue);
-//      DC.Data.RollbackTransaction();
-//      assertData();
-//      parentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey];
-//      DC.Data.StartTransaction();
-//      parentNullable.Update(parentNullable.Date, newValue);
-//      DC.Data.CommitTransaction();
-//      expectedParentsNullable[parentNullable.Key] = parentNullable.ToString();
-//      foreach (var child in DC.Data.Lookup_Children) {
-//        if (child.LookupParentNullable==parentNullable) {
-//          expectedChildren[child.Key] = child.ToString();
-//        }
-//      }
-//      assertData();
-//    }
-
-
-//    private void updateChild(int childKey, int parentKey, int? parentNullableKey, string text) {
-//      var child = DC.Data.Lookup_Children[childKey];
-//      var newParent = DC.Data.Lookup_Parents[parentKey];
-//      Lookup_ParentNullable? newParentNullable = null;
-//      if (parentNullableKey!=null) {
-//        newParentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey.Value];
-//      }
-//      DC.Data.StartTransaction();
-//      child.Update(text, newParent, newParentNullable);
-//      DC.Data.RollbackTransaction();
-//      assertData();
-
-//      child = DC.Data.Lookup_Children[childKey];
-//      newParent = DC.Data.Lookup_Parents[parentKey];
-//      var oldParent = child.LookupParent;
-//      newParentNullable = null;
-//      if (parentNullableKey!=null) {
-//        newParentNullable = DC.Data.Lookup_ParentNullables[parentNullableKey.Value];
-//      }
-//      var oldParentNullable = child.LookupParentNullable;
-//      DC.Data.StartTransaction();
-//      child.Update(text, newParent, newParentNullable);
-//      DC.Data.CommitTransaction();
-//      expectedChildren[child.Key] = child.ToString();
-//      assertData();
-//    }
-
-
-//    private void removeChild(int childKey) {
-//      var child = DC.Data.Lookup_Children[childKey];
-//      DC.Data.StartTransaction();
-//      child.Release();
-//      DC.Data.RollbackTransaction();
-//      assertData();
-//      child = DC.Data.Lookup_Children[childKey];
-//      expectedChildren.Remove(child.Key);
-//      DC.Data.StartTransaction();
-//      child.Release();
-//      DC.Data.CommitTransaction();
-//      assertData();
-//    }
-
-
-//    private void assertData() {
-//      assertDL();
-//      DC.DisposeData();
-
-//      initDL();
-//      assertDL();
-//    }
-//  }
-//}
-#endregion

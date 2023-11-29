@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
+using System;
+using System.IO;
 
 
 namespace StorageTest {
@@ -186,7 +183,7 @@ namespace StorageTest {
     }
 
 
-    private void assert(string fileName, string expectedText) {
+    private static void assert(string fileName, string expectedText) {
       using var fileStream = new FileStream(fileName, FileMode.Open);
       using var streamReader = new StreamReader(fileStream);
       var content = streamReader.ReadToEnd();
@@ -194,7 +191,7 @@ namespace StorageTest {
     }
 
 
-    private void reportException(Exception obj) {
+    private static void reportException(Exception obj) {
       System.Diagnostics.Debug.WriteLine(obj);
       System.Diagnostics.Debugger.Break();
       Assert.Fail();

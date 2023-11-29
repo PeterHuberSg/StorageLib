@@ -20,7 +20,7 @@ namespace StorageTest {
     DC dc;
 #pragma warning restore CS8618
 
-    //these variables get updated by assertDataDisposeDCRecreateDCassertData() each time a new data context gets created
+    //these variables get updated by assertDataDisposeDCRecreateDCAssertData() each time a new data context gets created
     SingleChildParent? parent0;
     SingleChildParent? parent0__;
     SingleChildParent? parent1;
@@ -102,7 +102,7 @@ namespace StorageTest {
         dc.StartTransaction();
         parent0_ = new SingleChildParent("p_", isStoring: false);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("");
+        assertDataDisposeDCRecreateDCAssertData("");
 
 
         traceHeader("create stored parent");
@@ -114,7 +114,7 @@ namespace StorageTest {
         dc.StartTransaction();
         parent0 = new SingleChildParent("p0", isStoring: true);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|");
 
         // Create child with Parent==parent0, ParentN==null, ParentR==parentR0, ParentNR=parentNR0
         // ---------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ namespace StorageTest {
         Assert.AreEqual(child0_, parent0_.Child);
         Assert.AreEqual(child0_, parentR0_.Child);
         Assert.AreEqual(child0_, parentNR0_.Child);
-        assertDataDisposeDCRecreateDCassertData("p0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|");
 
 
         traceHeader("create not stored child with stored parent");
@@ -158,7 +158,7 @@ namespace StorageTest {
         Assert.AreEqual(parent0__, child0__.Parent);
         Assert.AreEqual(parentR0__, child0__.ParentR);
         Assert.AreEqual(parentNR0__, child0__.ParentNR);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__:c0__|pR0__:c0__|pNR0__:c0__|", "p0|p0__|pR0__|pNR0__|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__:c0__|pR0__:c0__|pNR0__:c0__|", "p0|p0__|pR0__|pNR0__|");
 
 
         traceHeader("create stored child with stored parent");
@@ -172,7 +172,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0 = new SingleChildChild("c0", parent0, null, parentR0, parentNR0, isStoring: true);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
 
         //Fail to create stored child with not stored parent
         traceHeader("fail to create stored child with not stored parents");
@@ -188,7 +188,7 @@ namespace StorageTest {
         //Todo: Ideally, an exception during create, store or remove should not change any data. Is additional code needed undoing 
         //any potentially changed data ? 
         //Assert.AreEqual(0, parent0_.Children.Count);
-        assertDataDisposeDCRecreateDCassertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
 
         // Update
         // ======
@@ -212,7 +212,7 @@ namespace StorageTest {
         Assert.IsNull(parent0_.Child);
         Assert.AreEqual(child0_, parentN0_.Child);
         Assert.AreEqual(child0_, parent1_.Child);
-        assertDataDisposeDCRecreateDCassertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0:c0|p0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update with stored parents");
@@ -232,7 +232,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.1", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.AreEqual(parentN0__, child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0:c0|p0__|p1__:c0__.1|pN0__:c0__.1|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|",
           "p0:c0|p0__|p1__|pN0__|pR0__|pR0:c0|pNR0__|pNR0:c0|c0:p0,pR0,pNR0|");
 
@@ -248,7 +248,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.1", parent1, parentN0);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         // Update child.ParentN to parent1N
         // --------------------------------
@@ -272,7 +272,7 @@ namespace StorageTest {
         Assert.IsNull(parentN0_.Child);
         Assert.AreEqual(child0_, parent1_.Child);
         Assert.AreEqual(child0_, parentN1_.Child);
-        assertDataDisposeDCRecreateDCassertData("p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
+        assertDataDisposeDCRecreateDCAssertData("p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
 
         traceHeader("not stored child: update stored ParentN");
@@ -283,7 +283,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.1", child0__.Text);
         Assert.AreEqual(parent1__.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN0__.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pN1__|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
         dc.StartTransaction();
@@ -292,7 +292,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.2", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.AreEqual(parentN1__, child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__:c0__.2|p1:c0.1|pN0__|pN0:c0.1|pN1__:c0__.2|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|",
           "p0|p0__|p1__|p1:c0.1|pN0__|pN0:c0.1|pN1__|pR0__|pR0:c0.1|pNR0__|pNR0:c0.1|c0.1:p1,pN0,pR0,pNR0|");
 
@@ -307,7 +307,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.2", parent1, parentN1);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1:c0.2|pN0__|pN0|pN1__|pN1:c0.2|pR0__|pR0:c0.2|pNR0__|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         // Update child.ParentN to null
@@ -328,7 +328,7 @@ namespace StorageTest {
         Assert.AreEqual("c0_.3", child0_.Text);
         Assert.IsNull(parentN0_.Child);
         Assert.AreEqual(child0_, parent1_.Child);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1:c0.2|pN0__|pN0|pN1__|pN1:c0.2|pR0__|pR0:c0.2|pNR0__|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
 
@@ -339,7 +339,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.2", child0__.Text);
         Assert.AreEqual(parent1__.Text, child0__.Parent.Text);
         Assert.AreEqual(parentN1__.Text, child0__.ParentN!.Text);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1:c0.2|pN0__|pN0|pN1__|pN1:c0.2|pR0__|pR0:c0.2|pNR0__|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
         dc.StartTransaction();
@@ -348,7 +348,7 @@ namespace StorageTest {
         Assert.AreEqual("c0__.3", child0__.Text);
         Assert.AreEqual(parent1__, child0__.Parent);
         Assert.IsNull(child0__.ParentN);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__:c0__.3|p1:c0.2|pN0__|pN0|pN1__|pN1:c0.2|pR0__|pR0:c0.2|pNR0__|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|",
           "p0|p0__|p1__|p1:c0.2|pN0__|pN0|pN1__|pN1:c0.2|pR0__|pR0:c0.2|pNR0__|pNR0:c0.2|c0.2:p1,pN1,pR0,pNR0|");
 
@@ -362,7 +362,7 @@ namespace StorageTest {
         dc.StartTransaction();
         child0.Update("c0.3", parent1, null);
         dc.CommitTransaction();
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0|p0__|p1__|p1:c0.3|pN0__|pN0|pN1__|pN1|pR0__|pR0:c0.3|pNR0__|pNR0:c0.3|c0.3:p1,pR0,pNR0|");
 
 
@@ -385,7 +385,7 @@ namespace StorageTest {
         parentR1 = new SingleChildParentR("pR1", isStoring: true);
         parentNR1 = new SingleChildParentNR("pNR1", isStoring: true);
         child1 = new SingleChildChild("c1", parent0, parentN1, parentR1, parentNR1, isStoring: true);
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0:c1|p0__|p1__|p1:c0.3|pN0__|pN0|pN1__|pN1:c1|pR0__|pR0:c0.3|pR1:c1|pNR0__|pNR0:c0.3|pNR1:c1|c0.3:p1,pR0,pNR0|c1:p0,pN1,pR1,pNR1|");
         dc.StartTransaction();
         child1.Release();
@@ -396,7 +396,7 @@ namespace StorageTest {
         child1.Release();
         dc.CommitTransaction();
         child1 = null;
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0:c1|p0__|p1__|p1:c0.3|pN0__|pN0|pN1__|pN1:c1|pR0__|pR0:c0.3|pR1:c1|pNR0__|pNR0:c0.3|pNR1:c1|c0.3:p1,pR0,pNR0|",
           "p0"+"|p0__|p1__|p1:c0.3|pN0__|pN0|pN1__|pN1"+"|pR0__|pR0:c0.3|pR1"+"|pNR0__|pNR0:c0.3|pNR1"+"|c0.3:p1,pR0,pNR0|");
 
@@ -412,7 +412,7 @@ namespace StorageTest {
         parent0.Release();
         dc.CommitTransaction();
         parent0 = null;
-        assertDataDisposeDCRecreateDCassertData(
+        assertDataDisposeDCRecreateDCAssertData(
           "p0__|p1__|p1:c0.3|pN0__|pN0|pN1__|pN1|pR0__|pR0:c0.3|pR1|pNR0__|pNR0:c0.3|pNR1|c0.3:p1,pR0,pNR0|");
 
       } finally {
@@ -458,7 +458,7 @@ namespace StorageTest {
     }
 
 
-    private void assertDataDisposeDCRecreateDCassertData(string expectedDcString1, string? expectedDcString2 = null) {
+    private void assertDataDisposeDCRecreateDCAssertData(string expectedDcString1, string? expectedDcString2 = null) {
       assertData(expectedDcString1);
       DC.DisposeData();
 
@@ -505,18 +505,18 @@ namespace StorageTest {
     }
 
 
-    static readonly StringBuilder traceStrinBuilder = new StringBuilder();
+    static readonly StringBuilder traceStringBuilder = new StringBuilder();
 
     public static string TracesString {
       get {
-        return traceStrinBuilder.ToString();
+        return traceStringBuilder.ToString();
       }
     }
 
 
     private static void traceHeader(string line) {
-      traceStrinBuilder.AppendLine();
-      traceStrinBuilder.AppendLine(line);
+      traceStringBuilder.AppendLine();
+      traceStringBuilder.AppendLine(line);
     }
 
 
@@ -528,7 +528,7 @@ namespace StorageTest {
         isInitialisingDcTrace = false;
       }
       if (!isInitialisingDcTrace) {
-        traceStrinBuilder.AppendLine(message);
+        traceStringBuilder.AppendLine(message);
       }
       if (message=="Context DC initialising") {
         isInitialisingDcTrace = true;

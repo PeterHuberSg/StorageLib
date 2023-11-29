@@ -18,6 +18,7 @@ This software is distributed without any warranty.
 using System;
 using System.Collections.Generic;
 using System.IO;
+#pragma warning disable IDE0046 // Convert to conditional expression
 
 
 //todo: MemberInfo: Add support for dateTime?
@@ -45,7 +46,7 @@ namespace StorageLib {
     public string QMark = ""; //mi.IsNullable ? "?" : "";
     public bool IsReadOnly; //property is marked 'readonly' or class is not updatable 
     public readonly string? Comment;
-    public readonly string? PrecissionComment;
+    public readonly string? PrecisionComment;
     public readonly string? Rounding;
     public readonly string? DefaultValue;
     public readonly bool IsLookupOnly;
@@ -124,7 +125,7 @@ namespace StorageLib {
           NoValue = "DateTime.MinValue.Date";
           ToStringFunc = ".ToShortDateString()";
         }
-        PrecissionComment = "Stores only dates but no times.";
+        PrecisionComment = "Stores only dates but no times.";
         Rounding = ".Floor(Rounding.Days)";
         break;
 
@@ -140,7 +141,7 @@ namespace StorageLib {
           NoValue = "TimeSpan.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores less than 24 hours with second precision.";
+        PrecisionComment = "Stores less than 24 hours with second precision.";
         Rounding = ".Round(Rounding.Seconds)";
         break;
 
@@ -156,7 +157,7 @@ namespace StorageLib {
           NoValue = "DateTime.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores date and time with minute precision.";
+        PrecisionComment = "Stores date and time with minute precision.";
         Rounding = ".Round(Rounding.Minutes)";
         break;
 
@@ -172,7 +173,7 @@ namespace StorageLib {
           NoValue = "DateTime.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores date and time with seconds precision.";
+        PrecisionComment = "Stores date and time with seconds precision.";
         Rounding = ".Round(Rounding.Seconds)";
         break;
 
@@ -188,7 +189,7 @@ namespace StorageLib {
           NoValue = "DateTime.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores date and time with tick precision.";
+        PrecisionComment = "Stores date and time with tick precision.";
         break;
 
       case MemberTypeEnum.TimeSpanTicks:
@@ -203,7 +204,7 @@ namespace StorageLib {
           NoValue = "TimeSpan.MinValue";
         }
         ToStringFunc = "";
-        PrecissionComment = "Stores time duration with tick precision.";
+        PrecisionComment = "Stores time duration with tick precision.";
         break;
 
       case MemberTypeEnum.Decimal: 
@@ -218,7 +219,7 @@ namespace StorageLib {
         }
         CsvWriterWrite = "Write";
         ToStringFunc = "";
-        PrecissionComment = "Stores date and time with maximum precision.";
+        PrecisionComment = "Stores date and time with maximum precision.";
         break;
 
       case MemberTypeEnum.Decimal2:
@@ -233,7 +234,7 @@ namespace StorageLib {
         }
         CsvWriterWrite = "WriteDecimal2";
         ToStringFunc = "";
-        PrecissionComment = "Stores decimal with 2 digits after comma.";
+        PrecisionComment = "Stores decimal with 2 digits after comma.";
         Rounding = ".Round(2)";
         break;
 
@@ -249,7 +250,7 @@ namespace StorageLib {
         }
         CsvWriterWrite = "WriteDecimal4";
         ToStringFunc = "";
-        PrecissionComment = "Stores decimal with 4 digits after comma.";
+        PrecisionComment = "Stores decimal with 4 digits after comma.";
         Rounding = ".Round(4)";
         break;
 
@@ -265,7 +266,7 @@ namespace StorageLib {
         }
         CsvWriterWrite = "WriteDecimal5";
         ToStringFunc = "";
-        PrecissionComment = "Stores decimal with 5 digits after comma.";
+        PrecisionComment = "Stores decimal with 5 digits after comma.";
         Rounding = ".Round(5)";
         break;
 
@@ -636,7 +637,7 @@ namespace StorageLib {
     public override string ToString() {
       if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
         return $"List<{ChildTypeName}> {MemberName}";
-      }else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary || 
+      } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary || 
           MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
           MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
       {
@@ -657,17 +658,17 @@ namespace StorageLib {
         var linesArray = Comment.Split(Environment.NewLine);
         foreach (var line in linesArray) {
           if (!string.IsNullOrWhiteSpace(line)) {
-            if (PrecissionComment!=null && line.Contains("/// </summary>")) {
+            if (PrecisionComment!=null && line.Contains("/// </summary>")) {
               hasWrittenComment = true;
-              sw.WriteLine($"    /// {PrecissionComment}");
+              sw.WriteLine($"    /// {PrecisionComment}");
             }
             sw.WriteLine($"    {line}");
           }
         }
       }
-      if (PrecissionComment!=null && !hasWrittenComment) {
+      if (PrecisionComment!=null && !hasWrittenComment) {
         sw.WriteLine("    /// <summary>");
-        sw.WriteLine($"    /// {PrecissionComment}");
+        sw.WriteLine($"    /// {PrecisionComment}");
         sw.WriteLine("    ///  </summary>");
       }
       //if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {

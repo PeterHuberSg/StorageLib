@@ -334,9 +334,8 @@ namespace StorageLib {
     /// when reading back a null string from a CVS file, it becomes an empty string.
     /// </summary>
     public static bool AreEqual(string? thisString, string? thatString) {
-      if (thisString==thatString) return true;
-      if ((thisString==null || thisString=="") && (thatString==null || thatString=="")) return true;
-      return false;
+      return (thisString==thatString) ||
+        ((thisString==null || thisString=="") && (thatString==null || thatString==""));
     }
     #endregion
 

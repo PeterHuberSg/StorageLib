@@ -3,7 +3,7 @@
 StorageLib.ClassInfo
 ====================
 
-Some infos about a class to be generated
+Contains the information needed to generate the class
 
 Written in 2020 by Jürgpeter Huber 
 Contact: https://github.com/PeterHuberSg/StorageLib
@@ -25,7 +25,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace StorageLib {
 
   /// <summary>
-  /// Some infos about a class to be generated
+  /// Contains the information needed to generate the class
   /// </summary>
   public class ClassInfo {
     public readonly string ClassName;
@@ -54,7 +54,6 @@ namespace StorageLib {
     public int HeaderLength;
     public bool IsAddedToParentChildTree;
     public int StoreKey;
-    private object sdw;
 
     public ClassInfo(
       string name, 
@@ -83,11 +82,7 @@ namespace StorageLib {
       //ParentsWithList = new HashSet<ClassInfo>();
       Children = new HashSet<ClassInfo>();
       EstimatedMaxByteSize = 0;
-      if (AreInstancesReleasable || AreInstancesUpdatable) {
-        HeaderLength = "Key".Length + 1;
-      } else {
-        HeaderLength = 0;
-      }
+      HeaderLength = AreInstancesReleasable || AreInstancesUpdatable ? "Key".Length + 1 : 0;
       IsAddedToParentChildTree = false;
     }
 
@@ -200,7 +195,7 @@ namespace StorageLib {
             Environment.NewLine + memberText);
         }
         //illegal toLower combinations are handled already
-        if (csvTypeString.Contains("<")) {
+        if (csvTypeString.Contains('<')) {
           //a parent having a collection for its children
           //=============================================
 
@@ -277,11 +272,9 @@ namespace StorageLib {
             var keyTypeString = csvTypeString[(openBracketPos+1)..(comaPos)].Trim();
             var itemTypeName = csvTypeString[(comaPos+1)..(closingBracketPos)].Trim();
 
-            if (csvTypeString.StartsWith("SortedList<")) {
-              memberType = MemberTypeEnum.ParentMultipleChildrenSortedList;
-            } else {
-              memberType = MemberTypeEnum.ParentMultipleChildrenDictionary;
-            }
+            memberType =csvTypeString.StartsWith("SortedList<")
+              ? MemberTypeEnum.ParentMultipleChildrenSortedList
+              : MemberTypeEnum.ParentMultipleChildrenDictionary;
             member = new MemberInfo(
               memberText,
               name,
@@ -683,6 +676,9 @@ namespace StorageLib {
       }
       sw.WriteLine($"  public partial class {ClassName}: IStorageItem<{ClassName}> {{");
       sw.WriteLine();
+      sw.WriteLine($"    //Instances of {ClassName} are {(AreInstancesUpdatable ? "" : "not ")}updateable and {(AreInstancesReleasable ? "" : "not ")}releasable.");
+      sw.WriteLine($"    //Estimated storage size per instance: {EstimatedMaxByteSize} bytes.");
+      sw.WriteLine();
 
       var lines = new List<string>();
       writeProperties(sw, context, lines, isTracing);
@@ -875,7 +871,7 @@ namespace StorageLib {
         } else {
           //LinkToParent, simple type or enum
           sw.WriteLine($"      {mi.MemberName} = {mi.LowerMemberName}{mi.Rounding};");
-          writeToLowerCopyStatement(sw, mi, needsDictEnum.Contructor); //toLower must be executed here once the source
+          writeToLowerCopyStatement(sw, mi, needsDictEnum.Constructor); //toLower must be executed here once the source
                                                                        //property has its value and not when
                                                                        //mi.MemberType==MemberTypeEnum.ToLower
         }
@@ -982,9 +978,9 @@ namespace StorageLib {
             sw.WriteLine($"      {mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
           } else {
             sw.WriteLine($"      {mi.MemberName} = csvReader.{mi.CsvReaderRead};");
-            writeToLowerCopyStatement(sw, mi, needsDictEnum.Contructor);
+            writeToLowerCopyStatement(sw, mi, needsDictEnum.Constructor);
           }
-          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Contructor);
+          writeNeedsDictionaryAddStatement(sw, mi, context, needsDictEnum.Constructor);
         }
       }
       //if the parent is a Dictionary or SortedList, the key property must be assigned first (i.e. in the for loop 
@@ -1125,7 +1121,7 @@ namespace StorageLib {
         }
       }
 
-      //add first the item to dictinaries, if needed and only when this is successful, write it to the dataStore. The
+      //add first the item to dictionaries, if needed and only when this is successful, write it to the dataStore. The
       //chance of an exception is higher with the dictionary, because the same entry might exist already. If the item
       //is added to the dictionary after storing, that item causes a Dictionary exception again after restart.
       foreach (var mi in Members.Values) {
@@ -1254,7 +1250,7 @@ namespace StorageLib {
           if (isFirst) {
             isFirst = false;
             sw.WriteLine();
-            sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+            sw.WriteLine($"      //remove item with old values from parents which will be overwritten by update");
           }
 
           //collections with keys: the child needs to be removed from the parent's collection before the key get updated.
@@ -1265,7 +1261,7 @@ namespace StorageLib {
               $"{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
           } else if(mi.ParentMemberInfo.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
             if (mi.ParentMemberInfo.ChildKey2PropertyName=="Key") {
-              //Key property will never be changed in Update(), only 2 compparisions needed
+              //Key property will never be changed in Update(), only 2 comparisons needed
               sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName} || " +
                 $"{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
             } else {
@@ -1306,7 +1302,7 @@ namespace StorageLib {
           //the parent's type. The child should get added to parent's Children only once, regardless how many
           //of the child's properties link to that parent. When removing a child parent link during updating such
           //a child property, the parent will only remove the child if no other child property links to it. If 2
-          //child property each remove a particulat parent, the first property must be properly updated before
+          //child property each remove a particular parent, the first property must be properly updated before
           //the second property's update get processed. The second update can only remove the child from 
           //parent.Children if the first property points already to a different parent or is null.
           sw.WriteLine($"      var has{mi.MemberName}Changed = {mi.MemberName}!={mi.LowerMemberName};");
@@ -1481,7 +1477,7 @@ namespace StorageLib {
           if (isFirst) {
             isFirst = false;
             sw.WriteLine();
-            sw.WriteLine($"      //remove item with old values from parents which will be overewritten by update");
+            sw.WriteLine($"      //remove item with old values from parents which will be overwritten by update");
           }
 
           if (mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary ||
@@ -1491,7 +1487,7 @@ namespace StorageLib {
               $"{LowerClassName}.{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
           } else if(mi.ParentMemberInfo!.MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) {
             if (mi.ParentMemberInfo.ChildKey2PropertyName=="Key") {
-              //Key property will never be changed in Update(), only 2 compparisions needed
+              //Key property will never be changed in Update(), only 2 comparisons needed
               sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName} || " +
                 $"{LowerClassName}.{mi.ParentMemberInfo.ChildKeyPropertyName}!={mi.ParentMemberInfo.LowerChildKeyPropertyName};");
             } else {
@@ -1525,7 +1521,7 @@ namespace StorageLib {
           //the parent's type. The child should get added to parent's Children only once, regardless how many
           //of the child's properties link to that parent. When removing a child parent link during updating such
           //a child property, the parent will only remove the child if no other child property links to it. If 2
-          //child property each remove a particulat parent, the first property must be properly updated before
+          //child property each remove a particular parent, the first property must be properly updated before
           //the second property's update get processed. The second update can only remove the child from 
           //parent.Children if the first property points already to a different parent or is null.
           sw.WriteLine($"      var has{mi.MemberName}Changed = {LowerClassName}.{mi.MemberName}!={mi.LowerMemberName};");
@@ -2523,7 +2519,7 @@ namespace StorageLib {
 
     enum needsDictEnum {
       //add only
-      Contructor,
+      Constructor,
       Store, //addIndent: ""
       RollbackRelease, //isCSV: true
 
@@ -2539,7 +2535,7 @@ namespace StorageLib {
     }
 
 
-    private void writeNeedsDictionaryAddStatement(
+    private static void writeNeedsDictionaryAddStatement(
       StreamWriter sw, 
       MemberInfo memberInfo, 
       string context,
@@ -2603,17 +2599,7 @@ namespace StorageLib {
     }
 
 
-    //enum needsDictEnum {
-    //  Update, //isUpdate: true
-    //  UpdateCsv, //isCSV: true
-    //  Release, //
-    //  Diconnect, //
-    //  RollbackStore, //isCSV: true
-    //  RollbackUpdate, //isCSV: true, isRollbackUpdate: true
-    //}
-
-
-    private void writeNeedsDictionaryRemoveStatement(
+    private static void writeNeedsDictionaryRemoveStatement(
       StreamWriter sw, 
       MemberInfo memberInfo, 
       string context,
@@ -2662,7 +2648,7 @@ namespace StorageLib {
     }
 
 
-    private void writeToLowerCopyStatement(
+    private static void writeToLowerCopyStatement(
       StreamWriter sw, 
       MemberInfo memberInfo,
       needsDictEnum needsDict) 
@@ -2720,7 +2706,7 @@ namespace StorageLib {
     }
 
 
-    private void writeCode(StreamWriter streamWriter, List<string> parts, bool isStatement = false) {
+    private static void writeCode(StreamWriter streamWriter, List<string> parts, bool isStatement = false) {
       var isNewLines = parts.Count>4;
       for (int partsIndex = 0; partsIndex < parts.Count; partsIndex++) {
         if (isNewLines) {
@@ -2777,12 +2763,7 @@ namespace StorageLib {
       lastPart += "isCancelled";
       parts.Add(lastPart);
 
-      bool isNewLines;
-      if (updateType==updateTypeEnum.Call) {
-        isNewLines = parts.Count>7;
-      } else {
-        isNewLines = parts.Count>4;
-      }
+      bool isNewLines = updateType==updateTypeEnum.Call ? parts.Count>7 : parts.Count>4;
       for (int partsIndex = 0; partsIndex < parts.Count; partsIndex++) {
         if (isNewLines) {
           streamWriter.WriteLine();
@@ -2824,42 +2805,42 @@ namespace StorageLib {
     }
 
 
-    private bool writeRemoveComment(StreamWriter streamWriter, string context, bool isCapitaliseFirstLetter) {
-      var lineParts = new List<string>();
-      foreach (var mi in Members.Values) {
-        if  (mi.MemberType==MemberTypeEnum.LinkToParent) {
-          lineParts.Add($"disconnects {ClassName} from {mi.TypeStringNotNullable} because of {mi.MemberName}");
-        } else if (mi.NeedsDictionary) {
-          lineParts.Add($"removes {ClassName} from {context}.Data.{mi.ClassInfo.PluralName}By{mi.MemberName}");
-        }
-      }
+    //private bool writeRemoveComment(StreamWriter streamWriter, string context, bool isCapitaliseFirstLetter) {
+    //  var lineParts = new List<string>();
+    //  foreach (var mi in Members.Values) {
+    //    if  (mi.MemberType==MemberTypeEnum.LinkToParent) {
+    //      lineParts.Add($"disconnects {ClassName} from {mi.TypeStringNotNullable} because of {mi.MemberName}");
+    //    } else if (mi.NeedsDictionary) {
+    //      lineParts.Add($"removes {ClassName} from {context}.Data.{mi.ClassInfo.PluralName}By{mi.MemberName}");
+    //    }
+    //  }
 
-      if (lineParts.Count>0) {
-        //var partsCount = 0;
-        if (isCapitaliseFirstLetter) {
-          lineParts[0] = lineParts[0][0..1].ToUpperInvariant() + lineParts[0][1..];
-        }
-        for (int linePartIndex = 0; linePartIndex < lineParts.Count; linePartIndex++) {
-          var linePart = lineParts[linePartIndex];
-          if (linePartIndex + 1 == lineParts.Count) {
-            if (!isCapitaliseFirstLetter || linePartIndex!=0) {
-              streamWriter.Write(" and ");
-            }
-          } else {
-            if (!isCapitaliseFirstLetter || linePartIndex!=0) {
-              streamWriter.Write(", ");
-            }
-          }
-          if (linePartIndex>0 || !isCapitaliseFirstLetter) {
-            streamWriter.WriteLine();
-            streamWriter.Write("    /// ");
-          }
-          streamWriter.Write(linePart);
-        }
-        return true;
-      } else {
-        return false;
-      }
-    }
+    //  if (lineParts.Count>0) {
+    //    //var partsCount = 0;
+    //    if (isCapitaliseFirstLetter) {
+    //      lineParts[0] = lineParts[0][0..1].ToUpperInvariant() + lineParts[0][1..];
+    //    }
+    //    for (int linePartIndex = 0; linePartIndex < lineParts.Count; linePartIndex++) {
+    //      var linePart = lineParts[linePartIndex];
+    //      if (linePartIndex + 1 == lineParts.Count) {
+    //        if (!isCapitaliseFirstLetter || linePartIndex!=0) {
+    //          streamWriter.Write(" and ");
+    //        }
+    //      } else {
+    //        if (!isCapitaliseFirstLetter || linePartIndex!=0) {
+    //          streamWriter.Write(", ");
+    //        }
+    //      }
+    //      if (linePartIndex>0 || !isCapitaliseFirstLetter) {
+    //        streamWriter.WriteLine();
+    //        streamWriter.Write("    /// ");
+    //      }
+    //      streamWriter.Write(linePart);
+    //    }
+    //    return true;
+    //  } else {
+    //    return false;
+    //  }
+    //}
   }
 }

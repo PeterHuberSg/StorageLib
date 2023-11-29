@@ -339,7 +339,7 @@ namespace TestContext {
   #region ListTree: One class used as parent and child building a tree with roots, branches and leaves
   //      ---------------------------------------------------------------------------------------------
 
-  //In a hierachical structure like a file directory, a directory can contain more directories, i.e. a directory class 
+  //In a hierarchical structure like a file directory, a directory can contain more directories, i.e. a directory class 
   //can be parent with a children collection of directories and be child of another directory.
 
   public class ListTreeBranch {
@@ -349,7 +349,7 @@ namespace TestContext {
     /// </summary>
     public ListTreeBranch? Parent;
     /// <summary>
-    /// If CHildren is empty, this branch is a leaf 
+    /// If Children is empty, this branch is a leaf 
     /// </summary>
     public List<ListTreeBranch> Children;
   }
@@ -768,7 +768,7 @@ namespace TestContext {
     public Decimal5? Amount5;
 
     /// <summary>
-    /// PreciseDecimal with about 20 digits precision, takes more storage space then the other Decimalx types.
+    /// PreciseDecimal with about 20 digits precision, takes more storage space then the other DecimalX types.
     /// </summary>
     public decimal PreciseDecimal;
 

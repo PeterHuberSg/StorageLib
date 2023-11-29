@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
 using TestContext;
+#pragma warning disable IDE0045 // Convert to conditional expression
 
 
 namespace StorageTest {
@@ -196,7 +197,7 @@ namespace StorageTest {
       DC.Data.RollbackTransaction();
       assertData(presentStructure);
       if (csvConfig is not null) {
-        assertDisposalRecreactionDC();
+        assertDisposalRecreationDC();
       }
 
       //test committed transaction
@@ -211,11 +212,11 @@ namespace StorageTest {
       if (structureNewDC is not null) {
         presentStructure = structureNewDC;
       }
-      assertDisposalRecreactionDC();
+      assertDisposalRecreationDC();
     }
 
 
-    private void assertDisposalRecreactionDC() {
+    private void assertDisposalRecreationDC() {
       DC.DisposeData();
 
       if (bakCsvFileSwapper!.UseBackupFiles()) {
@@ -385,7 +386,7 @@ namespace StorageTest {
       sb.Clear();
       var parents = new Boolean[pTypeCount];
       var parentsChildren = new HashSet<int>?[pTypeCount, pCount];
-      var childrensParents = new int?[cCount, pTypeCount, pNoCount];
+      var childrenParents = new int?[cCount, pTypeCount, pNoCount];
       var sState = sStateEnum.classType;
       var cIndex = -1;
       var pNoIndex = -1;
@@ -446,7 +447,7 @@ namespace StorageTest {
             var parentId = ch - '0';
             if (cIndex>=0) {
               //child is stored (not released)
-              childrensParents[cIndex, pTypeIndex, pNoIndex] = parentId;
+              childrenParents[cIndex, pTypeIndex, pNoIndex] = parentId;
             }
             parentsChildren[pTypeIndex, parentId]!.Add(cIndex);
 
@@ -482,12 +483,12 @@ namespace StorageTest {
       //convert content of parents and children into final string
       sb.Clear();
       for (cIndex=0; cIndex<cCount; cIndex++) {
-        if (childrensParents[cIndex, pR_, 0] is not null) {
+        if (childrenParents[cIndex, pR_, 0] is not null) {
           sb.Append(Environment.NewLine + $"Child{cIndex}");
           for (pTypeIndex=0; pTypeIndex<pTypeCount; pTypeIndex++) {
             for (pNoIndex=0; pNoIndex<pNoCount; pNoIndex++) {
               sb.Append($" Parent{pNoIndex}{toString(pTypeIndex)}: " +
-               $"{(childrensParents[cIndex, pTypeIndex, pNoIndex]?.ToString()??"_")}");
+               $"{(childrenParents[cIndex, pTypeIndex, pNoIndex]?.ToString()??"_")}");
             }
           }
         }

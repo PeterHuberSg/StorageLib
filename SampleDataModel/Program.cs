@@ -37,7 +37,7 @@ namespace StorageModel {
       //path to VS solution of your project
       var solutionDirectory = sourceDirectory.Parent!;
       //path of the VS project where the created code should be generated
-      var targetDirectoryPath = solutionDirectory.FullName + @"\SampleDataContext"; //<== Enter here the name of your data contect project
+      var targetDirectoryPath = solutionDirectory.FullName + @"\SampleDataContext"; //<== Enter here the name of your data context project
 
       #region normally not needed code ---------------------------------------------------------------
       //normally, do not delete all files in targetDirectory, because manual changes in Xxx.CS files would get lost.

@@ -199,7 +199,7 @@ namespace StorageTest {
     }
 
 
-    private void removeExpected(List<string> expectedList, int key) {
+    private static void removeExpected(List<string> expectedList, int key) {
       var keyString = key.ToString();
       var hasFound = false;
       for (int index = 0; index < expectedList.Count; index++) {
@@ -221,7 +221,7 @@ namespace StorageTest {
     }
 
 
-    private void assert(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
+    private static void assert(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
       int count = expectedList.Count;
       Assert.AreEqual(count, dataStore.Count);
       Assert.AreEqual(count, dataStore.Keys.Count);

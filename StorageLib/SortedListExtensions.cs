@@ -1,7 +1,24 @@
-﻿using System;
+﻿/**************************************************************************************
+
+StorageLib.SortedListExtensions
+===============================
+
+Enumeration of the state of data
+
+Written in 2020 by Jürgpeter Huber 
+Contact: https://github.com/PeterHuberSg/StorageLib
+
+To the extent possible under law, the author(s) have dedicated all copyright and 
+related and neighboring rights to this software to the public domain worldwide under
+the Creative Commons 0 license (details see COPYING.txt file, see also
+<http://creativecommons.org/publicdomain/zero/1.0/>). 
+
+This software is distributed without any warranty. 
+**************************************************************************************/
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
+#pragma warning disable IDE0046 // Convert to conditional expression
 
 
 namespace StorageLib {
@@ -127,7 +144,8 @@ namespace StorageLib {
     /// </summary>
     [return: MaybeNull]
     public static TValue GetEqualGreater<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> iReadOnlyDictionary, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var sortedList = (SortedList<TKey, TValue>)iReadOnlyDictionary;
       return sortedList.GetEqualGreater(key);
     }
@@ -142,7 +160,8 @@ namespace StorageLib {
     /// </summary>
     [return: MaybeNull]
     public static TValue GetEqualGreater<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var comparer = sortedList.Comparer;
 
       if (sortedList.Count==0) {
@@ -189,7 +208,8 @@ namespace StorageLib {
     [return: MaybeNull]
     public static KeyValuePair<TKey, TValue>? GetEqualGreaterKVP<TKey, TValue>(
       this IReadOnlyDictionary<TKey, TValue> iReadOnlyDictionary, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var sortedList = (SortedList<TKey, TValue>)iReadOnlyDictionary;
       return sortedList.GetEqualGreaterKVP(key);
     }
@@ -204,7 +224,8 @@ namespace StorageLib {
     /// Exception gets thrown.
     /// </summary>
     public static KeyValuePair<TKey, TValue>? GetEqualGreaterKVP<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var comparer = sortedList.Comparer;
 
       if (sortedList.Count==0) {
@@ -250,7 +271,8 @@ namespace StorageLib {
     /// </summary>
     [return: MaybeNull]
     public static TValue GetEqualSmaller<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> iReadOnlyDictionary, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var sortedList = (SortedList<TKey, TValue>)iReadOnlyDictionary;
       return sortedList.GetEqualSmaller(key);
     }
@@ -265,7 +287,8 @@ namespace StorageLib {
     /// </summary>
     [return: MaybeNull]
     public static TValue GetEqualSmaller<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var comparer = sortedList.Comparer;
 
       if (sortedList.Count==0) {
@@ -312,7 +335,8 @@ namespace StorageLib {
     [return: MaybeNull]
     public static KeyValuePair<TKey, TValue>? GetEqualSmallerKVP<TKey, TValue>(
       this IReadOnlyDictionary<TKey, TValue> iReadOnlyDictionary, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var sortedList = (SortedList<TKey, TValue>)iReadOnlyDictionary;
       return sortedList.GetEqualSmallerKVP(key);
     }
@@ -327,7 +351,8 @@ namespace StorageLib {
     /// Exception gets thrown.
     /// </summary>
     public static KeyValuePair<TKey, TValue>? GetEqualSmallerKVP<TKey, TValue>(this SortedList<TKey, TValue> sortedList, TKey key)
-      where TKey : notnull {
+      where TKey : notnull 
+    {
       var comparer = sortedList.Comparer;
 
       if (sortedList.Count==0) {

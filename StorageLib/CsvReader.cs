@@ -16,10 +16,11 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 This software is distributed without any warranty. 
 **************************************************************************************/
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+#pragma warning disable IDE0046 // Convert to conditional expression
+#pragma warning disable IDE0045 // Convert to conditional expression
 
 
 namespace StorageLib {
@@ -177,9 +178,7 @@ namespace StorageLib {
       if (!isFileStreamOwner) return;
 
       var wasFileStream = Interlocked.Exchange(ref fileStream, null);//prevents that 2 threads release simultaneously
-      if (wasFileStream!=null) {
-        wasFileStream.Dispose();
-      }
+      wasFileStream?.Dispose();
     }
     #endregion
 
@@ -352,14 +351,9 @@ namespace StorageLib {
           continue;
         }
 
-        if (readByteAsInt==delimiter) {
-          if (isMinus) {
-            return -i;
-          } else {
-            return i;
-          }
-        }
-        throw new Exception($"CsvReader.ReadInt() '{FileName}': Illegal character found: " + Environment.NewLine + GetPresentContent());
+        if (readByteAsInt!=delimiter) throw new Exception($"CsvReader.ReadInt() '{FileName}': Illegal character found: " + Environment.NewLine + GetPresentContent());
+
+        return isMinus ? -i : i;
       }
     }
 
@@ -396,14 +390,10 @@ namespace StorageLib {
           continue;
         }
 
-        if (readByteAsInt==delimiter) {
-          if (isMinus) {
-            return -i;
-          } else {
-            return i;
-          }
-        }
-        throw new Exception($"CsvReader '{FileName}': Illegal integer: " + Environment.NewLine + GetPresentContent());
+        if (readByteAsInt!=delimiter) 
+          throw new Exception($"CsvReader '{FileName}': Illegal integer: " + Environment.NewLine + GetPresentContent());
+
+        return isMinus ? -i : i;
       }
     }
 
@@ -435,14 +425,10 @@ namespace StorageLib {
           continue;
         }
 
-        if (readByteAsInt==delimiter) {
-          if (isMinus) {
-            return -l;
-          } else {
-            return l;
-          }
-        }
-        throw new Exception($"CsvReader.ReadLong() '{FileName}': Illegal character found" + Environment.NewLine + GetPresentContent());
+        if (readByteAsInt!=delimiter)
+          throw new Exception($"CsvReader.ReadLong() '{FileName}': Illegal character found" + Environment.NewLine + GetPresentContent());
+
+        return isMinus ? -l : l;
       }
     }
 
@@ -479,14 +465,10 @@ namespace StorageLib {
           continue;
         }
 
-        if (readByteAsInt==delimiter) {
-          if (isMinus) {
-            return -l;
-          } else {
-            return l;
-          }
-        }
-        throw new Exception($"CsvReader.ReadLong() '{FileName}': Illegal character found" + Environment.NewLine + GetPresentContent());
+        if (readByteAsInt!=delimiter)
+          throw new Exception($"CsvReader.ReadLong() '{FileName}': Illegal character found" + Environment.NewLine + GetPresentContent());
+
+        return isMinus ? -l : l;
       }
     }
 

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
+using System;
+using System.IO;
 
 
 namespace StorageTest {
@@ -35,8 +33,8 @@ namespace StorageTest {
         dataStore.Add(testItem2);
         testItem1.Remove(dataStore);
         testItem2.Update("testItem2 updated", dataStore);
-        var expectedtestItem0 = testItem0.ToString();
-        var expectedtestItem2 = testItem2.ToString();
+        var expectedTestItem0 = testItem0.ToString();
+        var expectedTestItem2 = testItem2.ToString();
         dispose(ref dataStore, directoryInfo, hasBakFile: true, "new file with updates and remove");
 
         directoryInfo.Refresh();
@@ -44,8 +42,8 @@ namespace StorageTest {
         File.Move(directoryInfo.FullName + @"\TestItemCsv.bak", directoryInfo.FullName + @"\TestItemCsv.csv");
 
         dataStore = openDataStoreCSV(csvConfig);
-        Assert.AreEqual(expectedtestItem0, dataStore[0].ToString());
-        Assert.AreEqual(expectedtestItem2, dataStore[2].ToString());
+        Assert.AreEqual(expectedTestItem0, dataStore[0].ToString());
+        Assert.AreEqual(expectedTestItem2, dataStore[2].ToString());
 
         //Test if .bak files are properly created and deleted
         //---------------------------------------------------

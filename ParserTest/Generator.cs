@@ -3,10 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 namespace ParserTest {
   public static class Generator {

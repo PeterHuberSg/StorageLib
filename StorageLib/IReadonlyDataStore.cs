@@ -16,7 +16,6 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 This software is distributed without any warranty. 
 **************************************************************************************/
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace StorageLib {
 
@@ -97,7 +96,7 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Checks if item exists in StorageDirectionary and ensures that it is not marked as deleted. 
+    /// Checks if item exists in StorageDictionary and ensures that it is not marked as deleted. 
     /// </summary>
     public bool ContainsKey(int key);
 

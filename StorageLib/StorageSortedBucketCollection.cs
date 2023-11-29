@@ -41,7 +41,8 @@ namespace StorageLib {
     IStorageReadOnlySortedBucketCollection<TKey1, TKey2, TValue>
     where TKey1 : notnull, IComparable<TKey1>
     where TKey2 : notnull, IComparable<TKey2>
-    where TValue : class, IStorageItem<TValue> {
+    where TValue : class, IStorageItem<TValue> 
+  {
 
     #region Properties
     //      ----------

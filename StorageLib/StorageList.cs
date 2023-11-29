@@ -15,7 +15,6 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
-using System.Collections;
 using System.Collections.Generic;
 
 

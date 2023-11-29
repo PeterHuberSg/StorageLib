@@ -15,9 +15,7 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 
 This software is distributed without any warranty. 
 **************************************************************************************/
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace StorageLib {
 
@@ -29,8 +27,9 @@ namespace StorageLib {
   /// while CountStoredItems() counts all stored children. 
   /// </summary>
   public class StorageDictionary<TKey, TValue>: Dictionary<TKey, TValue>, IStorageReadOnlyDictionary<TKey, TValue>
-   where TKey : notnull
-   where TValue : class, IStorageItem<TValue> {
+    where TKey : notnull
+    where TValue : class, IStorageItem<TValue> 
+  {
 
 
     /// <summary>

@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
 using TestContext;
+#pragma warning disable IDE0045 // Convert to conditional expression
 
 
 namespace StorageTest {
@@ -25,12 +26,12 @@ namespace StorageTest {
     expectedDataClass? expectedData;
 
 
-    class expectedStructureClass {
-      public readonly Dictionary<int, List<int>/*Children*/> Masters = new();
-      public readonly Dictionary<int, (List<int> Parents, List<int> Children)> Samples = new();
-      public readonly Dictionary<int, int /*Parent*/> Details = new();
-    }
-    readonly expectedStructureClass expectedStructure = new expectedStructureClass();
+    //class expectedStructureClass {
+    //  public readonly Dictionary<int, List<int>/*Children*/> Masters = new();
+    //  public readonly Dictionary<int, (List<int> Parents, List<int> Children)> Samples = new();
+    //  public readonly Dictionary<int, int /*Parent*/> Details = new();
+    //}
+    //readonly expectedStructureClass expectedStructure = new expectedStructureClass();
 
 
     CsvConfig? csvConfig;
@@ -125,12 +126,12 @@ namespace StorageTest {
     }
 
 
-    private void removeMaster(int masterKey, string structure) {
-      expectedData!.Masters.Remove(masterKey);
-      var master = DC.Data.SampleX[masterKey];
-      master.Release();
-      assertData(structure);
-    }
+    //private void removeMaster(int masterKey, string structure) {
+    //  expectedData!.Masters.Remove(masterKey);
+    //  var master = DC.Data.SampleX[masterKey];
+    //  master.Release();
+    //  assertData(structure);
+    //}
 
 
     private static string toString(Sample sample) {
@@ -263,9 +264,7 @@ namespace StorageTest {
 
       DC.DisposeData();
 
-      if (structure1 is null) {
-        structure1 = structure0;
-      }
+      structure1 ??= structure0;
 
       if (bakCsvFileSwapper!.UseBackupFiles()) {
         _ = new DC(csvConfig);
@@ -282,7 +281,7 @@ namespace StorageTest {
     readonly StringBuilder sb = new();
 
 
-    public string dataToNiceString() {
+    private string dataToNiceString() {
       /*
 
 Master0

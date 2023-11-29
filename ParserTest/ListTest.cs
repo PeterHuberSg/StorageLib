@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 
 namespace ParserTest {
@@ -72,7 +73,7 @@ namespace ParserTest {
         public ListParent Parent1;
         public ListParent Parent2;
         Use HashSet<ListChild> if more than one child property links to Children or add to ListParent one " +
-        "List<ListChild> for each child property with the type ListParent and specify with attribut " +
+        "List<ListChild> for each child property with the type ListParent and specify with attribute " +
         "StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //missing children property in parent class
@@ -162,14 +163,14 @@ namespace ParserTest {
         Parent property: [StorageProperty(childPropertyName: ""Parent1"")]
                   public List<ListChild> Children;
         Property Parent2 in child class ListChild references property Children in parent class ListParent, which links " +
-        "explicitely to Parent1 in class ListChild. Remove StoragePropertyAttribute.childPropertyName from Children if " +
+        "explicitly to Parent1 in class ListChild. Remove StoragePropertyAttribute.childPropertyName from Children if " +
         "more than 1 property in child class ListChild should reference ListParent.Children, in which case the List<> " +
         "will get replaced by a HashSet<> in the generated code.");
 
 
       //Two properties in child class with parent's type and 2 collections in parent
       //============================================================================
-          compiler = Generator.Analyze(@"  
+      compiler = Generator.Analyze(@"  
         public class ListParent {
 
           [StorageProperty(childPropertyName: ""Parent1"")]

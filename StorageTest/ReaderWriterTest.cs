@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
+using System;
+using System.IO;
 using TestContext;
 
 
@@ -100,7 +97,7 @@ namespace StorageTest {
     public const string DataDirectoryPath = "TestCsv";
 
 
-    public void YearlyLogMaintenance() {
+    public static void YearlyLogMaintenance() {
       createData();
       var csvConfig = new CsvConfig(DataDirectoryPath);
       var deleteDate = DateTime.Now.Date.AddYears(-10);
@@ -117,7 +114,7 @@ namespace StorageTest {
     }
 
 
-    public void YearlyLogMaintenance2() {
+    public static void YearlyLogMaintenance2() {
       createData();
       var csvConfig = new CsvConfig(DataDirectoryPath);
       _ = new DC(csvConfig);

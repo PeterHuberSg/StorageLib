@@ -19,7 +19,6 @@ the Creative Commons 0 license (details see COPYING.txt file, see also
 This software is distributed without any warranty. 
 **************************************************************************************/
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -50,10 +49,10 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Maximal length of TItemCSV when stored as string. Can be too long, but not to short. 10*MaxLineLenght should be shorter
+    /// Estimated length of TItemCSV when stored as string. Could be too long, but not too short. 10*EstimatedLineLength should be shorter
     /// than CsvConfig.BufferSize
     /// </summary>
-    public int MaxLineLenght { get; private set; }
+    public int EstimatedLineLength { get; private set; }
 
 
     /// <summary>
@@ -106,7 +105,7 @@ namespace StorageLib {
     /// <param name="dataContext">DataContext creating this DataStore</param>
     /// <param name="storeKey">Unique number to identify DataStore</param>
     /// <param name="csvConfig">File name and other parameters for CSV file</param>
-    /// <param name="maxLineLenght">Maximal number of bytes needed to write one line</param>
+    /// <param name="estimatedLineLength">Estimated number of bytes needed to write one line</param>
     /// <param name="headers">Name for each item property</param>
     /// <param name="setKey">Called when an item gets added to set its Key</param>
     /// <param name="create">Creates a new item with one line read from the CSV file</param>
@@ -118,17 +117,17 @@ namespace StorageLib {
     /// <param name="rollbackItemStore">Undo of data change in item during transaction due to item.Store()</param>
     /// <param name="rollbackItemUpdate">Undo of data change in item during transaction due to item.Update()</param>
     /// <param name="rollbackItemRemove">Undo of data change in item during transaction due to item.Remove()</param>
-    /// items linked to this item and/or to remove item from parent(s)</param>
     /// <param name="areInstancesUpdatable">Can the property of an item change ?</param>
     /// <param name="areInstancesReleasable">Can an item be removed from DataStoreCSV</param>
     /// <param name="capacity">How many items should DataStoreCSV by able to hold initially ?</param>
     /// <param name="flushDelay">When the items in DataStoreCSV are not changed for flushDelay milliseconds, the internal
     /// buffer gets written to the CSV file.</param>
+
     public DataStoreCSV(
       DataContextBase? dataContext,
       int storeKey,
       CsvConfig csvConfig,
-      int maxLineLenght,
+      int estimatedLineLength,
       string[] headers,
       Action<IStorageItem, int, /*isRollback*/bool> setKey,
       Func<int, CsvReader, DataStoreCSV<TItemCSV>, TItemCSV> create,
@@ -140,7 +139,6 @@ namespace StorageLib {
       Action<IStorageItem> rollbackItemStore,
       Action</*old*/IStorageItem, /*new*/IStorageItem>? rollbackItemUpdate,
       Action<IStorageItem>? rollbackItemRemove,
-      //Action<TItemCSV>? disconnect,
       bool areInstancesUpdatable = false,
       bool areInstancesReleasable = false,
       int capacity = 0,
@@ -148,7 +146,7 @@ namespace StorageLib {
         rollbackItemUpdate, rollbackItemRemove, areInstancesUpdatable, areInstancesReleasable, capacity) 
     {
       CsvConfig = csvConfig;
-      MaxLineLenght = maxLineLenght;
+      EstimatedLineLength = estimatedLineLength;
       CsvHeaderString = Csv.ToCsvHeaderString(headers, csvConfig.Delimiter);
       this.create = create;
       this.verify = verify;
@@ -160,16 +158,16 @@ namespace StorageLib {
       fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, csvConfig.BufferSize, FileOptions.SequentialScan);
       if (fileStream.Length>0) {
         IsNew = false;
-        using (var csvReader = new CsvReader(null, CsvConfig, maxLineLenght, fileStream)) {
+        using (var csvReader = new CsvReader(null, CsvConfig, estimatedLineLength, fileStream)) {
           isInitialReading = true;
           readFromCsvFile(csvReader);
           isInitialReading = false;
           fileStream.Position = fileStream.Length;
         }
-        csvWriter = new CsvWriter("", csvConfig, maxLineLenght, fileStream, flushDelay: flushDelay);
+        csvWriter = new CsvWriter("", csvConfig, estimatedLineLength, fileStream, flushDelay: flushDelay);
       } else {
         //there is no file yet. Write an empty file with just the CSV header
-        csvWriter = new CsvWriter("", csvConfig, maxLineLenght, fileStream, flushDelay: flushDelay);
+        csvWriter = new CsvWriter("", csvConfig, estimatedLineLength, fileStream, flushDelay: flushDelay);
         WriteToCsvFile(csvWriter);
       }
       //flushTimer = new Timer(flushTimerMethod, null, Timeout.Infinite, Timeout.Infinite);
@@ -211,7 +209,7 @@ namespace StorageLib {
             //backup file and create a new one with only the latest items, but no deletions nor updates
             File.Move(PathFileName, backupFileName);
             using var fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, CsvConfig.BufferSize, FileOptions.SequentialScan);
-            using var csvWriter = new CsvWriter("", CsvConfig, MaxLineLenght, fileStream);
+            using var csvWriter = new CsvWriter("", CsvConfig, EstimatedLineLength, fileStream);
             WriteToCsvFile(csvWriter);
           }
         } catch (Exception ex) {
@@ -235,7 +233,7 @@ namespace StorageLib {
 
     /// <summary>
     /// Initiates that all data presently in RAM write buffers are written immediately to a file. Usually buffers get 
-    /// written when they are full, the CSVWriter.Flushtimer runs or the DataStore gets disposed. For normal operation
+    /// written when they are full, the CSVWriter.FlushTimer runs or the DataStore gets disposed. For normal operation
     /// it should not be necessary to call Flush(), it is mainly used for time measurement.
     /// </summary>
     public override void Flush() {
@@ -267,7 +265,7 @@ namespace StorageLib {
             var item = this[key];
             csvReader.SkipToEndOfLine();
             if (!Remove(key)) {
-              errorStringBuilder.AppendLine($"Deletion Line with key '{key}' did not exist in StorageDictonary.");
+              errorStringBuilder.AppendLine($"Deletion Line with key '{key}' did not exist in StorageDictionary.");
             }
             //Todo: I guess Disconnect() should no longer be called, since delete, i.e. release no longer disconnects child from parent
             disconnect!(item);
@@ -305,12 +303,9 @@ namespace StorageLib {
 
 
     private void addItem(CsvReader csvReader, StringBuilder errorStringBuilder) {
-      TItemCSV? item;
-      if (IsReadOnly) {
-        item = create(LastItemIndex+1, csvReader, this);
-      } else {
-        item = create(csvReader.ReadInt(), csvReader, this);
-      }
+      TItemCSV? item = IsReadOnly ? 
+        create(LastItemIndex+1, csvReader, this) : 
+        create(csvReader.ReadInt(), csvReader, this);
       if (errorStringBuilder.Length==0) {
         AddProtected(item!);
       }
@@ -363,14 +358,14 @@ namespace StorageLib {
     }
 
 
-    protected override void OnItemHasChanged(TItemCSV oldIitem, TItemCSV newIitem) {
+    protected override void OnItemHasChanged(TItemCSV oldItem, TItemCSV newItem) {
       if (isInitialReading) return;
 
       try {
         lock (csvWriter!) {
           csvWriter.WriteFirstLineChar(CsvConfig.LineCharUpdate);
-          csvWriter.Write(newIitem.Key);
-          write!(newIitem, csvWriter);
+          csvWriter.Write(newItem.Key);
+          write!(newItem, csvWriter);
           csvWriter.WriteEndOfLine();
         }
         //kickFlushTimer();
@@ -427,7 +422,7 @@ namespace StorageLib {
 
 
     public override string ToString() {
-      return base.ToString() + $"; MaxLine: {this.MaxLineLenght};";
+      return base.ToString() + $"; MaxLine: {this.EstimatedLineLength};";
     }
     #endregion
     #endregion

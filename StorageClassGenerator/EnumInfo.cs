@@ -3,7 +3,7 @@
 StorageLib.EnumInfo
 ===================
 
-Some infos about enums created by storage compiler
+Some info about enums created by storage compiler
 
 Written in 2020 by Jürgpeter Huber 
 Contact: https://github.com/PeterHuberSg/StorageLib
@@ -22,7 +22,7 @@ namespace StorageLib {
 
 
   /// <summary>
-  /// Some infos about enums created by storage compiler
+  /// Some info about enums created by storage compiler
   /// </summary>
   public class EnumInfo {
     public readonly string Name;

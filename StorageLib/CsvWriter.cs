@@ -53,13 +53,13 @@ namespace StorageLib {
     /// <summary>
     /// Estimated chars in a line for average values. With max values and long strings, the actual length might be much longer.
     /// </summary>
-    public int EstimatedLineLenght { get; }
+    public int EstimatedLineLength { get; }
 
 
     /// <summary>
     /// How many bytes can a line max contain ? (25% of CsvConfig.BufferSize)
     /// </summary>
-    public int MaxLineByteLenght { get; private set; }
+    public int MaxLineByteLength { get; private set; }
 
 
     /// <summary>
@@ -98,32 +98,28 @@ namespace StorageLib {
     public CsvWriter(
       string? fileName, 
       CsvConfig csvConfig, 
-      int estimatedLineLenght, 
+      int estimatedLineLength, 
       FileStream? existingFileStream = null, 
       int flushDelay = 200) 
     {
       if (!string.IsNullOrEmpty(fileName) && existingFileStream!=null) 
         throw new Exception("CsvWriter constructor: There was neither an existingFileStream nor a fileName provided.");
 
-      if (existingFileStream!=null) {
-        FileName = existingFileStream.Name;
-      } else {
-        FileName = fileName!;
-      }
+      FileName =existingFileStream!=null ? existingFileStream.Name : fileName!;
       CsvConfig = csvConfig;
       if (csvConfig.Encoding!=Encoding.UTF8) 
         throw new Exception($"CsvWriter constructor: Only reading from UTF8 files is supported, but the Encoding was " +
           $"{csvConfig.Encoding.EncodingName} for file {fileName}.");
       
       delimiter = (byte)csvConfig.Delimiter;
-      MaxLineByteLenght = CsvConfig.BufferSize/Csv.ByteBufferToReserveRatio;
-      if (estimatedLineLenght*Csv.Utf8BytesPerChar>MaxLineByteLenght)
+      MaxLineByteLength = CsvConfig.BufferSize/Csv.ByteBufferToReserveRatio;
+      if (estimatedLineLength*Csv.Utf8BytesPerChar>MaxLineByteLength)
         throw new Exception($"CsvWriter constructor: BufferSize {CsvConfig.BufferSize} should be at least " + 
           $"{Csv.ByteBufferToReserveRatio*Csv.Utf8BytesPerChar} times bigger than the estimated length needed of " +
-          $"{estimatedLineLenght} for file {fileName}.");
+          $"{estimatedLineLength} for file {fileName}.");
 
-      EstimatedLineLenght = estimatedLineLenght;
-      tempChars = new char[50]; //tempChars is only used for formating decimals, which needs maybe 10-30 chars
+      EstimatedLineLength = estimatedLineLength;
+      tempChars = new char[50]; //tempChars is only used for formatting decimals, which needs maybe 10-30 chars
       FlushDelay = flushDelay;
       if (existingFileStream is null) {
         isFileStreamOwner = true;
@@ -135,8 +131,8 @@ namespace StorageLib {
       }
       //byteArray = new byte[csvConfig.BufferSize];
       //writePos = 0;
-      //maxBufferWriteLength = CsvConfig.BufferSize - maxLineLenght;
-      byteArray = new byte[csvConfig.BufferSize + MaxLineByteLenght];
+      //maxBufferWriteLength = CsvConfig.BufferSize - maxLineLength;
+      byteArray = new byte[csvConfig.BufferSize + MaxLineByteLength];
       writePos = 0;
       maxBufferWriteLength = CsvConfig.BufferSize;
       flushTimer = new Timer(flushTimerMethod, null, Timeout.Infinite, Timeout.Infinite);
@@ -184,10 +180,10 @@ namespace StorageLib {
     /// </summary>
     /// <param name="disposing">is false if it is called from a destructor.</param>
     protected virtual void OnDispose(bool disposing) {
-      var wasflushTimer = Interlocked.Exchange(ref flushTimer, null);
-      if (wasflushTimer!=null) {
+      var wasFlushTimer = Interlocked.Exchange(ref flushTimer, null);
+      if (wasFlushTimer!=null) {
         try {
-          wasflushTimer.Dispose();//Dispose() is multi-threading safe
+          wasFlushTimer.Dispose();//Dispose() is multi-threading safe
         } catch (Exception ex) {
           CsvConfig.ReportException?.Invoke(ex);
         }
@@ -282,7 +278,7 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Writes Carriage Return and Line Feed to the bytêArray. If byteArray is nearly full, it gets written to the file. The
+    /// Writes Carriage Return and Line Feed to the byteArray. If byteArray is nearly full, it gets written to the file. The
     /// flushTimer gets started. If WriteEndOfLine() is not called again, the flushTimer writes the remaining bytes to the file.
     /// </summary>
     public void WriteEndOfLine() {
@@ -297,9 +293,9 @@ namespace StorageLib {
         byteArray[writePos++] = 0x0A;
 
         var actualLineLength = writePos-lineStart;
-        if (actualLineLength>MaxLineByteLenght) {
+        if (actualLineLength>MaxLineByteLength) {
           //actually written line is longer than expected.
-          throw new Exception($"MaxLineByteLenght {MaxLineByteLenght} should be at least {writePos-lineStart}.");
+          throw new Exception($"MaxLineByteLength {MaxLineByteLength} should be at least {writePos-lineStart}.");
 
           /*most likely it's not a problem to write the longer than expected string and it would be possible to
           write the new line length into the CSV file header so the CsvReader knows what to expect. But that solution
@@ -338,11 +334,7 @@ namespace StorageLib {
     /// Write boolean as 0 or 1 to UTF8 FileStream followed by delimiter.
     /// </summary>
     public void Write(bool b) {
-      if (b) {
-        byteArray[writePos++] = (byte)'1';
-      } else {
-        byteArray[writePos++] = (byte)'0';
-      }
+      byteArray[writePos++] =b ? (byte)'1' : (byte)'0';
       byteArray[writePos++] = delimiter;
     }
 
@@ -352,11 +344,7 @@ namespace StorageLib {
     /// </summary>
     public void Write(bool? b) {
       if (b.HasValue) {
-        if (b.Value) {
-          byteArray[writePos++] = (byte)'1';
-        } else {
-          byteArray[writePos++] = (byte)'0';
-        }
+        byteArray[writePos++] =b.Value ? (byte)'1' : (byte)'0';
       }
       byteArray[writePos++] = delimiter;
     }
@@ -385,7 +373,7 @@ namespace StorageLib {
       if (i<0) {
         byteArray[writePos++] = minusByte;
         start = writePos;
-        //since -int.MinValue is bigger than int.MaxValue, i=-i does not work for int.Minvalue.
+        //since -int.MinValue is bigger than int.MaxValue, i=-i does not work for int.MinValue.
         //therefore write 1 digit first and guarantee that i>int.MinValue
         byteArray[writePos++] = (byte)(-(i % 10) + '0');
         i /= 10;
@@ -433,7 +421,7 @@ namespace StorageLib {
       if (l<0) {
         byteArray[writePos++] = minusByte;
         start = writePos;
-        //since -long.MinValue is bigger than long.MaxValue, l=-l does not work for long.Minvalue.
+        //since -long.MinValue is bigger than long.MaxValue, l=-l does not work for long.MinValue.
         //therefore write 1 digit first and guarantee that l>long.MinValue
         byteArray[writePos++] = (byte)(-(l % 10) + '0');
         l /= 10;
@@ -646,9 +634,9 @@ namespace StorageLib {
           byteArray[writePos++] = (byte)' ';
 
         } else {
-          if (s.Length>MaxLineByteLenght) {
+          if (s.Length>MaxLineByteLength) {
             throw new Exception($"CsvWriter.Write() '{FileName}': The length {s.Length} of string 's.[..30]' is longer " +
-              $"than MaxLineLenght {MaxLineByteLenght}." + Environment.NewLine + GetPresentContent());
+              $"than MaxLineLength {MaxLineByteLength}." + Environment.NewLine + GetPresentContent());
           }
           var startWritePos = writePos;
           for (int readIndex = 0; readIndex < s.Length; readIndex++) {
@@ -710,9 +698,9 @@ namespace StorageLib {
     /// the carriage return and line feed. If string contains a Carriage Return or Line Feed, an Exception gets thrown.
     /// </summary>
     public void WriteLine(string line) {
-      if (line.Length>MaxLineByteLenght) {
+      if (line.Length>MaxLineByteLength) {
         throw new Exception($"CsvWriter.Write() '{FileName}': The length {line.Length} of string 'line.[..30]' is longer " +
-          $"than MaxLineLenght {MaxLineByteLenght}." + Environment.NewLine + GetPresentContent());
+          $"than MaxLineLength {MaxLineByteLength}." + Environment.NewLine + GetPresentContent());
       }
 
       StartNewLine();

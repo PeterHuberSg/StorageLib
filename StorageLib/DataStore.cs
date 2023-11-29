@@ -160,7 +160,7 @@ namespace StorageLib {
     /// <summary>
     /// Only used with DataStoreCSV.
     /// Initiates that all data presently in RAM write buffers are written immediately to a file. Usually buffers get 
-    /// written when they are full, the CSVWriter.Flushtimer runs or the DataStore gets disposed. For normal operation
+    /// written when they are full, the CSVWriter.FlushTimer runs or the DataStore gets disposed. For normal operation
     /// it should not be necessary to call Flush(), it is mainly used for time measurement.
     /// </summary>
     public virtual void Flush() {
@@ -266,7 +266,7 @@ namespace StorageLib {
 
   /// <summary>
   /// A fast collection of items which implement IStorage. Each item can get added to a DataStore only once. The DataStore
-  /// sets the Key property of that item. DataStroe does not publicly support DataStore.Add(item). Use item.Store() instead.
+  /// sets the Key property of that item. DataStore does not publicly support DataStore.Add(item). Use item.Store() instead.
   /// </summary>
   public class DataStore<TItem>: DataStore, IReadonlyDataStore<TItem> 
     where TItem : class, IStorageItem<TItem>
@@ -424,7 +424,7 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Checks if item exists in StorageDirectionary and ensures that it is not marked as deleted. 
+    /// Checks if item exists in DataStore and ensures that it is not marked as deleted. 
     /// </summary>
     public bool ContainsKey(int key) {
       return binarySearch(key)>=0;
@@ -494,12 +494,12 @@ namespace StorageLib {
           if (FirstItemIndex==index) {
             do {
               FirstItemIndex++;
-            } while (items[FirstItemIndex]==null);//since there are at least 2 items left, firstItemKey will always be smaller than lastItemkey
+            } while (items[FirstItemIndex]==null);//since there are at least 2 items left, firstItemKey will always be smaller than lastItemKey
             UpdateAreKeysContinuous();
           } else if (LastItemIndex==index) {
             do {
               LastItemIndex--;
-            } while (items[LastItemIndex]==null);//since there are at least 2 items left, lastItemkey will always be bigger than firstItemKey
+            } while (items[LastItemIndex]==null);//since there are at least 2 items left, lastItemKey will always be bigger than firstItemKey
             UpdateAreKeysContinuous();
           } else {
             //item was removed from the middle of items
@@ -544,17 +544,14 @@ namespace StorageLib {
     /// </summary>
     public TItem? GetItem(int key) {
       var index = binarySearch(key);
-      if (index<0) {
-        return null;
-      }
-      return items?[index];
+      return index<0 ? null : (items?[index]);
     }
 
 
     #region Disposable Interface
     //     ---------------------
 
-    //Todo: DataStore.Dispose(); Rollback transaction if dispose. Probably better if DC.Dispose() would detect and handle uncommited transaction.
+    //Todo: DataStore.Dispose(); Rollback transaction if dispose. Probably better if DC.Dispose() would detect and handle uncommitted transaction.
     protected override void Dispose(bool disposing) {
       setKey = null!;
       rollbackItemNew = null!;
@@ -673,7 +670,7 @@ namespace StorageLib {
     /// <summary>
     /// Called when the content of an item has changed. There is no change (add, remove) in DataStore itself. 
     /// </summary>
-    protected virtual void OnItemHasChanged(TItem oldIitem, TItem newIitem) {
+    protected virtual void OnItemHasChanged(TItem oldItem, TItem newItem) {
     }
     #endregion
 
@@ -736,7 +733,7 @@ namespace StorageLib {
 #if DEBUG
       //LastItemIndex always points to the last added item. RollbackStoreAdd() must always be about the last added item.
       if (Count<=0 || index!=LastItemIndex|| KeysArray[index]!=item.Key || items[index]!=item) 
-        throw new Exception($"DatatStore<typeof(TItem).Name>.RollbackStoreAdd(item: {item}); count: {Count}; " +
+        throw new Exception($"DataStore<typeof(TItem).Name>.RollbackStoreAdd(item: {item}); count: {Count}; " +
           $"LastItemIndex: {LastItemIndex}; keys[index]: {KeysArray[index]}; items[index]: {items[index]};");
 #endif
       items[index] = null;
@@ -776,7 +773,7 @@ namespace StorageLib {
 #if DEBUG
       if (!AreInstancesReleasable) throw new Exception();
       if (item.Key!=StorageExtensions.NoKey || index<0 || items[index]!=null || KeysArray[index]!=key)
-        throw new Exception($"DatatStore<{typeof(TItem).Name}>.RollbackStoreRemove(key: {key}, item: {item}); index: {index};");
+        throw new Exception($"DataStore<{typeof(TItem).Name}>.RollbackStoreRemove(key: {key}, item: {item}); index: {index};");
 #endif
 
       var tItem = (TItem)item;
@@ -859,14 +856,9 @@ namespace StorageLib {
     /// </summary>
     [Serializable]
     public struct EnumeratorItems: IEnumerator<TItem>, IEnumerator {
-      public TItem Current {
-        get { return current ?? throw new InvalidOperationException(); }
-      }
+      public readonly TItem Current => current ?? throw new InvalidOperationException();
 
-
-      object System.Collections.IEnumerator.Current {
-        get { return current ?? throw new InvalidOperationException(); }
-      }
+      readonly object System.Collections.IEnumerator.Current => current ?? throw new InvalidOperationException();
 
 
       readonly DataStore<TItem> dataStore;
@@ -896,7 +888,7 @@ namespace StorageLib {
       /// <summary>
       /// Doesn't do anything
       /// </summary>
-      public void Dispose() {
+      public readonly void Dispose() {
       }
 
 

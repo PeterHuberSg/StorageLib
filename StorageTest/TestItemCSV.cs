@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using StorageLib;
+﻿using StorageLib;
+using System;
 
 
 namespace StorageTest {
@@ -88,9 +86,7 @@ namespace StorageTest {
     }
 
 
-    #pragma warning disable IDE0060 // Remove unused parameter oldItem, newItem
     internal static void RollbackItemUpdate(IStorageItem oldItem, IStorageItem newItem) {
-    #pragma warning restore IDE0060
       throw new NotSupportedException();
     }
 

@@ -78,7 +78,7 @@ namespace StorageTest {
     }
 
 
-    private void add(DataStore<TestItem> dataStore, List<string> expectedList, int key, string text, bool cont) {
+    private static void add(DataStore<TestItem> dataStore, List<string> expectedList, int key, string text, bool cont) {
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
       var testItem = new TestItem(text);
@@ -88,7 +88,7 @@ namespace StorageTest {
     }
 
 
-    private void update(DataStore<TestItem> dataStore, List<string> expectedList, int key, string text, bool cont) {
+    private static void update(DataStore<TestItem> dataStore, List<string> expectedList, int key, string text, bool cont) {
       removeExpected(expectedList, key);
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
@@ -98,14 +98,14 @@ namespace StorageTest {
     }
 
 
-    private void remove(DataStore<TestItem> dataStore, List<string> expectedList, int key, bool cont) {
+    private static void remove(DataStore<TestItem> dataStore, List<string> expectedList, int key, bool cont) {
       removeExpected(expectedList, key);
       dataStore.Remove(key);
       assert(expectedList, cont, dataStore);
     }
 
 
-    private void removeExpected(List<string> expectedList, int key) {
+    private static void removeExpected(List<string> expectedList, int key) {
       var keyString = key.ToString();
       var hasFound = false;
       for (int index = 0; index < expectedList.Count; index++) {
@@ -118,7 +118,7 @@ namespace StorageTest {
     }
 
 
-    private void assert(List<string> expectedList, bool areKeysContinuous, DataStore<TestItem> dataStore) {
+    private static void assert(List<string> expectedList, bool areKeysContinuous, DataStore<TestItem> dataStore) {
       int count = expectedList.Count;
       Assert.AreEqual(count, dataStore.Count);
       Assert.AreEqual(count, dataStore.Keys.Count);

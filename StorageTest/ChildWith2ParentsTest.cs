@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
 using TestContext;
+#pragma warning disable IDE0045 // Convert to conditional expression
 
 
 namespace StorageTest {
@@ -101,15 +102,15 @@ namespace StorageTest {
     }
 
 
-    private void releaseParent(int masterKey, string structure) {
-      void transaction() {
-        DC.Data.Cw2PParents[masterKey].Release();
-        DC.Data.Cw2PParentNs[masterKey].Release();
-        DC.Data.Cw2PParentRs[masterKey].Release();
-        DC.Data.Cw2PParentNRs[masterKey].Release();
-      }
-      execute(transaction, structure);
-    }
+    //private void releaseParent(int masterKey, string structure) {
+    //  void transaction() {
+    //    DC.Data.Cw2PParents[masterKey].Release();
+    //    DC.Data.Cw2PParentNs[masterKey].Release();
+    //    DC.Data.Cw2PParentRs[masterKey].Release();
+    //    DC.Data.Cw2PParentNRs[masterKey].Release();
+    //  }
+    //  execute(transaction, structure);
+    //}
 
 
     private void addChild___(
@@ -197,7 +198,7 @@ namespace StorageTest {
       DC.Data.RollbackTransaction();
       assertData(presentStructure);
       if (csvConfig is not null) {
-        assertDisposalRecreactionDC();
+        assertDisposalRecreationDC();
       }
 
       //test committed transaction
@@ -212,11 +213,11 @@ namespace StorageTest {
       if (structureNewDC is not null) {
         presentStructure = structureNewDC;
       }
-      assertDisposalRecreactionDC();
+      assertDisposalRecreationDC();
     }
 
 
-    private void assertDisposalRecreactionDC() {
+    private void assertDisposalRecreationDC() {
       DC.DisposeData();
 
       if (bakCsvFileSwapper!.UseBackupFiles()) {

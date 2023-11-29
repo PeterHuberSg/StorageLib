@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 
 namespace ParserTest {
@@ -118,7 +119,7 @@ namespace ParserTest {
         public SortedBucketParent Parent2;
         Use HashSet<SortedBucketChild> if more than one child property links to Children or add to SortedBucketParent " +
         "one List<SortedBucketChild> for each child property with the type SortedBucketParent and specify with " +
-        "attribut StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
+        "attribute StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class matching the first key type defined in the parent
       //-------------------------------------------------------------------------------
@@ -189,7 +190,7 @@ namespace ParserTest {
         }
         public class SortedBucketChild {
           public string AnotherName;
-          public Date ANotherDate;
+          public Date AnotherDate;
           public string Name;
           public Date Date;
           public SortedBucketParent Parent;
@@ -215,7 +216,7 @@ namespace ParserTest {
         }
         public class SortedBucketChild {
           public string AnotherName;
-          public Date ANotherDate;
+          public Date AnotherDate;
           public int Name;
           public Date Date;
           public string Parent;
@@ -237,7 +238,7 @@ namespace ParserTest {
         }
         public class SortedBucketChild {
           public string AnotherName;
-          public Date ANotherDate;
+          public Date AnotherDate;
           public int Name;
           public Date Date;
           public SortedBucketParent Parent;
@@ -259,7 +260,7 @@ namespace ParserTest {
         }
         public class SortedBucketChild {
           public string AnotherName;
-          public Date ANotherDate;
+          public Date AnotherDate;
           public string Name;
           public int Date;
           public SortedBucketParent Parent;
@@ -331,7 +332,7 @@ namespace ParserTest {
         Property: public SortedBucketParent Parent2;
         The parent class SortedBucketParent is not linking back to Parent2 property. This can happen if 2 or more " +
         "properties of SortedBucketChild link to SortedBucketParent class. In this case, several collections or " +
-        "properties for singel child are needed in the SortedBucketParent class and they need to use " +
+        "properties for single child are needed in the SortedBucketParent class and they need to use " +
         "StoragePropertyAttribute.ChildPropertyName to indicate which of their property links to which " +
         "SortedBucketChild property.");
 

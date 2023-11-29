@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 
 namespace ParserTest {
@@ -94,7 +95,7 @@ namespace ParserTest {
         public DictionaryParent Parent1;
         public DictionaryParent Parent2;
         Use HashSet<DictionaryChild> if more than one child property links to Children or add to DictionaryParent " +
-        "one List<DictionaryChild> for each child property with the type DictionaryParent and specify with attribut " +
+        "one List<DictionaryChild> for each child property with the type DictionaryParent and specify with attribute " +
         "StorageProperty.ChildPropertyName which child property links to which List<> in Parent.");
 
       //Two properties in child class matching the key type defined in the parent
@@ -144,7 +145,7 @@ namespace ParserTest {
           public Dictionary<Date, DictionaryChild> Children;
         }
         public class DictionaryChild {
-          public Date ANotherDate;
+          public Date AnotherDate;
           public Date Date;
           public DictionaryParent Parent;
         }
@@ -166,7 +167,7 @@ namespace ParserTest {
           public Dictionary<Date, DictionaryChild> Children;
         }
         public class DictionaryChild {
-          public Date ANotherDate;
+          public Date AnotherDate;
           public Date Date;
           public string Parent;
         }
@@ -186,7 +187,7 @@ namespace ParserTest {
           public Dictionary<Date, DictionaryChild> Children;
         }
         public class DictionaryChild {
-          public Date ANotherDate;
+          public Date AnotherDate;
           public int Date;
           public DictionaryParent Parent;
         }
@@ -249,7 +250,7 @@ namespace ParserTest {
         Property: public DictionaryParent Parent2;
         The parent class DictionaryParent is not linking back to Parent2 property. This can happen if 2 or more " +
         "properties of DictionaryChild link to DictionaryParent class. In this case, several collections or " +
-        "properties for singel child are needed in the DictionaryParent class and they need to use " +
+        "properties for single child are needed in the DictionaryParent class and they need to use " +
         "StoragePropertyAttribute.ChildPropertyName to indicate which of their property links to which " +
         "DictionaryChild property.");
 

@@ -1,10 +1,6 @@
-﻿using System;
+﻿using StorageLib;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using StorageLib;
 
 
 namespace StorageTest {
@@ -13,7 +9,9 @@ namespace StorageTest {
   public class BakCsvFileSwapper {
 
 
+    #pragma warning disable IDE0052 // Remove unread private members
     readonly CsvConfig csvConfig;
+    #pragma warning restore IDE0052
     readonly DirectoryInfo directoryInfo;
     readonly List<(string OrgFile, string CsvFile)> copyInstructions;
 

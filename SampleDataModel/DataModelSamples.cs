@@ -28,17 +28,17 @@ namespace DataModelSamples {
   //      -------------------------------------------------
 
   /*
-  If data gets only created and stored, but never deleted, data retrieval becomes extremly faster. Any instance
+  If data gets only created and stored, but never deleted, data retrieval becomes extremely faster. Any instance
   can be found by its key immediately, while when deletion is allowed and some keys are missing, a search
   needs to be performed which has a log(number of keys) delay. It is quite often, that data does not
   need to get deleted, or even updated, like with measurement results, accounting, logs, etc.
 
-  StorageClassAttribut supports for this purpose 2 arguments:
+  StorageClassAttribute supports for this purpose 2 arguments:
   areInstancesUpdatable (default true): the class has some properties which can be changed calling Update().
-  areInstancesReleasable (default true): stored instances of that class can get removed from Data Contect (= deletion).
+  areInstancesReleasable (default true): stored instances of that class can get removed from Data Context (= deletion).
 
   If a child class is updatable and changes its parent, StorageLib automatically removes the child from its
-  old parent and adds it to its new parent. If data gets stored in a CSV file, an update recorde gets added and
+  old parent and adds it to its new parent. If data gets stored in a CSV file, an update record gets added and
   when the application shuts down, the file gets rewritten with updated data only.
 
   If Release() is called on an instance (object) of a releasable class, that object gets removed from the Data 
@@ -151,9 +151,9 @@ namespace DataModelSamples {
     public Time Time; // becomes TimeSpan, stored as hh:mm:ss, max: 23.59:59
     public DateMinutes DateMinutes; // becomes DateTime, stored as dd.mm.yyyy hh:mm
     public DateSeconds DateSeconds; // becomes DateTime, stored as dd.mm.yyyy hh:mm:ss
-    public DateTimeTicks DateTimeTicks; // becomes DateTime stored with full DateTime precission as Ticks
-    public TimeSpanTicks TimeSpanTicks; // becomes TimeSpan stored with full TimeSpan precission, stored as Ticks
-    public decimal Decimal_; // stays decimal, stored with full decimal precission
+    public DateTimeTicks DateTimeTicks; // becomes DateTime stored with full DateTime precision as Ticks
+    public TimeSpanTicks TimeSpanTicks; // becomes TimeSpan stored with full TimeSpan precision, stored as Ticks
+    public decimal Decimal_; // stays decimal, stored with full decimal precision
     public Decimal2 Decimal2; // becomes decimal stored with 2 digits after decimal point
     public Decimal4 Decimal4; // becomes decimal stored with 4 digits after decimal point
     public Decimal5 Decimal5; // becomes decimal stored with 5 digits after decimal point
@@ -390,7 +390,7 @@ namespace DataModelSamples {
   /// </summary>
   public class SortedBucketCollectionWithUsingKeyAsKey2Parent {
     public string Name;
-    //the Key property can be used here, even it is not explicitely listed in the child's properties below
+    //the Key property can be used here, even it is not explicitly listed in the child's properties below
     [StorageProperty(childKey2PropertyName: "Key")]
     public SortedBucketCollection<Date, string, SortedBucketCollectionWithUsingKeyAsKey2Child> Children;
   }
@@ -406,8 +406,8 @@ namespace DataModelSamples {
 
   //StorageLib creates for each data class a DataStore, which is like a Dictionary, using the data class'
   //Key property as key into the DataStore. If there are many instances of a data class, it might become
-  //to time consuming to serach through all of them to find one with a particular value. For this case,
-  //StorageLib can create an additional Dictionary in the Data Context, using the vaue of on property as
+  //to time consuming to search through all of them to find one with a particular value. For this case,
+  //StorageLib can create an additional Dictionary in the Data Context, using the value of on property as
   //key.
 
   public class NeedsDictionaryClass {
@@ -419,17 +419,17 @@ namespace DataModelSamples {
   /*
   The automatically generated Dictionary will look like this in the Data Context:
   /// <summary>
-  /// Directory of all NeedsDictionaryClasss by Name
+  /// Directory of all NeedsDictionaryClass by Name
   /// </summary>
-  public IReadOnlyDictionary<string, NeedsDictionaryClass> NeedsDictionaryClasssByName => _NeedsDictionaryClasssByName;
-  internal Dictionary<string, NeedsDictionaryClass> _NeedsDictionaryClasssByName { get; private set; }
+  public IReadOnlyDictionary<string, NeedsDictionaryClass> NeedsDictionaryClassByName => _NeedsDictionaryClassByName;
+  internal Dictionary<string, NeedsDictionaryClass> _NeedsDictionaryClassByName { get; private set; }
   
        [StorageProperty(toLower: "Name")]
     public string NameLower; //will always contain the lower case version of Name
 
    */
 
-  //sometimes, it is convenient if the Directoy key is the lower case version of the actual string. This can be achieved
+  //sometimes, it is convenient if the Directory key is the lower case version of the actual string. This can be achieved
   //like this:
 
   public class NeedsDictionaryLowerCaseClass {

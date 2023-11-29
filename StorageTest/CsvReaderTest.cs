@@ -293,14 +293,14 @@ namespace StorageTest {
     }
 
 
-    private void writeInt(StreamWriter streamWriter, int i, List<int> expectedInts, char delimiter) {
+    private static void writeInt(StreamWriter streamWriter, int i, List<int> expectedInts, char delimiter) {
       streamWriter.Write(i.ToString());
       streamWriter.Write(delimiter);
       expectedInts.Add(i);
     }
 
 
-    private void writeIntNull(StreamWriter streamWriter, int? i, List<int?> expectedInts, char delimiter) {
+    private static void writeIntNull(StreamWriter streamWriter, int? i, List<int?> expectedInts, char delimiter) {
       if (i.HasValue) {
         streamWriter.Write(i.ToString());
       }
@@ -309,14 +309,14 @@ namespace StorageTest {
     }
 
 
-    private void writeLong(StreamWriter streamWriter, long l, List<long> expectedLongs, char delimiter) {
+    private static void writeLong(StreamWriter streamWriter, long l, List<long> expectedLongs, char delimiter) {
       streamWriter.Write(l.ToString());
       streamWriter.Write(delimiter);
       expectedLongs.Add(l);
     }
 
 
-    private void writeDecimal(StreamWriter streamWriter, decimal? d, List<decimal?> expectedDecimals, char delimiter) {
+    private static void writeDecimal(StreamWriter streamWriter, decimal? d, List<decimal?> expectedDecimals, char delimiter) {
       if (d!=null) {
         streamWriter.Write(d.ToString());
       }

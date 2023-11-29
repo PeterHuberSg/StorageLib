@@ -71,11 +71,11 @@ namespace ParserTest {
       ",
       @"Class: Parent
         Property: public HashSet<Child> Children;
-        Children is of type HashSet, which is used when the child class hass several properties linking to the parent " +
+        Children is of type HashSet, which is used when the child class has several properties linking to the parent " +
         "class. But the child class Child has only the property Parent1 with they type Parent. With only one child " +
         "class property linking to parent class use List<> instead of HashSet<>.");
 
-      //Parent HashSet references explicitely a property in the child
+      //Parent HashSet references explicitly a property in the child
       //-------------------------------------------------------------
       Generator.Analyze(@"  
         public class Parent {
@@ -95,8 +95,8 @@ namespace ParserTest {
         "which has the type Parent in child class Child.");
 
 
-      //3 child properties linke to the same parent HashSet
-      //===================================================
+      //3 child properties link to the same parent HashSet
+      //==================================================
       compiler = Generator.Analyze(@"  
         public class Parent {
           public HashSet<Child> Children;
