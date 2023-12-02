@@ -249,14 +249,25 @@ namespace StorageLib {
 
       //read data lines
       var errorStringBuilder = new StringBuilder();
+      var isFirstAdd = true;
+      int lastKey = 0;
       while (!csvReader.IsEndOfFileReached()) {
         if (IsReadOnly) {
-          addItem(csvReader, errorStringBuilder);
+          addItem(LastItemIndex+1, csvReader, errorStringBuilder);
+ 
         } else {
-
           var firstLineChar = csvReader.ReadFirstLineChar();
           if (firstLineChar==CsvConfig.LineCharAdd) {
-            addItem(csvReader, errorStringBuilder);
+            var newKey = csvReader.ReadInt();
+            if (AreKeysContinuous) {
+              if (isFirstAdd) {
+                isFirstAdd = false;
+              } else {
+                AreKeysContinuous = newKey == lastKey + 1;
+              }
+              lastKey = newKey;
+            }
+            addItem(newKey, csvReader, errorStringBuilder);
 
           } else if (firstLineChar==CsvConfig.LineCharDelete) {
             //delete
@@ -298,14 +309,12 @@ namespace StorageLib {
         throw new Exception($"Errors reading file {csvReader.FileName}, problems on following lines:" + Environment.NewLine +
           errorStringBuilder.ToString());
       }
-      UpdateAreKeysContinuous();
+      //UpdateAreKeysContinuous();
     }
 
 
-    private void addItem(CsvReader csvReader, StringBuilder errorStringBuilder) {
-      TItemCSV? item = IsReadOnly ? 
-        create(LastItemIndex+1, csvReader, this) : 
-        create(csvReader.ReadInt(), csvReader, this);
+    private void addItem(int newKey, CsvReader csvReader, StringBuilder errorStringBuilder) {
+      var item = create(newKey, csvReader, this);
       if (errorStringBuilder.Length==0) {
         AddProtected(item!);
       }

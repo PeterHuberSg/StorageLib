@@ -3,7 +3,7 @@
 StorageLib.DataStore
 ====================
 
-Stores instances (=item) of classes inheriting from IStorage in an array. An item can be accessed by its key. It behaves
+Stores instances (=items) of classes inheriting from IStorage in an array. An item can be accessed by its key. It behaves
 like a dictionary, but is much faster and supports IEnumerable.
 The data is only stored in RAM and gets lost once the application ends. Use DataStoreCSV for permanent data 
 storage.
@@ -51,13 +51,13 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Can content of an items be changed ? If yes, a change item gets written to the CVS file
+    /// Can content of an items be changed ? If yes, a "change item" gets written to the CVS file
     /// </summary>
     public bool AreInstancesUpdatable { get; }
 
 
     /// <summary>
-    /// Can stored items be removed ? If yes, a delete item gets written to the CVS file
+    /// Can stored items be removed ? If yes, a "delete item" gets written to the CVS file
     /// </summary>
     public bool AreInstancesReleasable { get; }
 
@@ -65,9 +65,7 @@ namespace StorageLib {
     /// <summary>
     /// Returns true if items are not updatable nor deletable
     /// </summary>
-    public bool IsReadOnly {
-      get { return !AreInstancesUpdatable && !AreInstancesReleasable; }
-    }
+    public bool IsReadOnly { get; }
 
 
     /// <summary>
@@ -95,7 +93,7 @@ namespace StorageLib {
     public bool AreKeysContinuous { get; protected set; }
 
     protected void UpdateAreKeysContinuous() {
-      AreKeysContinuous = IsReadOnly || Count==0 ||KeysArray[LastItemIndex] - KeysArray[FirstItemIndex] + 1 == Count;
+      AreKeysContinuous = !AreInstancesReleasable || Count<2 || KeysArray[LastItemIndex] - KeysArray[FirstItemIndex] + 1 == Count;
     }
 
 
@@ -149,6 +147,7 @@ namespace StorageLib {
       StoreKey = storeKey;
       AreInstancesUpdatable = areInstancesUpdatable;
       AreInstancesReleasable = areInstancesReleasable;
+      IsReadOnly = !AreInstancesUpdatable && !AreInstancesReleasable;
       IsNew = true;
     }
     #endregion
@@ -362,7 +361,6 @@ namespace StorageLib {
     Action<IStorageItem> rollbackItemStore;
     Action</*old*/IStorageItem, /*new*/IStorageItem>? rollbackItemUpdate;
     Action<IStorageItem>? rollbackItemRelease;
-    //Action<TItem>? disconnect;
 
     TItem?[] items;
     //int[] keys; //keys don't get deleted when an item gets removed, because the key of the removed item is still needed for binary search
@@ -478,6 +476,7 @@ namespace StorageLib {
           FirstItemIndex = -1;
           LastItemIndex = -1;
           AreKeysContinuous = true;
+
         } else if (Count==1) {
           if (index==FirstItemIndex) {
             FirstItemIndex = LastItemIndex;
@@ -490,6 +489,7 @@ namespace StorageLib {
             LastItemIndex = FirstItemIndex;
           }
           AreKeysContinuous = true;
+
         } else {
           if (FirstItemIndex==index) {
             do {
@@ -506,6 +506,7 @@ namespace StorageLib {
             AreKeysContinuous = false;
           }
         }
+
         if (DataContextBase?.IsTransaction??false) {
           if (!IsTransactionRunning) {
             IsTransactionRunning = true;
@@ -518,7 +519,7 @@ namespace StorageLib {
         OnItemRemoved(item);
       }
       //disconnect!(item);
-      setKey(item, StorageExtensions.NoKey, /*isRollback*/false);//remove key only once  disconnect() and OnItemRemoved() have executed.
+      setKey(item, StorageExtensions.NoKey, /*isRollback*/false);//remove key only once disconnect() and OnItemRemoved() have executed.
       return true;
     }
 

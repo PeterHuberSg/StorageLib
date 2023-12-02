@@ -568,6 +568,34 @@ parent can only be achieved by changing the value of the child property linking 
 parent. There is no method supporting removing the child directly form the children 
 collection in the parent.
 
+## Keys
+Each item has a key with a unique value, which is used by *DataStore* to retrieve, update or 
+release (remove the item from the datstore = delete) an item. Keys are also used to establish 
+child parent relationships (i.e. the child stores the parent's key). The key value gets 
+assigned by *DataStore* and should not have 
+any meaning for the rest of the software (except that a key of -1 shows that the item is not 
+stored yet). A new key is always 1 higher than the highest 
+already existing key value. This guarantees that items are always stored sorted in asscending 
+key values, which allows for a binary search when retrieving an item in the *DataStore*.
+
+There are 2 formats how a .csv file can store items:
+
+1) If the items are updatable or releasable, the first character of a .csv line indicates if it is an Add, Update or Relase record, followed by the key value.
+2) I the items are neiter updatable nor releasable, it contains only Add records and therefore the first character does not indicate the record type and even the key value is not written to the file. The first item has always the key 0 and all following items get their keys incremented by one. 
+
+**Note:** If keys are continuous, i.e if there is no key missing, a search is no longer 
+needed to retrieve an item, *DataStore* can just use the item key to find the item. This 
+works also when the key of the first item is not 0. 
+
+*DataStore* decides if keys are continuous like this:
+
+```csharp
+AreKeysContinuous = 
+  !AreInstancesReleasable || 
+  Count<2 || 
+  lastKeyValue - fistKeyValue + 1 == Count;
+``` 
+
 ## Data Model
 
 The Data Model defines all classes and their relationships among them as shown in 

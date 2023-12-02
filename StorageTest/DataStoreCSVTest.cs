@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StorageLib;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace StorageTest {
@@ -13,21 +14,24 @@ namespace StorageTest {
   public class DataStoreCSVTest {
 
     CsvConfig? csvConfig;
-    DataStore<TestItemCsv>? dataStore;
+    DataStoreCSV<TestItemCsv>? dataStoreCSV;
 
-    const bool cont = true;
-    const bool notC = false;
+    const bool cont = true;  //keys are continuous
+    const bool notC = false; //keys are not continuous
 
 
     #region Readonly
     //      --------
 
+    //items are not updatable and not removable => Keys don't get stored in the CSV file, they can never be out of sequence 
+    //and there is never a missing key, i.e. newKey = oldKey + 1
+
     [TestMethod]
-    public void TestDataStoreReadonlyCSV() {
+    public void TestDataStoreCSVReadonly() {
       var directoryInfo = new DirectoryInfo("TestCsv");
       try {
         //clean up from previous failed tests
-        dataStore?.Dispose();
+        dataStoreCSV?.Dispose();
         if (directoryInfo.Exists) {
           directoryInfo.Delete(recursive: true);
           directoryInfo.Refresh();
@@ -37,22 +41,22 @@ namespace StorageTest {
         directoryInfo.Refresh();
 
         csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-        dataStore = createDataStoreReadonly();
+        dataStoreCSV = createDataStoreReadonly();
         var expectedList = new List<string>();
-        assertRewriteReadonly(expectedList, cont, ref dataStore);
+        assertRewriteReadonly(expectedList, cont, ref dataStoreCSV);
 
-        addReadonly(dataStore, expectedList, 0, "0");
-        addReadonly(dataStore, expectedList, 1, "1");
-        addReadonly(dataStore, expectedList, 2, "2");
-        addReadonly(dataStore, expectedList, 3, "3");
+        addReadonly(dataStoreCSV, expectedList, 0, "0");
+        addReadonly(dataStoreCSV, expectedList, 1, "1");
+        addReadonly(dataStoreCSV, expectedList, 2, "2");
+        addReadonly(dataStoreCSV, expectedList, 3, "3");
       } finally {
-        dataStore?.Dispose();
+        dataStoreCSV?.Dispose();
       }
     }
 
 
-    private DataStore<TestItemCsv> createDataStoreReadonly() {
-      dataStore = new DataStoreCSV<TestItemCsv>(
+    private DataStoreCSV<TestItemCsv> createDataStoreReadonly() {
+      dataStoreCSV = new DataStoreCSV<TestItemCsv>(
         null,
         1, 
         csvConfig!,
@@ -66,36 +70,44 @@ namespace StorageTest {
         TestItemCsv.Disconnect,
         TestItem.RollbackItemNew,
         TestItem.RollbackItemStore,
-        TestItem.RollbackItemUpdate,
-        TestItem.RollbackItemRelease);
-      Assert.IsTrue(dataStore.IsReadOnly);
-      return dataStore;
+        null,
+        null);
+      Assert.IsTrue(dataStoreCSV.IsReadOnly);
+      return dataStoreCSV;
     }
 
 
-    private void assertRewriteReadonly(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
-      assert(expectedList, areKeysContinuous, ref dataStore);
-      dataStore.Dispose();
+    private void assertRewriteReadonly(List<string> expectedList, bool areKeysContinuous, 
+      ref DataStoreCSV<TestItemCsv> dataStoreCSV) 
+    {
+      assert(expectedList, areKeysContinuous, ref dataStoreCSV);
+      dataStoreCSV.Dispose();
 
-      dataStore = createDataStoreReadonly();
-      assert(expectedList, areKeysContinuous, ref dataStore);
+      dataStoreCSV = createDataStoreReadonly();
+      assert(expectedList, areKeysContinuous, ref dataStoreCSV);
     }
 
 
-    private void addReadonly(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, string text) {
+    private void addReadonly(DataStoreCSV<TestItemCsv> dataStoreCSV, List<string> expectedList, int key, string text) {
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
       var testItemCsv = new TestItemCsv(text);
-      dataStore.Add(testItemCsv);
-      assertRewriteReadonly(expectedList, cont, ref dataStore);
+      dataStoreCSV.Add(testItemCsv);
+      assertRewriteReadonly(expectedList, cont, ref dataStoreCSV);
     }
     #endregion
 
 
-    #region Updatable
-    //      ---------
+    #region Not Readonly
+    //      ------------
+
+    //items are updatable and/or removable => Keys get stored in the CSV file.
+    //updatable but not removable and not updatable but removable are subcases of updatable and removable, so only
+    //updatable and removable get tested.
+    //New keys should always be greater than any existing key, but some keys can be missing => dataStore.AreKeysContinuous = false
+
     [TestMethod]
-    public void TestStorageDataStoreCSV() {
+    public void TestDataStoreCSVNotReadOnly() {
       var directoryInfo = new DirectoryInfo("TestCsv");
       for (int configurationIndex = 0; configurationIndex < 2; configurationIndex++) {
         try {
@@ -109,42 +121,42 @@ namespace StorageTest {
           directoryInfo.Refresh();
 
           csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-          dataStore = createDataStore();
+          dataStoreCSV = createDataStore();
           var expectedList = new List<string>();
-          assertRewrite(expectedList, cont, ref dataStore);
+          assertRewrite(expectedList, cont, ref dataStoreCSV);
 
-          add(dataStore, expectedList, 0, "0", cont);
-          add(dataStore, expectedList, 1, "1", cont);
-          add(dataStore, expectedList, 2, "2", cont);
-          add(dataStore, expectedList, 3, "3", cont);
-          add(dataStore, expectedList, 4, "4", cont);
+          add(dataStoreCSV, expectedList, 0, "0", cont);
+          add(dataStoreCSV, expectedList, 1, "1", cont);
+          add(dataStoreCSV, expectedList, 2, "2", cont);
+          add(dataStoreCSV, expectedList, 3, "3", cont);
+          add(dataStoreCSV, expectedList, 4, "4", cont);
 
-          remove(dataStore, expectedList, 3, notC);
-          add(dataStore, expectedList, 5, "5", notC);
-          remove(dataStore, expectedList, 4, notC);
-          remove(dataStore, expectedList, 5, cont);
+          remove(dataStoreCSV, expectedList, 3, notC);
+          add(dataStoreCSV, expectedList, 5, "5", notC);
+          remove(dataStoreCSV, expectedList, 4, notC);
+          remove(dataStoreCSV, expectedList, 5, cont);
 
-          add(dataStore, expectedList, 3, "3a", cont);
-          update(dataStore, expectedList, 2, "2a", cont);
+          add(dataStoreCSV, expectedList, 3, "3a", cont);
+          update(dataStoreCSV, expectedList, 2, "2a", cont);
 
-          remove(dataStore, expectedList, 2, notC);
-          remove(dataStore, expectedList, 3, cont);
-          remove(dataStore, expectedList, 0, cont);
-          remove(dataStore, expectedList, 1, cont);
+          remove(dataStoreCSV, expectedList, 2, notC);
+          remove(dataStoreCSV, expectedList, 3, cont);
+          remove(dataStoreCSV, expectedList, 0, cont);
+          remove(dataStoreCSV, expectedList, 1, cont);
 
-          add(dataStore, expectedList, 0, "0a", cont);
-          add(dataStore, expectedList, 1, "1a", cont);
+          add(dataStoreCSV, expectedList, 0, "0a", cont);
+          add(dataStoreCSV, expectedList, 1, "1a", cont);
 
         } finally {
-          dataStore?.Dispose();
+          dataStoreCSV?.Dispose();
           directoryInfo.Delete(recursive: true);
         }
       }
     }
 
 
-    private DataStore<TestItemCsv> createDataStore() {
-      dataStore = new DataStoreCSV<TestItemCsv>(
+    private DataStoreCSV<TestItemCsv> createDataStore() {
+      dataStoreCSV = new DataStoreCSV<TestItemCsv>(
         null,
         1, 
         csvConfig!,
@@ -162,8 +174,8 @@ namespace StorageTest {
         TestItem.RollbackItemRelease,
         areInstancesUpdatable: true,
         areInstancesReleasable: true);
-      Assert.IsFalse(dataStore.IsReadOnly);
-      return dataStore;
+      Assert.IsFalse(dataStoreCSV.IsReadOnly);
+      return dataStoreCSV;
     }
 
 
@@ -172,30 +184,30 @@ namespace StorageTest {
     }
 
 
-    private void add(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, string text, bool isCont) {
+    private void add(DataStoreCSV<TestItemCsv> dataStoreCSV, List<string> expectedList, int key, string text, bool isCont) {
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
       var testItemCsv = new TestItemCsv(text);
       Assert.AreEqual(StorageExtensions.NoKey, testItemCsv.Key);
-      dataStore.Add(testItemCsv);
-      assertRewrite(expectedList, isCont, ref dataStore);
+      dataStoreCSV.Add(testItemCsv);
+      assertRewrite(expectedList, isCont, ref dataStoreCSV);
     }
 
 
-    private void update(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, string text, bool isCont) {
+    private void update(DataStoreCSV<TestItemCsv> dataStoreCSV, List<string> expectedList, int key, string text, bool isCont) {
       removeExpected(expectedList, key);
       var dataString = $"{key}|{text}";
       expectedList.Add(dataString);
-      var item = dataStore[key];
-      item.Update(text, dataStore); //fires HasChanged event
-      assertRewrite(expectedList, isCont, ref dataStore);
+      var item = dataStoreCSV[key];
+      item.Update(text, dataStoreCSV); //fires HasChanged event
+      assertRewrite(expectedList, isCont, ref dataStoreCSV);
     }
 
 
-    private void remove(DataStore<TestItemCsv> dataStore, List<string> expectedList, int key, bool isCont) {
+    private void remove(DataStoreCSV<TestItemCsv> dataStoreCSV, List<string> expectedList, int key, bool isCont) {
       removeExpected(expectedList, key);
-      dataStore.Remove(key);
-      assertRewrite(expectedList, isCont, ref dataStore);
+      dataStoreCSV.Remove(key);
+      assertRewrite(expectedList, isCont, ref dataStoreCSV);
     }
 
 
@@ -212,36 +224,103 @@ namespace StorageTest {
     }
 
 
-    private void assertRewrite(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
-      assert(expectedList, areKeysContinuous, ref dataStore);
-      dataStore.Dispose();
+    private void assertRewrite(List<string> expectedList, bool areKeysContinuous, ref DataStoreCSV<TestItemCsv> dataStoreCSV) {
+      assert(expectedList, areKeysContinuous, ref dataStoreCSV);
+      dataStoreCSV.Dispose();
 
-      dataStore = createDataStore();
-      assert(expectedList, areKeysContinuous, ref dataStore);
+      dataStoreCSV = createDataStore();
+      assert(expectedList, areKeysContinuous, ref dataStoreCSV);
     }
 
 
-    private static void assert(List<string> expectedList, bool areKeysContinuous, ref DataStore<TestItemCsv> dataStore) {
+    private static void assert(List<string> expectedList, bool areKeysContinuous, ref DataStoreCSV<TestItemCsv> dataStoreCSV) {
       int count = expectedList.Count;
-      Assert.AreEqual(count, dataStore.Count);
-      Assert.AreEqual(count, dataStore.Keys.Count);
-      Assert.AreEqual(count, dataStore.Values.Count);
-      Assert.AreEqual(areKeysContinuous, dataStore.AreKeysContinuous);
+      Assert.AreEqual(count, dataStoreCSV.Count);
+      Assert.AreEqual(count, dataStoreCSV.Keys.Count);
+      Assert.AreEqual(count, dataStoreCSV.Values.Count);
+      Assert.AreEqual(areKeysContinuous, dataStoreCSV.AreKeysContinuous);
       for (int index = 0; index < count; index++) {
         var fields = expectedList[index].Split("|");
         var key = int.Parse(fields[0]);
-        var data = dataStore[key];
+        var data = dataStoreCSV[key];
         Assert.AreEqual(fields[1], data.Text);
-        Assert.IsTrue(dataStore.Keys.Contains(key));
-        Assert.IsTrue(dataStore.Values.Contains(data));
+        Assert.IsTrue(dataStoreCSV.Keys.Contains(key));
+        Assert.IsTrue(dataStoreCSV.Values.Contains(data));
       }
       var countedItems = 0;
-      foreach (var data in dataStore) {
+      foreach (var data in dataStoreCSV) {
         countedItems++;
         var dataString = $"{data.Key}|{data.Text}";
         Assert.IsTrue(expectedList.Contains(dataString));
       }
       Assert.AreEqual(count, countedItems);
+    }
+    #endregion
+
+
+    #region Restore From File
+    //      -----------------
+
+    //When the application gets closed properly, the .csv file might contain update and release records. However, in 
+    //memory is only the latest updated data and upon Dispose() the existing .csv file gets renamed to .bak and a new
+    //.csv file gets written containing only "add records". The original .csv file with updates and releases gets only
+    //read, when dispose doesn't get executed because of an exception.
+
+    //This test verifies that the following old bug is corrected:
+    //The old software only detected if the keys are not continuous after the complete file was read from the CSV file. This
+    //let to problems if the keys were actually not continuous and an "update item" was performed, as if the keys were 
+    //continuous.
+
+    [TestMethod]
+    public void TestDataStoreCSVRestoreFromFile() {
+      var directoryInfo = new DirectoryInfo("TestCsv");
+      try {
+        //clean up from previous failed tests
+        dataStoreCSV?.Dispose();
+        if (directoryInfo.Exists) {
+          directoryInfo.Delete(recursive: true);
+          directoryInfo.Refresh();
+        }
+
+        directoryInfo.Create();
+        directoryInfo.Refresh();
+
+        csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
+        dataStoreCSV = createDataStore();
+        var item0 = new TestItemCsv("item0");
+        dataStoreCSV.Add(item0);
+        var item1 = new TestItemCsv("item1");
+        dataStoreCSV.Add(item1);
+        var item2 = new TestItemCsv("item2");
+        dataStoreCSV.Add(item2);
+        var item3 = new TestItemCsv("item3");
+        dataStoreCSV.Add(item3);
+        var item4 = new TestItemCsv("item4");
+        dataStoreCSV.Add(item4);
+        dataStoreCSV.Remove(item1);
+        dataStoreCSV.Dispose();
+        dataStoreCSV = createDataStore();
+        item2.Update("item2 changed", dataStoreCSV);
+        dataStoreCSV.Dispose();
+
+        var fileNameCsv = dataStoreCSV.PathFileName;
+        var fileNameBak = Path.ChangeExtension(fileNameCsv, "bak");
+        File.Move(fileNameBak, fileNameCsv, overwrite: true);
+
+
+        dataStoreCSV = createDataStore();
+        var expectedList = new List<string> {
+          "0|item0",
+          "2|item2 changed",
+          "3|item3",
+          "4|item4",
+        };
+        assert(expectedList, areKeysContinuous: false, ref dataStoreCSV);
+
+
+      } finally {
+        dataStoreCSV?.Dispose();
+      }
     }
     #endregion
   }

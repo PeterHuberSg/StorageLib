@@ -7,6 +7,8 @@ using StorageLib;
 
 namespace StorageTest {
 
+  #region TestCsvReaderLine
+  //       ----------------
 
   [TestClass()]
   public class CsvReaderTest {
@@ -323,9 +325,12 @@ namespace StorageTest {
       streamWriter.Write(delimiter);
       expectedDecimals.Add(d);
     }
+    #endregion
 
 
-    #region 
+    #region TestCsvReaderLine
+    //      -----------------
+
     [TestMethod()]
     public void TestCsvReaderLine() {
       var directoryInfo = new DirectoryInfo("TestCsv");
@@ -365,7 +370,6 @@ namespace StorageTest {
         directoryInfo.Delete(recursive: true);
       }
     }
-
     #endregion
 
   }
