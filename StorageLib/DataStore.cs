@@ -593,7 +593,7 @@ namespace StorageLib {
         if (item.Key==StorageExtensions.NoKey) {
           setKey(item, ++lastItemKey, /*isRollback*/false);
         } else {
-          if (item.Key<=lastItemKey) throw new Exception($"Cannot add {typeof(TItem).Name} '{item}' to DataStore, because its key should be greater than lastItemKey {lastItemKey}.");
+          if (item.Key<=lastItemKey) throw new IndexOutOfRangeException($"Cannot add {typeof(TItem).Name} '{item}' to DataStore, because its key should be greater than lastItemKey {lastItemKey}.");
         }
         LastItemIndex++;
         if (Count==0) {

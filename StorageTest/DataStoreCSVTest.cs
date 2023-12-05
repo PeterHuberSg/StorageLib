@@ -121,7 +121,7 @@ namespace StorageTest {
           directoryInfo.Refresh();
 
           csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-          dataStoreCSV = createDataStore();
+          dataStoreCSV = createDataStoreUpdatableReleasable();
           var expectedList = new List<string>();
           assertRewrite(expectedList, cont, ref dataStoreCSV);
 
@@ -155,7 +155,31 @@ namespace StorageTest {
     }
 
 
-    private DataStoreCSV<TestItemCsv> createDataStore() {
+    private DataStoreCSV<TestItemCsv> createDataStoreUpdatableNotReleasable() {
+      dataStoreCSV = new DataStoreCSV<TestItemCsv>(
+        null,
+        1,
+        csvConfig!,
+        TestItemCsv.MaxLineLength,
+        TestItemCsv.Headers,
+        TestItemCsv.SetKey,
+        TestItemCsv.Create,
+        null,
+        TestItemCsv.Update,
+        TestItemCsv.Write,
+        TestItemCsv.Disconnect,
+        TestItem.RollbackItemNew,
+        TestItem.RollbackItemStore,
+        TestItem.RollbackItemUpdate,
+        null,
+        areInstancesUpdatable: true,
+        areInstancesReleasable: false);
+      Assert.IsFalse(dataStoreCSV.IsReadOnly);
+      return dataStoreCSV;
+    }
+
+
+    private DataStoreCSV<TestItemCsv> createDataStoreUpdatableReleasable() {
       dataStoreCSV = new DataStoreCSV<TestItemCsv>(
         null,
         1, 
@@ -228,7 +252,7 @@ namespace StorageTest {
       assert(expectedList, areKeysContinuous, ref dataStoreCSV);
       dataStoreCSV.Dispose();
 
-      dataStoreCSV = createDataStore();
+      dataStoreCSV = createDataStoreUpdatableReleasable();
       assert(expectedList, areKeysContinuous, ref dataStoreCSV);
     }
 
@@ -266,11 +290,6 @@ namespace StorageTest {
     //.csv file gets written containing only "add records". The original .csv file with updates and releases gets only
     //read, when dispose doesn't get executed because of an exception.
 
-    //This test verifies that the following old bug is corrected:
-    //The old software only detected if the keys are not continuous after the complete file was read from the CSV file. This
-    //let to problems if the keys were actually not continuous and an "update item" was performed, as if the keys were 
-    //continuous.
-
     [TestMethod]
     public void TestDataStoreCSVRestoreFromFile() {
       var directoryInfo = new DirectoryInfo("TestCsv");
@@ -285,8 +304,12 @@ namespace StorageTest {
         directoryInfo.Create();
         directoryInfo.Refresh();
 
+        //This test verifies that the following old bug is corrected:
+        //The old software only detected if the keys are not continuous after the complete file was read from the CSV file. This
+        //let to problems if the keys were actually not continuous and an "update item" was performed, as if the keys were 
+        //continuous.
         csvConfig = new CsvConfig(directoryInfo.FullName, reportException: reportException);
-        dataStoreCSV = createDataStore();
+        dataStoreCSV = createDataStoreUpdatableReleasable();
         var item0 = new TestItemCsv("item0");
         dataStoreCSV.Add(item0);
         var item1 = new TestItemCsv("item1");
@@ -299,7 +322,7 @@ namespace StorageTest {
         dataStoreCSV.Add(item4);
         dataStoreCSV.Remove(item1);
         dataStoreCSV.Dispose();
-        dataStoreCSV = createDataStore();
+        dataStoreCSV = createDataStoreUpdatableReleasable();
         item2.Update("item2 changed", dataStoreCSV);
         dataStoreCSV.Dispose();
 
@@ -308,7 +331,7 @@ namespace StorageTest {
         File.Move(fileNameBak, fileNameCsv, overwrite: true);
 
 
-        dataStoreCSV = createDataStore();
+        dataStoreCSV = createDataStoreUpdatableReleasable();
         var expectedList = new List<string> {
           "0|item0",
           "2|item2 changed",
@@ -316,7 +339,41 @@ namespace StorageTest {
           "4|item4",
         };
         assert(expectedList, areKeysContinuous: false, ref dataStoreCSV);
+        dataStoreCSV.Dispose();
 
+        ////////////////////////////////////////////////////////////////////////////////
+        //test to verify that a new key smaller than an existing key raises an exception
+        File.WriteAllText(fileNameCsv,
+@"Key	Text	
++0	item0	
++2	item2	
++1	item1	
+");
+        try {
+          dataStoreCSV = createDataStoreUpdatableReleasable();
+          Assert.Fail("IndexOutOfRangeException is missing, keys are out of sequence.");
+
+        } catch (IndexOutOfRangeException ex) {
+          //test is successful
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //Test: When reading an updateable but nor releasable file, does DataStoreCSV detect when the keys are not
+        //continuous ?
+        // It is ok that a file starts with a key>0, but key 4 is missing:
+        File.WriteAllText(fileNameCsv,
+@"Key	Text	
++2	item2	
++3	item3	
++5	item5	
+");
+        try {
+          dataStoreCSV = createDataStoreUpdatableNotReleasable();
+          Assert.Fail("IndexOutOfRangeException is missing, new key is too big.");
+
+        } catch (IndexOutOfRangeException ex) {
+          //test is successful
+        }
 
       } finally {
         dataStoreCSV?.Dispose();

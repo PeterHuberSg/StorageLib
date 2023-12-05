@@ -2298,7 +2298,9 @@ namespace StorageLib {
           }
         } else if (mi.MemberType==MemberTypeEnum.Enum) {
           sw.WriteLine($"      {LowerRawName}.{mi.MemberName} = ({mi.TypeString})csvReader.{mi.CsvReaderRead};");
-        } else if (mi.MemberType<=MemberTypeEnum.LinkToParent) {//simple data type or LinkToParent
+        } else if (mi.MemberType==MemberTypeEnum.ToLower) {
+          sw.WriteLine($"      {LowerRawName}.{mi.MemberName} = {LowerRawName}.{mi.PropertyForToLower}{mi.QMark}.ToLowerInvariant();");
+        } else if (mi.MemberType<MemberTypeEnum.LinkToParent) {//simple data
           sw.WriteLine($"      {LowerRawName}.{mi.MemberName} = csvReader.{mi.CsvReaderRead};");
         }
       }
@@ -2321,7 +2323,7 @@ namespace StorageLib {
       sw.WriteLine();
       sw.WriteLine();
       sw.WriteLine("    /// <summary>");
-      sw.WriteLine($"    /// Is {ReaderName} already exposed ?");
+      sw.WriteLine($"    /// Is {ReaderName} already disposed ?");
       sw.WriteLine("    /// </summary>");
       sw.WriteLine("    protected bool IsDisposed {");
       sw.WriteLine("      get { return isDisposed==1; }");
@@ -2419,7 +2421,7 @@ namespace StorageLib {
           }
         } else if (mi.MemberType==MemberTypeEnum.Enum) {
           sw.WriteLine($"      csvWriter.{mi.CsvWriterWrite}((int){LowerRawName}.{mi.MemberName});");
-        } else if (mi.MemberType<MemberTypeEnum.Enum) {//simple data
+        } else if (mi.MemberType<MemberTypeEnum.ToLower) {//simple data, nothing to do for ToLower
           sw.WriteLine($"      csvWriter.{mi.CsvWriterWrite}({LowerRawName}.{mi.MemberName});");
         }
       }
@@ -2469,7 +2471,7 @@ namespace StorageLib {
           }
         } else if (mi.MemberType==MemberTypeEnum.Enum) {
           sw.WriteLine($"      csvWriter.{mi.CsvWriterWrite}((int){mi.LowerMemberName});");
-        } else if (mi.MemberType<MemberTypeEnum.Enum) {//simple data
+        } else if (mi.MemberType<MemberTypeEnum.ToLower) {//simple data, nothing to do for ToLower
           sw.WriteLine($"      csvWriter.{mi.CsvWriterWrite}({mi.LowerMemberName});");
         }
       }
@@ -2491,7 +2493,7 @@ namespace StorageLib {
       sw.WriteLine();
       sw.WriteLine();
       sw.WriteLine("    /// <summary>");
-      sw.WriteLine($"    /// Is {WriterName} already exposed ?");
+      sw.WriteLine($"    /// Is {WriterName} already disposed ?");
       sw.WriteLine("    /// </summary>");
       sw.WriteLine("    protected bool IsDisposed {");
       sw.WriteLine("      get { return isDisposed==1; }");

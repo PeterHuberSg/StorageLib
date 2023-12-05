@@ -73,9 +73,7 @@ namespace StorageLib {
 
     #region Constructor
     //      -----------
-    #pragma warning disable IDE0069 // Disposable fields should be disposed
     FileStream? fileStream;
-    #pragma warning restore IDE0069 // Disposable fields should be disposed
     readonly bool isFileStreamOwner;
     readonly byte[] byteArray;
     int readIndex;
@@ -146,7 +144,7 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Is CsvReader already exposed ?
+    /// Is CsvReader already disposed ?
     /// </summary>
     protected bool IsDisposed {
       get { return isDisposed==1; }

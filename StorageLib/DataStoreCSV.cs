@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Timers;
 
 
 namespace StorageLib {
@@ -158,12 +159,16 @@ namespace StorageLib {
       fileStream = new FileStream(PathFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, csvConfig.BufferSize, FileOptions.SequentialScan);
       if (fileStream.Length>0) {
         IsNew = false;
-        using (var csvReader = new CsvReader(null, CsvConfig, estimatedLineLength, fileStream)) {
-          isInitialReading = true;
+        var csvReader = new CsvReader(null, CsvConfig, estimatedLineLength, fileStream);
+        isInitialReading = true;
+        try {
           readFromCsvFile(csvReader);
-          isInitialReading = false;
-          fileStream.Position = fileStream.Length;
+        } catch {
+          fileStream.Dispose();
+          throw;
         }
+        isInitialReading = false;
+        fileStream.Position = fileStream.Length;
         csvWriter = new CsvWriter("", csvConfig, estimatedLineLength, fileStream, flushDelay: flushDelay);
       } else {
         //there is no file yet. Write an empty file with just the CSV header
@@ -264,6 +269,9 @@ namespace StorageLib {
                 isFirstAdd = false;
               } else {
                 AreKeysContinuous = newKey == lastKey + 1;
+                if (!AreInstancesReleasable && !AreKeysContinuous) {
+                  throw new IndexOutOfRangeException($"Reading {typeof(TItemCSV).Name}: Key {newKey} is out of sequence, it should be {lastKey + 1}.");
+                }
               }
               lastKey = newKey;
             }
@@ -342,8 +350,8 @@ namespace StorageLib {
     }
 
 
-#region Overrides
-//      ---------
+    #region Overrides
+    //      ---------
 
     protected override void OnItemAdded(TItemCSV item) {
       if (isInitialReading) return;
