@@ -322,7 +322,17 @@ namespace StorageLib {
 
 
     private void addItem(int newKey, CsvReader csvReader, StringBuilder errorStringBuilder) {
-      var item = create(newKey, csvReader, this);
+      TItemCSV? item;
+      try {
+        item = create(newKey, csvReader, this);
+      } catch (Exception ex) {
+        if (errorStringBuilder.Length>0) {
+          errorStringBuilder.AppendLine();
+        }
+        errorStringBuilder.AppendLine($"Error when reading from file '{csvReader.FileName}'.");
+        errorStringBuilder.AppendLine($"At '{csvReader.PresentContent}'");
+        throw new Exception(errorStringBuilder.ToString(), ex);
+      }
       if (errorStringBuilder.Length==0) {
         AddProtected(item!);
       }
