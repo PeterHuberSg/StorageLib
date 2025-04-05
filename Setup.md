@@ -42,7 +42,7 @@ For this and any other projects you might add, ensure that the project file cont
 
 ```xml
 <PropertyGroup>
-<TargetFramework>net5.0</TargetFramework>
+<TargetFramework>net8.0</TargetFramework>
 <Nullable>enable</Nullable>
 </PropertyGroup>
 ```
