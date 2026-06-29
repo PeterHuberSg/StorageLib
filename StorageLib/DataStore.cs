@@ -21,6 +21,7 @@ This software is distributed without any warranty.
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 
@@ -275,6 +276,12 @@ namespace StorageLib {
     //      ----------
 
     /// <summary>
+    /// Returns the type of TItem
+    /// </summary>
+    public string StoreName { get; }
+
+
+    /// <summary>
     /// Gets the capacity of DataStore. The capacity is the size of the internal array used to hold items, which grows 
     /// automatically over time as needed.
     /// </summary>
@@ -298,9 +305,10 @@ namespace StorageLib {
     public TItem this[int key] { 
       get {
         int arrayIndex = binarySearch(key);
+        if (arrayIndex < 0) System.Diagnostics.Debugger.Break();
         return arrayIndex<0
-            ? throw new ArgumentOutOfRangeException($"Cannot find key {key}.")
-            : items[arrayIndex]?? throw new ArgumentException($"There is no item for key '{key}'.");
+            ? throw new ArgumentOutOfRangeException($"Cannot find key {key} in {StoreName}.")
+            : items[arrayIndex]?? throw new ArgumentException($"There is no item for key '{key}' in {StoreName}.");
       }
     }
 
@@ -395,13 +403,14 @@ namespace StorageLib {
       int capacity = 0) 
     :base(dataContext, storeKey, areInstancesUpdatable, areInstancesReleasable)
     {
+      StoreName = typeof(TItem).Name;
       this.setKey = setKey;
       this.rollbackItemNew = rollbackItemNew;
       this.rollbackItemStore = rollbackItemStore;
       this.rollbackItemUpdate = rollbackItemUpdate;
       this.rollbackItemRelease = rollbackItemRelease;
       //this.disconnect = disconnect;
-      if (capacity < 0) throw new ArgumentOutOfRangeException("Capacity must be equal or grater , but was '" + capacity + "'.");
+      if (capacity < 0) throw new ArgumentOutOfRangeException($"Capacity must be equal or grater , but was '{capacity}' in {StoreName}.");
 
       if (capacity==0) {
         items = Array.Empty<TItem>();
@@ -451,7 +460,7 @@ namespace StorageLib {
     /// </summary>
     public bool Remove(int key) {
 #if DEBUG
-      if (!AreInstancesReleasable) throw new NotSupportedException($"DataStore for {typeof(TItem).Name} does not allow key '{key}' to be deleted.");
+      if (!AreInstancesReleasable) throw new NotSupportedException($"DataStore for {StoreName} does not allow key '{key}' to be deleted.");
 #endif
 
       int index;
@@ -536,7 +545,7 @@ namespace StorageLib {
     /// If item was removed already, still true gets returned. No Removed event gets fired.
     /// </summary>
     public bool Remove(TItem item) {
-      return item.Key<0 ? throw new Exception($"DataStore can not remove item '{item}' with no key (-1).") : Remove(item.Key);
+      return item.Key<0 ? throw new Exception($"DataStore {StoreName} can not remove item '{item}' with no key (-1).") : Remove(item.Key);
     }
 
 
@@ -579,21 +588,21 @@ namespace StorageLib {
     /// the capacity of DataStore is doubled before adding the new item.
     /// </summary>
     public void Add(TItem item) {
-      if (item.Key>=0) throw new Exception($"Cannot add {typeof(TItem).Name} '{item}' to DataStore, because it is already added (Key is 0 or bigger).");
+      if (item.Key>=0) throw new Exception($"Cannot add '{item}' to DataStore {StoreName}, because it is already added (Key is 0 or bigger).");
 
       AddProtected(item);
     }
 
 
     protected void AddProtected(TItem item) {
-      if (IsDisposed) throw new ObjectDisposedException($"DataStore<{typeof(TItem).Name}>");
+      if (IsDisposed) throw new ObjectDisposedException($"DataStore<{StoreName}>");
 
       lock (items) {
         var lastItemKey = LastItemIndex==-1 ? -1 : items[LastItemIndex]!.Key;//throws exception if indexed item is null
         if (item.Key==StorageExtensions.NoKey) {
           setKey(item, ++lastItemKey, /*isRollback*/false);
         } else {
-          if (item.Key<=lastItemKey) throw new IndexOutOfRangeException($"Cannot add {typeof(TItem).Name} '{item}' to DataStore, because its key should be greater than lastItemKey {lastItemKey}.");
+          if (item.Key<=lastItemKey) throw new IndexOutOfRangeException($"Cannot add '{item}' to DataStore {StoreName}, because its key should be greater than lastItemKey {lastItemKey}.");
         }
         LastItemIndex++;
         if (Count==0) {
@@ -646,7 +655,7 @@ namespace StorageLib {
 
     public void ItemHasChanged(TItem oldItem, TItem newItem) {
 #if DEBUG
-      if (!AreInstancesUpdatable) throw new NotSupportedException($"DataStore for {typeof(TItem).Name} does not " +
+      if (!AreInstancesUpdatable) throw new NotSupportedException($"DataStore {StoreName} does not " +
         $"allow item '{oldItem}' to be updated to {newItem}.");
       if (newItem.Key<0) throw new Exception();
 #endif
@@ -734,7 +743,7 @@ namespace StorageLib {
 #if DEBUG
       //LastItemIndex always points to the last added item. RollbackStoreAdd() must always be about the last added item.
       if (Count<=0 || index!=LastItemIndex|| KeysArray[index]!=item.Key || items[index]!=item) 
-        throw new Exception($"DataStore<typeof(TItem).Name>.RollbackStoreAdd(item: {item}); count: {Count}; " +
+        throw new Exception($"{StoreName}.Name>.RollbackStoreAdd(item: {item}); count: {Count}; " +
           $"LastItemIndex: {LastItemIndex}; keys[index]: {KeysArray[index]}; items[index]: {items[index]};");
 #endif
       items[index] = null;
@@ -774,7 +783,7 @@ namespace StorageLib {
 #if DEBUG
       if (!AreInstancesReleasable) throw new Exception();
       if (item.Key!=StorageExtensions.NoKey || index<0 || items[index]!=null || KeysArray[index]!=key)
-        throw new Exception($"DataStore<{typeof(TItem).Name}>.RollbackStoreRemove(key: {key}, item: {item}); index: {index};");
+        throw new Exception($"{StoreName}.RollbackStoreRemove(key: {key}, item: {item}); index: {index};");
 #endif
 
       var tItem = (TItem)item;
@@ -895,7 +904,7 @@ namespace StorageLib {
 
       public bool MoveNext() {
         if (version!=dataStore.version) {
-          throw new InvalidOperationException("DataStore content has changed during enumeration.");
+          throw new InvalidOperationException($"DataStore {typeof(TItem).Name} content has changed during enumeration.");
         }
         while (true) {
           index++;
