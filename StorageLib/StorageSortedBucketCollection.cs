@@ -5,7 +5,8 @@ StorageLib.StorageSortedBucketCollection
 
 StorageSortedBucketCollection is a replacement for SortedBucketCollection used by parent classes with releasable children. 
 
-Written in 2021 by Jürgpeter Huber 
+
+Written in 2021-26 by Jürgpeter Huber 
 Contact: https://github.com/PeterHuberSg/StorageLib
 
 To the extent possible under law, the author(s) have dedicated all copyright and 
@@ -21,6 +22,8 @@ using System.Collections.Generic;
 
 namespace StorageLib {
 
+  #region StorageSortedBucketCollection with 2 keys
+  //      =========================================
 
   /// <summary>
   /// Like IReadOnlySortedBucketCollection, but for StorageSortedBucketCollection, which provides CountStoredItems and 
@@ -87,4 +90,74 @@ namespace StorageLib {
     }
     #endregion
   }
+  #endregion
+
+
+  #region StorageSortedBucketCollection with 1 key
+  //      ========================================
+
+  /// <summary>
+  /// Like IReadOnlySortedBucketCollection (single key), but for StorageSortedBucketCollection, which provides 
+  /// CountStoredItems and GetStoredItems().
+  /// </summary>
+  public interface IStorageReadOnlySortedBucketCollection<TKey1, TItem> :
+    IStorageReadOnly<TItem>, IReadOnlySortedBucketCollection<TKey1, TItem> { }
+
+
+  /// <summary>
+  /// StorageSortedBucketCollection is the single key replacement for SortedBucketCollection used by parent classes with 
+  /// releasable children. A stored parent might have stored and not stored children. Enumerating 
+  /// StorageSortedBucketCollection shows all children, while GetStoredItems() enumerates all stored children. Count() 
+  /// counts all children, while CountStoredItems() counts all stored children. 
+  /// </summary>
+  public class StorageSortedBucketCollection<TKey1, TValue> :
+    SortedBucketCollection<TKey1, TValue>,
+    IStorageReadOnlySortedBucketCollection<TKey1, TValue>
+    where TKey1 : notnull, IComparable<TKey1>
+    where TValue : class, IStorageItem<TValue> {
+
+    #region Properties
+    //      ----------
+
+    /// <summary>
+    /// Count how many items from StorageSortedBucketCollection are stored in the Data Context
+    /// </summary>
+    public int CountStoredItems {
+      get {
+        var count = 0;
+        foreach (var item in this) {
+          if (item.Key>=0) {
+            count++;
+          }
+        }
+        return count;
+      }
+    }
+    #endregion
+
+
+    #region Constructor
+    //      -----------
+
+    public StorageSortedBucketCollection(Func<TValue, TKey1> getKey1) : base(getKey1) { }
+    #endregion
+
+
+    #region Methods
+    //      -------
+
+    /// <summary>
+    /// Enumerate all items from StorageSortedBucketCollection being stored in the Data Context
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<TValue> GetStoredItems() {
+      foreach (var item in this) {
+        if (item.Key>=0) {
+          yield return item;
+        }
+      }
+    }
+    #endregion
+  }
+  #endregion
 }

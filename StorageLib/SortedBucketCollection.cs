@@ -3,14 +3,36 @@
 Storage.SortedBucketCollection
 ==============================
 
-SortedBucketCollection stores items (TValue) which have 2 keys. Conceptually, a bucket stores items having the same 
-value for TKey1. Within one bucket, each item must have a unique TKey2. However, internally, the items are not stored
-in buckets, but a sorted linked list. SortedBucketCollection supports 3 indexers:
+SortedBucketCollection is like a SortedDictionary, but the difference is that SortedDictionary can 
+have only one item per TKey1, while SortedBucketCollection can have many items per TKey1. 
+Conceptually, a bucket stores items having the same value for TKey1. There are 2 
+SortedBucketCollection versions:
+
+SortedBucketCollection with 2 keys
+----------------------------------
+
+Within one bucket, each item must have a unique TKey2. However, internally, the items are not 
+stored in buckets, but a sorted linked list. SortedBucketCollection with 2 keys supports 3 indexers:
 [TKey1]: returns an IEnumerable<TValue> looping over all items with the same TKey1
 [TKey1a, TKey1b]: returns an IEnumerable<TValue> looping over all items with TKey1 in the range of TKey1a and TKey1b
 [TKey1, TKey2]: returns one particular item.
 
-Written in 2021 by Jürgpeter Huber 
+
+SortedBucketCollection with 1 key
+---------------------------------
+
+Use it when the child items sharing the same TKey1 have no second property which is guaranteed 
+unique among them. Unlike the two key SortedBucketCollection, the items within one bucket are not 
+distinguishable by a second key and therefore cannot be addressed individually by a TKey2. They 
+can only be enumerated. Internally, each TKey1 maps to a List<TValue> holding that bucket's items 
+in insertion (append) order.
+ 
+SortedBucketCollection supports 2 indexers:
+[TKey1]: returns an IEnumerable<TValue> looping over all items with the same TKey1
+[TKey1a, TKey1b]: returns an IEnumerable<TValue> looping over all items with TKey1 in the range of TKey1a and TKey1b
+
+
+Written in 2021-26 by Jürgpeter Huber 
 Contact: PeterCode at Peterbox dot com
 
 To the extent possible under law, the author(s) have dedicated all copyright and 
@@ -28,8 +50,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace StorageLib {
 
-  #region IReadOnlySortedBucketCollection
-  //      -------------------------------
+  #region IReadOnlySortedBucketCollection with 2 keys
+  //      -------------------------------------------
 
   /// <summary>
   /// Provides readonly access to a BucketCollection, which works like a Dictionary, but each item needs 2 keys.
@@ -101,8 +123,8 @@ namespace StorageLib {
   #endregion
 
 
-  #region SortedBucketCollection
-  //      ----------------------
+  #region SortedBucketCollection with 2 keys
+  //      ----------------------------------
 
   /// <summary>
   /// Like a SortedList, SortedBucketCollection stores TValue items which can be retrieved by their TKey1 value. In SortedList, 
@@ -474,4 +496,291 @@ namespace StorageLib {
     #endregion
   }
   #endregion
+
+
+  #region IReadOnlySortedBucketCollection with 1 key
+  //      ------------------------------------------
+
+  /// <summary>
+  /// Provides readonly access to a single key SortedBucketCollection, which works like a Dictionary, but each TKey1 
+  /// gives access to possibly many items. Since the items in one bucket have no second key, they can only be 
+  /// enumerated, not addressed individually by a second key.
+  /// </summary>
+  public interface IReadOnlySortedBucketCollection<TKey1, TValue> : IReadOnlyCollection<TValue> {
+
+    #region Properties
+    //      ----------
+
+    /// <summary>
+    /// A collection of all TKey1 values stored.
+    /// </summary>
+    ICollection<TKey1> Keys { get; }
+
+
+    /// <summary>
+    /// Number of all TKey1 stored
+    /// </summary>
+    public int Key1Count { get; }
+
+
+    /// <summary>
+    /// Returns all items with TKey1==key1
+    /// </summary>
+    public IEnumerable<TValue> this[TKey1 key1] { get; }
+
+
+    /// <summary>
+    /// Returns all items where TKey1>=key1Lower &amp;&amp; TKey1&lt;=key1Higher
+    /// </summary>
+    public IEnumerable<TValue> this[TKey1 key1Lower, TKey1 key1Higher] { get; }
+    #endregion
+
+
+    #region Methods
+    //      -------
+
+    /// <summary>
+    /// Does at least 1 item exist in SortedBuckets with item.Key1==key1 ?
+    /// </summary>
+    public bool Contains(TKey1 key1);
+
+
+    /// <summary>
+    /// Does item exist in SortedBuckets ? The item gets located by reference identity within its TKey1 bucket.
+    /// </summary>
+    public bool Contains(TValue item);
+    #endregion
+  }
+    #endregion
+
+
+  #region SortedBucketCollection with 1 key
+  //      ---------------------------------
+
+  /// <summary>
+  /// Like a SortedList, SortedBucketCollection stores TValue items which can be retrieved by their TKey1 value. In 
+  /// SortedList, each TKey accesses at most 1 item. In this single key SortedBucketCollection, each TKey1 accesses a 
+  /// bucket, which can contain 0 to many items with the same TKey1. The items within one bucket have no second key 
+  /// and can therefore only be enumerated, not addressed individually. Buckets are sorted by TKey1, within a bucket 
+  /// the items are kept in insertion (append) order. TKey1 is a property within TValue.
+  /// </summary>
+  public class SortedBucketCollection<TKey1, TValue> : ICollection<TValue>, IReadOnlySortedBucketCollection<TKey1, TValue>
+    where TKey1 : notnull, IComparable<TKey1>
+    where TValue : class {
+
+
+    #region Properties
+    //      ----------
+
+    /// <summary>
+    /// A collection of all TKey1 values stored.
+    /// </summary>
+    public ICollection<TKey1> Keys => buckets.Keys;
+
+
+    /// <summary>
+    /// Number of all TValues stored
+    /// </summary>
+    public int Count { get; private set; }
+
+
+    /// <summary>
+    /// Number of all TKey1 stored
+    /// </summary>
+    public int Key1Count => buckets.Count;
+
+
+    /// <summary>
+    /// Readonly versions of SortedBucketCollection don't exist
+    /// </summary>
+    public bool IsReadOnly => false;
+
+
+    /// <summary>
+    /// Returns all items with TKey1==key1
+    /// </summary>
+    public IEnumerable<TValue> this[TKey1 key1] => getValuesFor(key1);
+
+
+    private IEnumerable<TValue> getValuesFor(TKey1 key1) {
+      if (!buckets.TryGetValue(key1, out var itemList)) yield break;
+
+      var versionCopy = version;
+      for (int itemIndex = 0; itemIndex < itemList.Count; itemIndex++) {
+        yield return itemList[itemIndex];
+
+        if (versionCopy!=version) {
+          throw new InvalidOperationException();
+        }
+      }
+    }
+
+
+    /// <summary>
+    /// Returns all items where TKey1>=key1Lower &amp;&amp; TKey1&lt;=key1Higher
+    /// </summary>
+    public IEnumerable<TValue> this[TKey1 key1Lower, TKey1 key1Higher] => getValuesFor(key1Lower, key1Higher);
+
+
+    private IEnumerable<TValue> getValuesFor(TKey1 key1Lower, TKey1 key1Higher) {
+      var versionCopy = version;
+      foreach (var keyValuePairItemList in buckets) {
+        if (keyValuePairItemList.Key.CompareTo(key1Lower)<0) continue;
+
+        if (keyValuePairItemList.Key.CompareTo(key1Higher)>0) break;
+
+        var itemList = keyValuePairItemList.Value;
+        for (int itemIndex = 0; itemIndex<itemList.Count; itemIndex++) {
+          yield return itemList[itemIndex];
+
+          if (versionCopy!=version) {
+            throw new InvalidOperationException();
+          }
+        }
+      }
+    }
+    #endregion
+
+
+    #region Constructor
+    //      -----------
+
+    readonly Func<TValue, TKey1> getKey1;
+    readonly SortedDictionary<TKey1, List<TValue>> buckets;
+    int version;
+
+
+    /// <summary>
+    /// The getKey1() delegate provides access to the TKey1 property in TValue
+    /// </summary>
+    public SortedBucketCollection(Func<TValue, TKey1> getKey1) {
+      this.getKey1 = getKey1;
+      buckets = [];
+      Count = 0;
+    }
+    #endregion
+
+
+    #region Methods
+    //      -------
+
+    /// <summary>
+    /// Adds item to SortedBucketCollection. The item gets appended to the end of its TKey1 bucket. Several items with 
+    /// the same TKey1 are allowed. Adding the same item instance twice is a usage error and is not checked here.
+    /// </summary>
+    public void Add(TValue item) {
+      var key1 = getKey1(item);
+      if (buckets.TryGetValue(key1, out var itemList)) {
+        itemList.Add(item);
+      } else {
+        buckets.Add(key1, [item]);
+      }
+      Count++;
+      version++;
+    }
+
+
+    /// <summary>
+    /// Does at least 1 item exist in SortedBuckets with item.Key1==key1 ?
+    /// </summary>
+    public bool Contains(TKey1 key1) {
+      return buckets.ContainsKey(key1);
+    }
+
+
+    /// <summary>
+    /// Does item exist in SortedBuckets ? The item gets located by reference identity within its TKey1 bucket.
+    /// </summary>
+    public bool Contains(TValue item) {
+      var key1 = getKey1(item);
+      if (!buckets.TryGetValue(key1, out var itemList)) return false;
+
+      for (int itemIndex = 0; itemIndex<itemList.Count; itemIndex++) {
+        if (ReferenceEquals(itemList[itemIndex], item)) return true;
+      }
+      return false;
+    }
+
+
+    /// <summary>
+    /// Enumerates over all items in SortedBucketCollection, sorted by Key1, within a Key1 in insertion order
+    /// </summary>
+    public IEnumerator<TValue> GetEnumerator() {
+      var versionCopy = version;
+
+      foreach (var keyValuePairItemList in buckets) {
+        var itemList = keyValuePairItemList.Value;
+        for (int itemIndex = 0; itemIndex<itemList.Count; itemIndex++) {
+          yield return itemList[itemIndex];
+
+          if (versionCopy!=version) {
+            throw new InvalidOperationException();
+          }
+        }
+      }
+    }
+
+
+    /// <summary>
+    /// Enumerates over all items in SortedBucketCollection, sorted by Key1, within a Key1 in insertion order
+    /// </summary>
+    IEnumerator IEnumerable.GetEnumerator() {
+      return GetEnumerator();
+    }
+
+
+    /// <summary>
+    /// Returns true if item was found by reference identity within its TKey1 bucket. Item gets removed. If the bucket 
+    /// becomes empty, the TKey1 gets removed too.
+    /// </summary>
+    public bool Remove(TValue item) {
+      var key1 = getKey1(item);
+      if (!buckets.TryGetValue(key1, out var itemList)) return false; //Key1 is completely missing in buckets
+
+      for (int itemIndex = 0; itemIndex < itemList.Count; itemIndex++) {
+        if (ReferenceEquals(itemList[itemIndex], item)) {
+          itemList.RemoveAt(itemIndex);
+          if (itemList.Count == 0) {
+            //last item of that Key1 got removed, remove the empty bucket too
+            buckets.Remove(key1);
+          }
+          Count--;
+          version++;
+          return true;
+        }
+      }
+
+      //item not found in its Key1 bucket
+      return false;
+    }
+
+
+    /// <summary>
+    /// Releases all items from SortedBucketCollection
+    /// </summary>
+    public void Clear() {
+      buckets.Clear();
+      Count = 0;
+      version++;
+    }
+
+
+    /// <summary>
+    /// Copies the elements of the SortedBucketCollection to an Array, starting at a particular Array index.
+    /// </summary>
+    public void CopyTo(TValue[] array, int arrayIndex) {
+      if (array is null) throw new ArgumentNullException(nameof(array));
+
+      if (arrayIndex<0) throw new ArgumentOutOfRangeException(nameof(array), $"value needs to be greater 0, but was {arrayIndex}.");
+
+      if (array.Length-arrayIndex < Count) throw new ArgumentException("array is too small.");
+
+      foreach (var item in this) {
+        array[arrayIndex++] = item;
+      }
+    }
+    #endregion
+  }
+  #endregion
+
 }
