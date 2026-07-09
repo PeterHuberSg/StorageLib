@@ -219,7 +219,7 @@ namespace StorageLib {
         }
         CsvWriterWrite = "Write";
         ToStringFunc = "";
-        PrecisionComment = "Stores date and time with maximum precision.";
+        PrecisionComment = "Stores decimal with maximum precision.";
         break;
 
       case MemberTypeEnum.Decimal2:
@@ -314,7 +314,7 @@ namespace StorageLib {
 
       case MemberTypeEnum.Char:
         TypeString = "char";
-        MaxStorageSize = 1;
+        MaxStorageSize = "c\t".Length;
         if (isNullable) {
           CsvReaderRead = "ReadCharNull()";
           NoValue = "null";
@@ -360,12 +360,7 @@ namespace StorageLib {
         throw new NotSupportedException();
       }
 
-      TypeStringNotNullable = TypeString;
-      IsNullable = isNullable;
-      if (isNullable) {
-        TypeString += '?';
-        QMark = "?";
-      }
+      SetIsNullable(isNullable);
     }
 
 
@@ -389,7 +384,6 @@ namespace StorageLib {
       ClassInfo = classInfo;
       PropertyForToLower = toLower;
       TypeString = "string";
-      TypeStringNotNullable = TypeString;
       SetIsNullable(isNullable);
       IsReadOnly = false;
       Comment = comment;
@@ -436,10 +430,8 @@ namespace StorageLib {
         LowerChildPropertyName = childPropertyName.ToCamelCase();
       }
       IsReadOnly = false;
-      IsNullable = true;
-      TypeStringNotNullable = childType;
-      TypeString = childType + '?';
-      QMark = "?";
+      TypeString = childType;
+      SetIsNullable(true);
 
       CsvReaderRead = null;
       CsvWriterWrite = null;
@@ -479,10 +471,9 @@ namespace StorageLib {
       if (childPropertyName is not null) {
         LowerChildPropertyName = childPropertyName.ToCamelCase();
       }
-      SetIsNullable(false);
       IsReadOnly = false; //List and HashSet properties get changed to IReadOnlyXxx, but no need to mark them with ReadOnly
       TypeString = typeString;
-      TypeStringNotNullable = TypeString;
+      SetIsNullable(false);
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -522,10 +513,9 @@ namespace StorageLib {
         LowerChildKeyPropertyName = childKeyPropertyName.ToCamelCase();
       }
       ChildKeyTypeString = keyTypeString;
-      SetIsNullable(false);
       IsReadOnly = false; //Collection properties are IReadOnlyXXX, but not need to mark them with ReadOnly
       TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
-      TypeStringNotNullable = TypeString;
+      SetIsNullable(false);
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -572,10 +562,9 @@ namespace StorageLib {
       }
       ChildKeyTypeString = key1TypeString;
       ChildKey2TypeString = key2TypeString;
-      SetIsNullable(false);
       IsReadOnly = false; //Collection properties are IReadOnlyXXX, but no need to mark them with ReadOnly
       TypeString = memberTypeString; //will be overwritten in Compiler.AnalyzeDependencies()
-      TypeStringNotNullable = TypeString;
+      SetIsNullable(false);
       CsvReaderRead = null;
       CsvWriterWrite = null;
       Comment = comment;
@@ -605,18 +594,15 @@ namespace StorageLib {
       if (isReadOnly) ClassInfo.HasReadOnlies = true;
       LowerParentType = memberTypeString.ToCamelCase();
       CsvWriterWrite = "Write";
-      TypeStringNotNullable = memberTypeString;
-      IsNullable = isNullable;
+      TypeString = memberTypeString;
+      SetIsNullable(isNullable);
       if (isNullable) {
-        TypeString = memberTypeString + '?';
-        QMark = "?";
         CsvReaderRead = "ReadIntNull()";
         NoValue = "null";
         ToStringFunc = "?.ToShortString()";
       } else {
-        TypeString = memberTypeString;
         CsvReaderRead = "ReadInt()";
-        NoValue = $"{TypeString}.No{TypeString}";
+        NoValue = $"{TypeStringNotNullable}.No{TypeStringNotNullable}";
         ToStringFunc = ".ToShortString()";
       }
       Comment = comment;
@@ -625,7 +611,13 @@ namespace StorageLib {
     }
 
 
+    /// <summary>
+    /// Sets nullability from an already-assigned, non-nullable TypeString.
+    /// Callers must assign TypeString before calling this. It records the
+    /// non-nullable form in TypeStringNotNullable, then appends '?' / sets QMark when nullable.
+    /// </summary>
     internal void SetIsNullable(bool isNullable) {
+      TypeStringNotNullable = TypeString;
       IsNullable = isNullable;
       if (isNullable) {
         TypeString += '?';
@@ -669,39 +661,8 @@ namespace StorageLib {
       if (PrecisionComment!=null && !hasWrittenComment) {
         sw.WriteLine("    /// <summary>");
         sw.WriteLine($"    /// {PrecisionComment}");
-        sw.WriteLine("    ///  </summary>");
+        sw.WriteLine("    /// </summary>");
       }
-      //if (MemberType==MemberTypeEnum.ParentMultipleChildrenList) {
-      //  ////if (ChildCount<1) {
-      //  ////  throw new Exception();
-      //  ////} else if (ChildCount==1) {
-      //  ////  if (ChildClassInfo!.AreInstancesReleasable) {
-      //  ////    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-      //  ////    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
-      //  ////  } else {
-      //  ////    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-      //  ////    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
-      //  ////  }
-      //  ////} else {
-      //  ////  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-      //  ////  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
-      //  ////}
-      //  //if (SingleChildMI is not null) {
-      //  //  if (ChildClassInfo!.AreInstancesReleasable) {
-      //  //    sw.WriteLine($"    public IStorageReadOnlyList<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-      //  //    sw.WriteLine($"    readonly StorageList<{ChildTypeName}> {LowerMemberName};");
-      //  //  } else {
-      //  //    sw.WriteLine($"    public IReadOnly{TypeString} {MemberName} => {LowerMemberName};");
-      //  //    sw.WriteLine($"    readonly List<{ChildTypeName}> {LowerMemberName};");
-      //  //  }
-      //  //} else if (MultipleChildrenMIs is not null) {
-      //  //  //A parent List<> referenced by 2 properties in the child class
-      //  //  sw.WriteLine($"    public ICollection<{ChildTypeName}> {MemberName} => {LowerMemberName};");
-      //  //  sw.WriteLine($"    readonly HashSet<{ChildTypeName}> {LowerMemberName};");
-      //  //} else {
-      //  //  throw new Exception();
-      //  //}
-      //} else 
       if (MemberType is
         MemberTypeEnum.ParentMultipleChildrenList or
         MemberTypeEnum.ParentMultipleChildrenHashSet or
@@ -737,6 +698,7 @@ namespace StorageLib {
 
   public static class ToCamelCaseExtension {
     public static string ToCamelCase(this string str) {
+      if (string.IsNullOrEmpty(str)) return str;
       return str[0..1].ToLowerInvariant() + str[1..];
     }
   }
