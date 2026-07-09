@@ -137,7 +137,7 @@ namespace ParserTest {
       @"Class: SortedBucketParent
         Property: public SortedBucketCollection<Date, string, SortedBucketChild> Children;
         The collection Children in parent class SortedBucketParent needs a key with the type Date. There are 2 " +
-        "properties in SortedBucketChild with the type Date. Use StoragePropertyAttribute.ChildKey2PropertyName to " +
+        "properties in SortedBucketChild with the type Date. Use StoragePropertyAttribute.ChildKeyPropertyName to " +
         "indicate which property should be used.");
 
       //Two properties in child class matching the second key type defined in the parent
@@ -156,7 +156,7 @@ namespace ParserTest {
       @"Class: SortedBucketParent
         Property: public SortedBucketCollection<Date, string, SortedBucketChild> Children;
         The collection Children in parent class SortedBucketParent needs a second key with the type string. There " +
-        "are 2 properties in SortedBucketChild with the type string. Use StoragePropertyAttribute.ChildKeyPropertyName " +
+        "are 2 properties in SortedBucketChild with the type string. Use StoragePropertyAttribute.ChildKey2PropertyName " +
         "to indicate which property should be used.");
 
       //Two collections in parent and only 1 parent property in child

@@ -113,8 +113,9 @@ namespace ParserTest {
       @"Class: DictionaryParent
         Property: public Dictionary<Date, DictionaryChild> Children;
         The collection Children in parent class DictionaryParent needs a key with the type Date. There are 2 " +
-        "properties in DictionaryChild with the type Date. Use StoragePropertyAttribute.ChildKey2PropertyName to " +
+        "properties in DictionaryChild with the type Date. Use StoragePropertyAttribute.ChildKeyPropertyName to " +
         "indicate which property should be used.");
+
 
       //Two collections in parent and only 1 parent property in child
       //-------------------------------------------------------------
