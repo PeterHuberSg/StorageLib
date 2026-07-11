@@ -443,6 +443,26 @@ namespace StorageLib {
               mi.TypeStringNotNullable = mi.TypeString;
               break;
 
+
+            case MemberTypeEnum.ParentMultipleChildrenSortedBucketOneKey:
+              //                ----------------------------------------
+
+              findLinkToParentPropertyInChildClassAndSetupParentChildLinks(mi, topClasses);
+
+              findKeyPropertyInChildClass(mi, mi.ChildKeyPropertyName, mi.ChildKeyTypeString, isSecondKey: false);
+
+              //memberTypeString = $"SortedBucketCollection<{key1TypeName}, {itemTypeName}>";
+              var oneKeyGenericParameters = $"{mi.ChildKeyTypeString}, {mi.ChildClassInfo!.ClassName}";
+              if (mi.ChildClassInfo.AreInstancesReleasable) {
+                mi.TypeString = $"StorageSortedBucketCollection<{oneKeyGenericParameters}>";
+                mi.ReadOnlyTypeString = $"IStorageReadOnlySortedBucketCollection<{oneKeyGenericParameters}>";
+              } else {
+                mi.TypeString = $"SortedBucketCollection<{oneKeyGenericParameters}>";
+                mi.ReadOnlyTypeString = $"IReadOnlySortedBucketCollection<{oneKeyGenericParameters}>";
+              }
+              mi.TypeStringNotNullable = mi.TypeString;
+              break;
+
             default: throw new NotSupportedException($"Compiler.AnalyzeDependencies(mi.MemberType: {mi.MemberType})");
             }
           }
@@ -750,11 +770,12 @@ namespace StorageLib {
 
 
     /// <summary>
-    /// Finds the child class property which should be used as key for a collection in the parent class. Returns
-    /// null if isSecondKey and the property child property Key is used as key. Key exists for every class, but
-    /// has no MemberInfo.
+    /// Finds the child class property which should be used as key for a collection in the parent class. Throws a
+    /// GeneratorException when the child's auto created Key property would be used as second key, because unstored
+    /// children all share Key==NoKey and would break the bucket ordering. Such models must use the single key
+    /// SortedBucketCollection instead.
     /// </summary>
-    private static MemberInfo? findKeyPropertyInChildClass(
+    private static MemberInfo findKeyPropertyInChildClass(
       MemberInfo parentMI,//has a value for parentMI.ChildClassInfo
       string? childKeyPropertyName,
       string? childKeyPropertyType,
@@ -789,11 +810,8 @@ namespace StorageLib {
 
         if (childKeyMI is null)
           if (isSecondKey && childKeyPropertyType=="int") {
-            //use the Key property as second key for SortedBucketCollection 
-            parentMI.ChildKey2PropertyName = "Key";
-            parentMI.LowerChildKey2PropertyName = "key";
-            parentMI.ChildKey2TypeString = "int";
-            return null;
+            //the only int property matching would be the child's auto created Key, which cannot be used as second key
+            throw newKeyAsSecondKeyException(parentCI, parentMI);
 
           } else {
             //No property was found in the child class with the type the parent class is looking for
@@ -817,11 +835,8 @@ namespace StorageLib {
 
         } else {
           if (isSecondKey && childKeyPropertyName=="Key") {
-            //use the Key property as second key for SortedBucketCollection 
-            parentMI.ChildKey2PropertyName = "Key";
-            parentMI.LowerChildKey2PropertyName = "key";
-            parentMI.ChildKey2TypeString = "int";
-            return null;
+            //the child's auto created Key cannot be used as second key
+            throw newKeyAsSecondKeyException(parentCI, parentMI);
 
           } else {
             //cannot find property in child with the name==ChildPropertyName
@@ -842,6 +857,15 @@ namespace StorageLib {
         parentMI.ChildKeyTypeString = childKeyMI.TypeStringNotNullable;
       }
       return childKeyMI;
+    }
+
+
+    private static GeneratorException newKeyAsSecondKeyException(ClassInfo parentCI, MemberInfo parentMI) {
+      return new GeneratorException(parentCI, parentMI,
+        $"The collection {parentMI.MemberName} in parent class {parentCI.ClassName} uses the child's Key property as " +
+        "second key. This does not work, because unstored children all have Key==NoKey (-1), so the bucket ordering " +
+        $"breaks. Declare {parentMI.MemberName} as a single key SortedBucketCollection<TKey1, {parentMI.ChildTypeName}> " +
+        "instead.");
     }
 
 

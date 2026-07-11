@@ -345,59 +345,85 @@ namespace DataModelSamples {
   }
   #endregion
 
-  #region Parent with Children SortedBucketCollection, 1:mc or c:mc
-  //      ---------------------------------------------------------
+  #region Parent with Children SortedBucketCollection and 1 key, 1:mc or c:mc
+  //      -------------------------------------------------------------------
 
   //child 1 : mc parent relationship using SortedBucketCollection
-  public class SortedBucketCollection_1_MC_Parent {
+  public class SortedBucketCollection1Key_1_MC_Parent {
     public string Name;
     //SortedBucketCollectionChild has only one property of type string. No need for
     //[StorageProperty(childKeyPropertyName: "Name")]
-    public SortedBucketCollection<Date, string, SortedBucketCollection_1_MC_Child> Children;
+    public SortedBucketCollection<string, SortedBucketCollection1Key_1_MC_Child> Children;
   }
-  public class SortedBucketCollection_1_MC_Child {
+  public class SortedBucketCollection1Key_1_MC_Child {
     public string Name;
     public Date Date;
-    public SortedBucketCollection_1_MC_Parent Parent;
+    public SortedBucketCollection1Key_1_MC_Parent Parent;
   }
 
   //child c : mc parent relationship using SortedBucketCollection
-  public class SortedBucketCollection_C_MC_Parent {
+  public class SortedBucketCollection1Key_C_MC_Parent {
     public string Name;
-    public SortedBucketCollection<Date, string, SortedBucketCollection_C_MC_Child> Children;
+    public SortedBucketCollection<string, SortedBucketCollection1Key_C_MC_Child> Children;
   }
-  public class SortedBucketCollection_C_MC_Child {
+  public class SortedBucketCollection1Key_C_MC_Child {
     public string Name;
     public Date Date;
-    public SortedBucketCollection_C_MC_Parent? Parent; //nullable parent indicates c:mc relation
+    public SortedBucketCollection1Key_C_MC_Parent? Parent; //nullable parent indicates c:mc relation
   }
 
-  public class SortedBucketCollectionWithPropertyNameParent {
+  public class SortedBucketCollection1KeyWithPropertyNameParent {
     public string Name;
-    [StorageProperty(childKeyPropertyName: "Date", childKey2PropertyName: "Name")] //SortedBucketCollection needs to know which properties to use for keys
-    public SortedBucketCollection<Date, string, SortedBucketCollectionWithPropertyNameChild> Children;
+    [StorageProperty(childKeyPropertyName: "Date")] //SortedBucketCollection needs to know which properties to use for keys
+    public SortedBucketCollection<Date, SortedBucketCollection1KeyWithPropertyNameChild> Children;
   }
-  public class SortedBucketCollectionWithPropertyNameChild {
+  public class SortedBucketCollection1KeyWithPropertyNameChild {
     public string Name;
     public Date Date;
     public Date AnotherDate;
     public string Address;
-    public SortedBucketCollectionWithPropertyNameParent Parent;
+    public SortedBucketCollection1KeyWithPropertyNameParent Parent;
   }
+  #endregion
 
-  /// <summary>
-  /// The child's auto created property Key can be used as second key of SortedBucketCollection
-  /// </summary>
-  public class SortedBucketCollectionWithUsingKeyAsKey2Parent {
+  #region Parent with Children SortedBucketCollection and 2 keys, 1:mc or c:mc
+  //      --------------------------------------------------------------------
+
+  //child 1 : mc parent relationship using SortedBucketCollection
+  public class SortedBucketCollection2Keys_1_MC_Parent {
     public string Name;
-    //the Key property can be used here, even it is not explicitly listed in the child's properties below
-    [StorageProperty(childKey2PropertyName: "Key")]
-    public SortedBucketCollection<Date, string, SortedBucketCollectionWithUsingKeyAsKey2Child> Children;
+    //SortedBucketCollectionChild has only one property of type string. No need for
+    //[StorageProperty(childKeyPropertyName: "Name")]
+    public SortedBucketCollection<Date, string, SortedBucketCollection2Keys_1_MC_Child> Children;
   }
-  public class SortedBucketCollectionWithUsingKeyAsKey2Child {
+  public class SortedBucketCollection2Keys_1_MC_Child {
     public string Name;
     public Date Date;
-    public SortedBucketCollectionWithUsingKeyAsKey2Parent Parent;
+    public SortedBucketCollection2Keys_1_MC_Parent Parent;
+  }
+
+  //child c : mc parent relationship using SortedBucketCollection
+  public class SortedBucketCollection2Keys_C_MC_Parent {
+    public string Name;
+    public SortedBucketCollection<Date, string, SortedBucketCollection2Keys_C_MC_Child> Children;
+  }
+  public class SortedBucketCollection2Keys_C_MC_Child {
+    public string Name;
+    public Date Date;
+    public SortedBucketCollection2Keys_C_MC_Parent? Parent; //nullable parent indicates c:mc relation
+  }
+
+  public class SortedBucketCollection2KeysWithPropertyNameParent {
+    public string Name;
+    [StorageProperty(childKeyPropertyName: "Date", childKey2PropertyName: "Name")] //SortedBucketCollection needs to know which properties to use for keys
+    public SortedBucketCollection<Date, string, SortedBucketCollection2KeysWithPropertyNameChild> Children;
+  }
+  public class SortedBucketCollection2KeysWithPropertyNameChild {
+    public string Name;
+    public Date Date;
+    public Date AnotherDate;
+    public string Address;
+    public SortedBucketCollection2KeysWithPropertyNameParent Parent;
   }
   #endregion
 

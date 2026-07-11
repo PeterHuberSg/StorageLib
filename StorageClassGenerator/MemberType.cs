@@ -47,6 +47,7 @@ namespace StorageLib {
     ParentMultipleChildrenDictionary, //property of parent being a Dictionary<TKey, TValue> of children
     ParentMultipleChildrenSortedList, //property of parent being a SortedList<TKey, TValue> of children
     ParentMultipleChildrenSortedBucket, //property of parent being a SortedBucketCollection<TKey1, TKey2, TValue> of children
+    ParentMultipleChildrenSortedBucketOneKey, //property of parent being a SortedBucketCollection<TKey1, TValue> of children
 
     Lenght
   }

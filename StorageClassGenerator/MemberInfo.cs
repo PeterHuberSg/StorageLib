@@ -356,6 +356,8 @@ namespace StorageLib {
         throw new Exception("SortedList uses its own constructor.");
       case MemberTypeEnum.ParentMultipleChildrenSortedBucket:
         throw new Exception("SortedBucketCollection uses its own constructor.");
+      case MemberTypeEnum.ParentMultipleChildrenSortedBucketOneKey:
+        throw new Exception("SortedBucketCollection uses its own constructor.");
       default:
         throw new NotSupportedException();
       }
@@ -631,7 +633,8 @@ namespace StorageLib {
         return $"List<{ChildTypeName}> {MemberName}";
       } else if (MemberType==MemberTypeEnum.ParentMultipleChildrenDictionary || 
           MemberType==MemberTypeEnum.ParentMultipleChildrenSortedList ||
-          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
+          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucket ||
+          MemberType==MemberTypeEnum.ParentMultipleChildrenSortedBucketOneKey) 
       {
         return $"{TypeString} {MemberName}";
       } else {
@@ -668,7 +671,8 @@ namespace StorageLib {
         MemberTypeEnum.ParentMultipleChildrenHashSet or
         MemberTypeEnum.ParentMultipleChildrenDictionary or
         MemberTypeEnum.ParentMultipleChildrenSortedList or
-        MemberTypeEnum.ParentMultipleChildrenSortedBucket) 
+        MemberTypeEnum.ParentMultipleChildrenSortedBucket or
+        MemberTypeEnum.ParentMultipleChildrenSortedBucketOneKey) 
       {
         sw.WriteLine($"    public {ReadOnlyTypeString} {MemberName} => {LowerMemberName};");
         sw.WriteLine($"    readonly {TypeString} {LowerMemberName};");

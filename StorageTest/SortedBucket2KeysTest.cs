@@ -8,7 +8,7 @@ using System.Linq;
 namespace StorageTest {
 
   [TestClass]
-  public class SortedBucketTest {
+  public class SortedBucket2KeysTest {
 
     public record Item(DateTime Date, int Key2, string Description);
 
@@ -25,7 +25,7 @@ namespace StorageTest {
 
 
     [TestMethod]
-    public void TestSortedBucket() {
+    public void TestSortedBucket2Kes() {
       for (int itemIndex = 0; itemIndex < expectedItems.Length; itemIndex++) {
         expectedItems[itemIndex] = new SortedList<int, Item>();
       }
@@ -106,12 +106,12 @@ namespace StorageTest {
         if (dayList.Count==0) {
           Assert.IsFalse(items.Contains(day));
           Assert.IsFalse(items.Contains(day, 12345678));
-          Assert.IsFalse(items.Contains(day));
           Assert.IsFalse(items.TryGetValue(day, 87654321, out var itemFound));
           Assert.IsNull(itemFound);
 
         } else {
           Assert.AreEqual(dateKeysList[dateKeysListIndex++], day);
+          Assert.IsFalse(items.Contains(day, 12345678));
           var dayItems = items[day].ToList();
           var dayListIndex = 0;
           foreach (var KeyValuePairItem in dayList) {
@@ -135,18 +135,15 @@ namespace StorageTest {
 
       for (int day1Index = 0; day1Index<expectedItems.Length; day1Index++) {
         for (int day2Index = 0; day2Index<expectedItems.Length; day2Index++) {
-          //var day1 = day0.AddDays(day1Index);
-          //var day2 = day0.AddDays(day2Index);
-          //var dayRangeItems = items[day1, day2].ToArray();
+          var dayLower = day0.AddDays(day1Index);
+          var dayHigher = day0.AddDays(day2Index);
+          var expectedRange = new List<Item>();
           for (int dayRangeIndex = day1Index; dayRangeIndex<=day2Index; dayRangeIndex++) {
-            var dayList = expectedItems[dayRangeIndex];
-            if (dayList.Count>0) {
-              foreach (var KeyValuePairItem in dayList) {
-                var item = KeyValuePairItem.Value;
-                Assert.AreEqual(item, items[item.Date, item.Key2]);
-              }
+            foreach (var keyValuePairItem in expectedItems[dayRangeIndex]) {
+              expectedRange.Add(keyValuePairItem.Value);
             }
           }
+          CollectionAssert.AreEqual(expectedRange, items[dayLower, dayHigher].ToList());
         }
       }
     }
